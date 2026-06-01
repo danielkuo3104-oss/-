@@ -51,11 +51,25 @@
         @keyframes pulse { 0% { opacity: 1; } 100% { opacity: 0.6; } }
 
         .main-container { max-width: 1200px; margin: 0 auto 40px auto; padding: 0 20px; box-sizing: border-box; }
-        .spacer-top { margin-top: 40px; }
+        
+        /* 🛠️【核心修正：解決標題黏太緊問題】 */
+        /* 讓所有大標題（不論是在電腦或手機）上方主動空出 42px 呼吸空間，下方空 18px 遠離卡片 */
+        .section-title { 
+            font-size: 16px; 
+            font-weight: 600; 
+            color: #626973; 
+            letter-spacing: 1px; 
+            margin: 42px 0 18px 0; 
+            display: block;
+        }
         
         /* 標題與圖表切換鈕結構 */
-        .chart-header-row { display: flex; justify-content: space-between; align-items: center; margin: 35px 0 15px 0; }
-        .section-title { font-size: 16px; font-weight: 600; color: #626973; letter-spacing: 1px; margin: 0; }
+        .chart-header-row { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin: 0; /* 移除原本衝突的 margin，統一由內建的 section-title 去撐開上下 */
+        }
         
         /* 莫蘭迪圖表切換按鈕 */
         .toggle-btn-group { display: flex; background: #e2e6ea; padding: 3px; border-radius: 10px; border: 1px solid #d1d5db; }
@@ -63,7 +77,7 @@
         .toggle-btn.active { background: #ffffff; color: #4a515a; box-shadow: 0 2px 6px rgba(0,0,0,0.06); }
 
         /* 卡片網格：預設 PC 網格間距 20px */
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; margin-bottom: 0; }
         
         /* 基礎卡片樣式 */
         .stat-card {
@@ -91,11 +105,11 @@
         .stat-card.history-card { background: #ffffff; border: 1px solid #e1e4e8; }
         .stat-card.history-card .stat-value { color: #4a515a; }
 
-        .chart-card { background: #ffffff; border-radius: 20px; padding: 24px; box-shadow: 0 8px 20px rgba(140, 149, 159, 0.08); border: 1px solid #e1e4e8; margin-bottom: 30px; }
+        .chart-card { background: #ffffff; border-radius: 20px; padding: 24px; box-shadow: 0 8px 20px rgba(140, 149, 159, 0.08); border: 1px solid #e1e4e8; margin-bottom: 0; }
         .chart-container { position: relative; height: 350px; width: 100%; }
         
         /* 歷月電表抄錄 */
-        .gray-section { background: #e6ebf0; border-radius: 24px; padding: 24px; margin-top: 40px; border: 1px solid #d2dae2; }
+        .gray-section { background: #e6ebf0; border-radius: 24px; padding: 24px; margin-top: 45px; border: 1px solid #d2dae2; }
         .gray-title { color: #54606e; font-size: 15px; font-weight: 600; margin-bottom: 16px; letter-spacing: 0.5px; }
         .gray-card { background: #f5f8fa; border-radius: 16px; padding: 20px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.01); border: 1px solid #dbe2e8; }
 
@@ -135,26 +149,30 @@
         .copyright { text-align: center; color: #b2b9c0; font-size: 11px; padding-bottom: 30px; letter-spacing: 1px; }
         .loading { text-align: center; padding: 40px; font-size: 14px; color: #8696b8; font-weight: 500; }
 
-        /* 📱【全新加入：手機端 RWD 深度空間優化】 */
+        /* 📱【手機端 RWD 空間優化】 */
         @media (max-width: 768px) {
             .header-banner { padding: 35px 20px 45px 20px; }
             .header-banner h1 { font-size: 22px; }
             .main-container { padding: 0 16px; margin-bottom: 25px; }
             
-            /* 1. 將卡片格子之間的間距從 20px 大幅拉開到 28px，產生呼吸感 */
-            .stats-grid { gap: 28px; margin-bottom: 25px; }
+            /* 1. 調整手機上的標題外部間距，依然維持足夠的上下留白 */
+            .section-title { margin: 38px 0 16px 0; font-size: 15px; }
             
-            /* 2. 微調卡片內部襯距與陰影，減少密集重壓感 */
+            /* 2. 手機版卡片格子之間拉開到 28px */
+            .stats-grid { gap: 28px; }
+            
+            /* 3. 微調卡片內部襯距 */
             .stat-card { padding: 20px; border-radius: 18px; box-shadow: 0 6px 16px rgba(140, 149, 159, 0.06); }
             .stat-value { font-size: 22px; }
             
-            /* 3. 優化圖表區域與切換按鈕在手機上的排列 */
-            .chart-header-row { flex-direction: column; align-items: flex-start; gap: 12px; margin: 25px 0 15px 0; }
-            .chart-card { padding: 16px; border-radius: 18px; }
-            .chart-container { height: 280px; } /* 稍微降低手機圖表高度，更好滑動 */
+            /* 4. 手機圖表控制列 */
+            .chart-header-row { flex-direction: column; align-items: flex-start; gap: 12px; margin: 0; }
+            .chart-header-row .section-title { margin-bottom: 0; } /* 避免切換按鈕離標題太遠 */
+            .chart-card { padding: 16px; border-radius: 18px; margin-top: 16px; }
+            .chart-container { height: 280px; }
             
-            /* 4. 灰區電表抄錄部分間距同步拉開 */
-            .gray-section { padding: 16px; border-radius: 20px; margin-top: 30px; }
+            /* 5. 灰色抄表區 */
+            .gray-section { padding: 16px; border-radius: 20px; margin-top: 40px; }
         }
     </style>
 </head>
@@ -179,7 +197,7 @@
     </div>
     
     <div class="main-container">
-        <div class="section-title" style="margin-bottom: 15px;">宿舍規範</div>
+        <div class="section-title">宿舍規範</div>
         <div class="rules-card">
             <ul class="rules-list">
                 <li>維護公共區域整潔，個人垃圾請定時清理。</li>
@@ -313,7 +331,7 @@
                 const container = document.getElementById('mainContent');
                 
                 container.innerHTML = `
-                    <div class="section-title spacer-top">當月費用摘要 (${latest.month})</div>
+                    <div class="section-title">當月費用摘要 (${latest.month})</div>
                     <div class="stats-grid">
                         <div class="stat-card current-ele" onclick="openRoomDetails('currentEle')">
                             <div class="stat-label" style="color: #bc6c3a;">當月電費 (點擊看房間明細)</div>
