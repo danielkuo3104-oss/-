@@ -62,7 +62,7 @@
         .toggle-btn { background: transparent; border: none; padding: 6px 14px; font-size: 12px; font-weight: 600; color: #626973; border-radius: 8px; cursor: pointer; transition: all 0.2s ease; }
         .toggle-btn.active { background: #ffffff; color: #4a515a; box-shadow: 0 2px 6px rgba(0,0,0,0.06); }
 
-        /* 卡片網格 */
+        /* 卡片網格：預設 PC 網格間距 20px */
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; margin-bottom: 30px; }
         
         /* 基礎卡片樣式 */
@@ -80,7 +80,7 @@
         .stat-card.current-ele { background: linear-gradient(135deg, #ffffff 0%, #fdf6f0 100%); border: 1px solid rgba(217, 119, 54, 0.15); }
         .stat-card.current-ele .stat-value { color: #d97736; }
         
-        /* 💡【細節一：水費顏色加深，避免與電表灰搞混】採用高雅的暮色莫蘭迪藍 */
+        /* 水費顏色加深，採用高雅的暮色莫蘭迪藍 */
         .stat-card.current-water { background: linear-gradient(135deg, #ffffff 0%, #edf3f7 100%); border: 1px solid rgba(82, 121, 150, 0.18); }
         .stat-card.current-water .stat-value { color: #527996; }
         
@@ -127,13 +127,35 @@
         .modal-row.total-line .modal-row-label { color: #4a515a; font-weight: 600; }
         .modal-row.total-line .modal-row-value { color: #69779b; font-size: 16px; font-weight: 700; }
         
-        /* 💡【細節二：公基金注資備註長相完全一樣】精緻輕綠色小方塊樣式 */
+        /* 公基金注資備註：精緻輕綠色小方塊樣式 */
         .impute-note { font-size: 11px; color: #769476; opacity: 0.9; font-weight: 400; text-align: left; margin-top: 6px; line-height: 1.4; background: #f3f7f3; padding: 6px 10px; border-radius: 8px; border: 1px solid rgba(110, 145, 110, 0.1); }
 
         .close-btn { background: #f0f2f5; color: #626973; border: none; width: 100%; padding: 14px; border-radius: 14px; font-weight: 600; margin-top: 20px; cursor: pointer; transition: background 0.2s; }
         .close-btn:hover { background: #e6ebf0; }
         .copyright { text-align: center; color: #b2b9c0; font-size: 11px; padding-bottom: 30px; letter-spacing: 1px; }
         .loading { text-align: center; padding: 40px; font-size: 14px; color: #8696b8; font-weight: 500; }
+
+        /* 📱【全新加入：手機端 RWD 深度空間優化】 */
+        @media (max-width: 768px) {
+            .header-banner { padding: 35px 20px 45px 20px; }
+            .header-banner h1 { font-size: 22px; }
+            .main-container { padding: 0 16px; margin-bottom: 25px; }
+            
+            /* 1. 將卡片格子之間的間距從 20px 大幅拉開到 28px，產生呼吸感 */
+            .stats-grid { gap: 28px; margin-bottom: 25px; }
+            
+            /* 2. 微調卡片內部襯距與陰影，減少密集重壓感 */
+            .stat-card { padding: 20px; border-radius: 18px; box-shadow: 0 6px 16px rgba(140, 149, 159, 0.06); }
+            .stat-value { font-size: 22px; }
+            
+            /* 3. 優化圖表區域與切換按鈕在手機上的排列 */
+            .chart-header-row { flex-direction: column; align-items: flex-start; gap: 12px; margin: 25px 0 15px 0; }
+            .chart-card { padding: 16px; border-radius: 18px; }
+            .chart-container { height: 280px; } /* 稍微降低手機圖表高度，更好滑動 */
+            
+            /* 4. 灰區電表抄錄部分間距同步拉開 */
+            .gray-section { padding: 16px; border-radius: 20px; margin-top: 30px; }
+        }
     </style>
 </head>
 <body>
@@ -182,7 +204,7 @@
         const urlAnnounce = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQkqhXCPp4XiHKCEpI3pz4pzcu3sQreQ_qNRLger00ULCHFr9cTbXHMQqAfk7dLa_gUBAIBSJ5sZM4F/pub?output=csv&gid=1058170538"; 
 
         let globalParsedData = []; 
-        let trendChartInstance = null; // 存放主圖表物件實例
+        let trendChartInstance = null; 
 
         async function startSystem() {
             await loadAnnouncements();
@@ -351,10 +373,8 @@
                     </div>
                 `;
 
-                // 產生主分析圖表 (預設為 line 模式)
                 renderMainChart('line', labels, eleChartData, waterChartData);
 
-                // 產生下方電表抄錄圖表
                 new Chart(document.getElementById('meterChart').getContext('2d'), {
                     type: 'line',
                     data: { labels: labels, datasets: [{ label: '全戶用電淨增加 (度)', data: meterDeltaTotal, borderColor: '#7e8794', backgroundColor: 'rgba(126, 135, 148, 0.04)', borderWidth: 2, pointBackgroundColor: '#626973', fill: true, tension: 0.2 }]},
@@ -366,10 +386,9 @@
             }
         }
 
-        // 💡【細節三：渲染與重構主圖表核心邏輯】
         function renderMainChart(type, labels, eleData, waterData) {
             const ctx = document.getElementById('trendChart').getContext('2d');
-            if(trendChartInstance) { trendChartInstance.destroy(); } // 銷毀舊圖表
+            if(trendChartInstance) { trendChartInstance.destroy(); } 
 
             if(type === 'line') {
                 trendChartInstance = new Chart(ctx, {
@@ -384,7 +403,6 @@
                     options: { responsive: true, maintainAspectRatio: false, scales: { y: { ticks: { callback: val => 'NT$ ' + val.toLocaleString() } } } }
                 });
             } else if (type === 'bar') {
-                // 📊 堆疊直條圖模式：讓水費電費疊加起來看總和變化
                 trendChartInstance = new Chart(ctx, {
                     type: 'bar',
                     data: {
@@ -406,7 +424,6 @@
             }
         }
 
-        // 💡【細節三：點擊開關時動態切換圖表模式】
         function switchChartMode(mode) {
             const btnLine = document.getElementById('btnLine');
             const btnBar = document.getElementById('btnBar');
@@ -417,7 +434,6 @@
                 btnBar.classList.add('active'); btnLine.classList.remove('active');
             }
 
-            // 重製抽取出資料重新渲染
             const labels = globalParsedData.map(d => d.month);
             const eleData = globalParsedData.map(d => d.eleTotal);
             const waterData = globalParsedData.map(d => d.water);
