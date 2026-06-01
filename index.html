@@ -9,83 +9,38 @@
         body {
             font-family: 'PingFang TC', 'SF Pro Display', 'Microsoft JhengHei', sans-serif;
             background: linear-gradient(135deg, #f3f4f9 0%, #e8ebf5 100%);
-            margin: 0;
-            padding: 0;
-            min-height: 100vh;
-            color: #2d3748;
+            margin: 0; padding: 0; min-height: 100vh; color: #2d3748;
         }
         .header-banner {
             background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
-            color: white;
-            padding: 40px 24px 60px 24px;
-            text-align: left;
+            color: white; padding: 40px 24px 60px 24px; text-align: left;
             box-shadow: 0 4px 20px rgba(79, 70, 229, 0.15);
         }
-        .header-container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        .header-banner h1 {
-            margin: 0;
-            font-size: 28px;
-            font-weight: 700;
-            letter-spacing: 1px;
-        }
-        .header-banner p {
-            margin: 8px 0 0 0;
-            opacity: 0.8;
-            font-size: 14px;
-        }
+        .header-container { max-width: 1200px; margin: 0 auto; }
+        .header-banner h1 { margin: 0; font-size: 28px; font-weight: 700; letter-spacing: 1px; }
+        .header-banner p { margin: 8px 0 0 0; opacity: 0.8; font-size: 14px; }
 
         /* 公告欄跑馬燈 */
         .marquee-wrapper {
-            background: #ffffff;
-            border-bottom: 1px solid #e2e8f0;
-            height: 44px;
-            overflow: hidden;
-            position: relative;
-            display: flex;
-            align-items: center;
+            background: #ffffff; border-bottom: 1px solid #e2e8f0; height: 44px;
+            overflow: hidden; position: relative; display: flex; align-items: center;
             box-shadow: 0 2px 8px rgba(0,0,0,0.04);
         }
         .marquee-title {
-            position: absolute;
-            left: 0; top: 0; bottom: 0;
-            background: #4a5568;
-            color: #ffffff;
-            padding: 0 16px;
-            font-size: 14px;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            z-index: 10;
+            position: absolute; left: 0; top: 0; bottom: 0; background: #4a5568;
+            color: #ffffff; padding: 0 16px; font-size: 14px; font-weight: 600;
+            display: flex; align-items: center; z-index: 10;
         }
         .marquee-content {
-            display: flex;
-            white-space: nowrap;
-            position: absolute;
-            left: 100%;
-            animation: marquee linear infinite;
-            padding-left: 20px;
+            display: flex; white-space: nowrap; position: absolute; left: 100%;
+            animation: marquee linear infinite; padding-left: 20px;
         }
         @keyframes marquee {
             0% { left: 100%; transform: translate3d(0,0,0); }
             100% { left: 0; transform: translate3d(-100%,0,0); }
         }
-        .announcement-item {
-            display: inline-flex;
-            align-items: center;
-            margin-right: 50px;
-            font-size: 14px;
-            font-weight: 500;
-        }
-        .badge {
-            padding: 2px 8px;
-            border-radius: 6px;
-            font-size: 11px;
-            font-weight: 700;
-            margin-right: 8px;
-        }
+        .announcement-item { display: inline-flex; align-items: center; margin-right: 50px; font-size: 14px; font-weight: 500; }
+        .badge { padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; margin-right: 8px; }
         .badge.緊急 { background: #ef4444; color: white; animation: pulse 1s infinite alternate; }
         .badge.重要 { background: #f97316; color: white; }
         .badge.普通 { background: #e2e8f0; color: #4a5568; }
@@ -94,123 +49,39 @@
         .text-普通 { color: #4a5568; }
         @keyframes pulse { 0% { opacity: 1; } 100% { opacity: 0.6; } }
 
-        .main-container {
-            max-width: 1200px;
-            margin: 0 auto 40px auto;
-            padding: 0 20px;
-            box-sizing: border-box;
-        }
+        .main-container { max-width: 1200px; margin: 0 auto 40px auto; padding: 0 20px; box-sizing: border-box; }
+        .spacer-top { margin-top: 40px; }
+        .section-title { font-size: 18px; font-weight: 600; margin: 35px 0 15px 0; color: #4a5568; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-bottom: 30px; }
         
-        .spacer-top {
-            margin-top: 40px;
-        }
-        .section-title {
-            font-size: 18px;
-            font-weight: 600;
-            margin: 35px 0 15px 0;
-            color: #4a5568;
-        }
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
         .stat-card {
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(10px);
-            border-radius: 24px;
-            padding: 24px;
-            box-shadow: 0 10px 25px rgba(160, 174, 192, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.6);
-            transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.3s ease;
-            position: relative;
-            cursor: pointer;
+            background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(10px); border-radius: 24px; padding: 24px;
+            box-shadow: 0 10px 25px rgba(160, 174, 192, 0.1); border: 1px solid rgba(255, 255, 255, 0.6);
+            transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.3s ease; position: relative; cursor: pointer;
         }
-        .stat-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 30px rgba(160, 174, 192, 0.2);
-        }
-        .stat-label {
-            font-size: 14px;
-            color: #718096;
-            margin-bottom: 8px;
-            font-weight: 500;
-        }
-        .stat-value {
-            font-size: 26px;
-            font-weight: 700;
-            color: #1a202c;
-        }
-        .stat-sub {
-            font-size: 12px;
-            color: #a0aec0;
-            margin-top: 6px;
-        }
-        .stat-card.highlight {
-            background: linear-gradient(135deg, #ffffff 0%, #f5f3ff 100%);
-            border: 1px solid rgba(124, 58, 237, 0.2);
-        }
-        .stat-card.highlight .stat-value {
-            color: #4f46e5;
-        }
-        .chart-card {
-            background: #ffffff;
-            border-radius: 24px;
-            padding: 24px;
-            box-shadow: 0 10px 25px rgba(160, 174, 192, 0.1);
-            margin-bottom: 30px;
-        }
-        .chart-container {
-            position: relative;
-            height: 350px;
-            width: 100%;
-        }
+        .stat-card:hover { transform: translateY(-5px); box-shadow: 0 15px 30px rgba(160, 174, 192, 0.2); }
+        .stat-label { font-size: 14px; color: #718096; margin-bottom: 8px; font-weight: 500; }
+        .stat-value { font-size: 26px; font-weight: 700; color: #1a202c; }
+        .stat-sub { font-size: 12px; color: #a0aec0; margin-top: 6px; }
+        .stat-card.highlight { background: linear-gradient(135deg, #ffffff 0%, #f5f3ff 100%); border: 1px solid rgba(124, 58, 237, 0.2); }
+        .stat-card.highlight .stat-value { color: #4f46e5; }
         
-        /* 灰色系歷月電表抄錄值專區 */
-        .gray-section {
-            background: #e4e7eb;
-            border-radius: 28px;
-            padding: 24px;
-            margin-top: 40px;
-            border: 1px solid #cbd5e1;
-        }
-        .gray-title {
-            color: #334155;
-            font-size: 17px;
-            font-weight: 600;
-            margin-bottom: 16px;
-        }
-        .gray-card {
-            background: #f8fafc;
-            border-radius: 20px;
-            padding: 20px;
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
-            border: 1px solid #e2e8f0;
-        }
+        .chart-card { background: #ffffff; border-radius: 24px; padding: 24px; box-shadow: 0 10px 25px rgba(160, 174, 192, 0.1); margin-bottom: 30px; }
+        .chart-container { position: relative; height: 350px; width: 100%; }
+        
+        .gray-section { background: #e4e7eb; border-radius: 28px; padding: 24px; margin-top: 40px; border: 1px solid #cbd5e1; }
+        .gray-title { color: #334155; font-size: 17px; font-weight: 600; margin-bottom: 16px; }
+        .gray-card { background: #f8fafc; border-radius: 20px; padding: 20px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02); border: 1px solid #e2e8f0; }
 
-        .rules-card {
-            background: #ffffff;
-            border-radius: 24px;
-            padding: 28px;
-            box-shadow: 0 10px 25px rgba(160, 174, 192, 0.1);
-            margin-bottom: 40px;
-        }
+        .rules-card { background: #ffffff; border-radius: 24px; padding: 28px; box-shadow: 0 10px 25px rgba(160, 174, 192, 0.1); margin-bottom: 40px; }
         .rules-list { margin: 0; padding-left: 20px; color: #4a5568; line-height: 1.8; }
         .rules-list li { margin-bottom: 10px; }
 
         /* 彈窗 UI */
         .modal-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.4);
-            backdrop-filter: blur(4px);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            opacity: 0; visibility: hidden;
-            transition: all 0.3s ease;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 1000;
+            opacity: 0; visibility: hidden; transition: all 0.3s ease;
         }
         .modal-overlay.active { opacity: 1; visibility: visible; }
         .modal-box {
@@ -229,7 +100,6 @@
         .modal-row.total-line { border-top: 1px dashed #e2e8f0; margin-top: 12px; padding-top: 12px; }
         .modal-row.total-line .modal-row-label { color: #2d3748; font-weight: 600; }
         .modal-row.total-line .modal-row-value { color: #4f46e5; font-size: 18px; font-weight: 700; }
-        .modal-subtext { font-size: 12px; color: #a0aec0; margin-top: 4px; font-weight: 400; line-height: 1.4; }
 
         .close-btn { background: #f3f4f9; color: #4a5568; border: none; width: 100%; padding: 14px; border-radius: 16px; font-weight: 600; margin-top: 20px; cursor: pointer; }
         .copyright { text-align: center; color: #a0aec0; font-size: 12px; padding-bottom: 30px; letter-spacing: 1px; }
@@ -278,9 +148,9 @@
     </div>
 
     <script>
-        // 🚀 精準修正為大寫 I 結尾的公開發布網址
-        const urlPrimary = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR6zS-Y6VdMAt732e7g11p60x_nS34r6-uorv9f-hK_MbyTclSqnG4I7bM3M98wL_8_23-5eA-v9I-I/pub?output=csv";
-        const urlAnnounce = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR6zS-Y6VdMAt732e7g11p60x_nS34r6-uorv9f-hK_MbyTclSqnG4I7bM3M98wL_8_23-5eA-v9I-I/pub?gid=1058170538&output=csv"; 
+        // 🚀【核心修正】這裡換成「發布到網路」所產生的真正公開 CSV 連結
+        const urlPrimary = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR6zS-Y6VdMAt732e7g11p60x_nS34r6-uorv9f-hK_MbyTclSqnG4I7bM3M98wL_8_23-5eA-v9I-I/pub?output=csv&gid=0";
+        const urlAnnounce = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR6zS-Y6VdMAt732e7g11p60x_nS34r6-uorv9f-hK_MbyTclSqnG4I7bM3M98wL_8_23-5eA-v9I-I/pub?output=csv&gid=1058170538"; 
 
         let globalParsedData = []; 
 
@@ -289,12 +159,11 @@
             await initDashboard();
         }
 
-        // 🟢 載入「公告欄」
         async function loadAnnouncements() {
             try {
                 const response = await fetch(urlAnnounce);
                 const text = await response.text();
-                if (text.includes("<!doctype html") || text.includes("<script")) return;
+                if (text.includes("<!doctype html") || text.includes("<script") || text.includes("login")) return;
 
                 const lines = text.replace(/\r/g, "").split("\n").map(l => l.trim()).filter(l => l);
                 if (lines.length < 2) return;
@@ -307,7 +176,7 @@
                     const content = cells[0];
                     const level = cells[1] || "普通";
 
-                    if (content && !content.includes("<!DOCTYPE") && !content.includes("function")) {
+                    if (content && !content.includes("<!DOCTYPE")) {
                         validCount++;
                         html += `
                             <div class="announcement-item text-${level}">
@@ -331,80 +200,49 @@
                 const response = await fetch(urlPrimary);
                 const csvText = await response.text();
                 
+                // 🛡️ 安全過濾器：如果拿到的是登入畫面 HTML，直接拋出錯誤引導使用者
+                if (csvText.includes("<!doctype html") || csvText.includes("<script") || csvText.includes("login") || csvText.includes("Google Accounts")) {
+                    throw new Error("試算表未正確發布至網路（抓到的是登入保護頁面），請確認是否選擇了『發布為 CSV 格式』。");
+                }
+
                 let cleanText = csvText.replace(/\r/g, "");
                 const lines = cleanText.split("\n").map(line => line.trim()).filter(line => line);
                 if(lines.length < 2) throw new Error("無足夠的資料列數");
 
-                // 指標索引完全精確配對
-                const monthIdx = 0; 
-                const waterIdx = 1;
-                const eleTotalIdx = 11; // L 欄「總金額」
+                const monthIdx = 0; const waterIdx = 1; const eleTotalIdx = 11;
                 const meterIdx = { "內大": 2, "內小": 3, "中": 4, "外": 5, "總和": 6 };
                 const roomIdx = { "內大": 12, "內小": 13, "中": 14, "外": 15 };
 
-                let totalWater = 0;
-                let totalElectricity = 0;
-                let historyTotal = 0;
-                
-                const labels = [];
-                const waterChartData = [];
-                const eleChartData = [];
-                const meterLabels = [];
-                const meterDataTotal = [];
-
+                let totalWater = 0; let totalElectricity = 0; let historyTotal = 0;
+                const labels = []; const waterChartData = []; const eleChartData = [];
+                const meterLabels = []; const meterDataTotal = [];
                 globalParsedData = [];
 
                 for(let i = 1; i < lines.length; i++) {
                     const cells = lines[i].split(",").map(c => c.replace(/["'\uFEFF]/g, '').trim());
-                    
-                    if(cells.length < 7 || !cells[monthIdx] || cells[monthIdx].includes("基準") || cells[monthIdx].includes("function") || cells[monthIdx].includes("<script")) {
-                        continue;
-                    }
+                    if(cells.length < 7 || !cells[monthIdx] || cells[monthIdx].includes("基準") || cells[monthIdx].includes("<script")) continue;
 
                     const monthVal = cells[monthIdx];
                     const waterVal = parseFloat(cells[waterIdx]) || 0;
                     const eleTotalVal = parseFloat(cells[eleTotalIdx]) || 0; 
                     const combinedSum = waterVal + eleTotalVal;
 
-                    totalWater += waterVal;
-                    totalElectricity += eleTotalVal;
-                    historyTotal += combinedSum;
-
-                    labels.push(monthVal);
-                    waterChartData.push(waterVal);
-                    eleChartData.push(eleTotalVal);
-
-                    meterLabels.push(monthVal);
-                    meterDataTotal.push(parseFloat(cells[meterIdx["總和"]]) || 0);
+                    totalWater += waterVal; totalElectricity += eleTotalVal; historyTotal += combinedSum;
+                    labels.push(monthVal); waterChartData.push(waterVal); eleChartData.push(eleTotalVal);
+                    meterLabels.push(monthVal); meterDataTotal.push(parseFloat(cells[meterIdx["總和"]]) || 0);
 
                     const waterPerPerson = Math.floor(waterVal / 4);
                     const waterImpute = waterVal - (waterPerPerson * 4);
 
                     globalParsedData.push({
-                        month: monthVal,
-                        water: waterVal,
-                        waterPerPerson: waterPerPerson,
-                        waterImpute: waterImpute,
-                        eleTotal: eleTotalVal,
-                        total: combinedSum,
-                        meters: {
-                            "內大": parseFloat(cells[meterIdx["內大"]]) || 0,
-                            "內小": parseFloat(cells[meterIdx["內小"]]) || 0,
-                            "中": parseFloat(cells[meterIdx["中"]]) || 0,
-                            "外": parseFloat(cells[meterIdx["外"]]) || 0,
-                            "總和": parseFloat(cells[meterIdx["總和"]]) || 0
-                        },
-                        rooms: {
-                            "內大": parseFloat(cells[roomIdx["內大"]]) || 0,
-                            "內小": parseFloat(cells[roomIdx["內小"]]) || 0,
-                            "中": parseFloat(cells[roomIdx["中"]]) || 0,
-                            "外": parseFloat(cells[roomIdx["外"]]) || 0
-                        }
+                        month: monthVal, water: waterVal, waterPerPerson: waterPerPerson, waterImpute: waterImpute,
+                        eleTotal: eleTotalVal, total: combinedSum,
+                        meters: { "內大": parseFloat(cells[meterIdx["內大"]]) || 0, "內小": parseFloat(cells[meterIdx["內小"]]) || 0, "中": parseFloat(cells[meterIdx["中"]]) || 0, "外": parseFloat(cells[meterIdx["外"]]) || 0, "總和": parseFloat(cells[meterIdx["總和"]]) || 0 },
+                        rooms: { "內大": parseFloat(cells[roomIdx["內大"]]) || 0, "內小": parseFloat(cells[roomIdx["內小"]]) || 0, "中": parseFloat(cells[roomIdx["中"]]) || 0, "外": parseFloat(cells[roomIdx["外"]]) || 0 }
                     });
                 }
 
                 if (globalParsedData.length === 0) throw new Error("無效的月份數據，請確認試算表格式");
-
                 const latest = globalParsedData[globalParsedData.length - 1];
                 const container = document.getElementById('mainContent');
                 
@@ -448,11 +286,7 @@
                     </div>
 
                     <div class="section-title">歷年費用趨勢折線圖</div>
-                    <div class="chart-card">
-                        <div class="chart-container">
-                            <canvas id="trendChart"></canvas>
-                        </div>
-                    </div>
+                    <div class="chart-card"><div class="chart-container"><canvas id="trendChart"></canvas></div></div>
 
                     <div class="gray-section">
                         <div class="gray-title">⚙️ 歷月電表抄錄底數觀測區</div>
@@ -463,47 +297,23 @@
                                 <div class="stat-sub" style="color: #94a3b8;">點擊展開各房完整電表底數紀錄</div>
                             </div>
                         </div>
-                        <div class="chart-card" style="background: #f1f5f9; border-color: #cbd5e1;">
-                            <div class="chart-container" style="height: 220px;">
-                                <canvas id="meterChart"></canvas>
-                            </div>
-                        </div>
+                        <div class="chart-card" style="background: #f1f5f9; border-color: #cbd5e1;"><div class="chart-container" style="height: 220px;"><canvas id="meterChart"></canvas></div></div>
                     </div>
                 `;
 
-                // 費用圖表
-                const ctx = document.getElementById('trendChart').getContext('2d');
-                new Chart(ctx, {
+                new Chart(document.getElementById('trendChart').getContext('2d'), {
                     type: 'line',
-                    data: {
-                        labels: labels,
-                        datasets: [
-                            { label: '電費總計', data: eleChartData, borderColor: '#e11d48', backgroundColor: 'transparent', borderWidth: 3, pointBackgroundColor: '#e11d48', tension: 0.3 },
-                            { label: '水費總計', data: waterChartData, borderColor: '#0284c7', backgroundColor: 'transparent', borderWidth: 3, pointBackgroundColor: '#0284c7', tension: 0.3 }
-                        ]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: { legend: { display: true, position: 'top' } },
-                        scales: { y: { ticks: { callback: function(val) { return 'NT$ ' + val.toLocaleString(); } } }, x: { grid: { display: false } } }
-                    }
+                    data: { labels: labels, datasets: [
+                        { label: '電費總計', data: eleChartData, borderColor: '#e11d48', backgroundColor: 'transparent', borderWidth: 3, pointBackgroundColor: '#e11d48', tension: 0.3 },
+                        { label: '水費總計', data: waterChartData, borderColor: '#0284c7', backgroundColor: 'transparent', borderWidth: 3, pointBackgroundColor: '#0284c7', tension: 0.3 }
+                    ]},
+                    options: { responsive: true, maintainAspectRatio: false, scales: { y: { ticks: { callback: val => 'NT$ ' + val.toLocaleString() } } } }
                 });
 
-                // 灰色度數圖表
-                const mCtx = document.getElementById('meterChart').getContext('2d');
-                new Chart(mCtx, {
+                new Chart(document.getElementById('meterChart').getContext('2d'), {
                     type: 'line',
-                    data: {
-                        labels: meterLabels,
-                        datasets: [{ label: '總電表讀數 (度)', data: meterDataTotal, borderColor: '#64748b', backgroundColor: 'rgba(100, 116, 139, 0.05)', borderWidth: 2, pointBackgroundColor: '#475569', fill: true, tension: 0.2 }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: { legend: { display: false } },
-                        scales: { y: { grid: { color: '#e2e8f0' }, ticks: { callback: function(val) { return val + ' 度'; } } }, x: { grid: { display: false } } }
-                    }
+                    data: { labels: meterLabels, datasets: [{ label: '總電表讀數 (度)', data: meterDataTotal, borderColor: '#64748b', backgroundColor: 'rgba(100, 116, 139, 0.05)', borderWidth: 2, pointBackgroundColor: '#475569', fill: true, tension: 0.2 }]},
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { ticks: { callback: val => val + ' 度' } } } }
                 });
 
             } catch (error) {
@@ -511,7 +321,6 @@
             }
         }
 
-        // 彈窗
         function openRoomDetails(type) {
             const overlay = document.getElementById('detailModal');
             const title = document.getElementById('modalTitle');
@@ -572,9 +381,7 @@
             overlay.classList.add('active');
         }
 
-        function closeModal() {
-            document.getElementById('detailModal').classList.remove('active');
-        }
+        function closeModal() { document.getElementById('detailModal').classList.remove('active'); }
 
         function showError(msg) {
             document.getElementById('mainContent').innerHTML = `
