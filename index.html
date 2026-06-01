@@ -100,6 +100,9 @@
         .modal-row.total-line { border-top: 1px dashed #e2e8f0; margin-top: 12px; padding-top: 12px; }
         .modal-row.total-line .modal-row-label { color: #2d3748; font-weight: 600; }
         .modal-row.total-line .modal-row-value { color: #4f46e5; font-size: 18px; font-weight: 700; }
+        
+        /* 挹注金額專用弱化附註樣式 */
+        .water-impute-note { font-size: 12px; color: #16a34a; opacity: 0.75; font-weight: 400; text-align: right; margin-top: 4px; }
 
         .close-btn { background: #f3f4f9; color: #4a5568; border: none; width: 100%; padding: 14px; border-radius: 16px; font-weight: 600; margin-top: 20px; cursor: pointer; }
         .copyright { text-align: center; color: #a0aec0; font-size: 12px; padding-bottom: 30px; letter-spacing: 1px; }
@@ -148,9 +151,9 @@
     </div>
 
     <script>
-        // 🔒【終極強制修正】直接將你提供的金鑰代入並強制轉為公開 CSV 讀取路徑
+        // 固定使用你取得的正確 CSV 發布網址
         const urlPrimary = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQkqhXCPp4XiHKCEpI3pz4pzcu3sQreQ_qNRLger00ULCHFr9cTbXHMQqAfk7dLa_gUBAIBSJ5sZM4F/pub?output=csv&gid=0";
-const urlAnnounce = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQkqhXCPp4XiHKCEpI3pz4pzcu3sQreQ_qNRLger00ULCHFr9cTbXHMQqAfk7dLa_gUBAIBSJ5sZM4F/pub?output=csv&gid=1058170538";
+        const urlAnnounce = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQkqhXCPp4XiHKCEpI3pz4pzcu3sQreQ_qNRLger00ULCHFr9cTbXHMQqAfk7dLa_gUBAIBSJ5sZM4F/pub?output=csv&gid=1058170538"; 
 
         let globalParsedData = []; 
 
@@ -201,7 +204,7 @@ const urlAnnounce = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQkqhXCPp4X
                 const csvText = await response.text();
                 
                 if (csvText.includes("<!doctype html") || csvText.includes("<script") || csvText.includes("login") || csvText.includes("Google Accounts")) {
-                    throw new Error("試算表後台尚未將發布類型正確轉換。請到試算表『共用』>『發布到網路』，在點擊發布按鈕上方的選單中，確認將『網頁』改成『逗號分隔值(.csv)』後關閉視窗。");
+                    throw new Error("試算表讀取權限異常，請確認試算表是否有維持發布狀態。");
                 }
 
                 let cleanText = csvText.replace(/\r/g, "");
@@ -214,8 +217,11 @@ const urlAnnounce = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQkqhXCPp4X
 
                 let totalWater = 0; let totalElectricity = 0; let historyTotal = 0;
                 const labels = []; const waterChartData = []; const eleChartData = [];
-                const meterLabels = []; const meterDataTotal = [];
+                const meterLabels = []; const meterDeltaTotal = [];
                 globalParsedData = [];
+
+                // 為了算底數差值，我們需要留存「上一列」的底數資料做相減
+                let prevMeters = null;
 
                 for(let i = 1; i < lines.length; i++) {
                     const cells = lines[i].split(",").map(c => c.replace(/["'\uFEFF]/g, '').trim());
@@ -226,9 +232,36 @@ const urlAnnounce = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQkqhXCPp4X
                     const eleTotalVal = parseFloat(cells[eleTotalIdx]) || 0; 
                     const combinedSum = waterVal + eleTotalVal;
 
+                    // 當期累積底數現值
+                    const currMeters = {
+                        "內大": parseFloat(cells[meterIdx["內大"]]) || 0,
+                        "內小": parseFloat(cells[meterIdx["內小"]]) || 0,
+                        "中": parseFloat(cells[meterIdx["中"]]) || 0,
+                        "外": parseFloat(cells[meterIdx["外"]]) || 0,
+                        "總和": parseFloat(cells[meterIdx["總和"]]) || 0
+                    };
+
+                    // 🛠️【核心修正五】非歸零，計算電表「差值度數」（當月消耗度數）
+                    let deltaMeters = { "內大": 0, "內小": 0, "中": 0, "外": 0, "總和": 0 };
+                    if (prevMeters !== null) {
+                        deltaMeters["內大"] = Math.max(0, Number((currMeters["內大"] - prevMeters["內大"]).toFixed(2)));
+                        deltaMeters["內小"] = Math.max(0, Number((currMeters["內小"] - prevMeters["內小"]).toFixed(2)));
+                        deltaMeters["中"] = Math.max(0, Number((currMeters["中"] - prevMeters["中"]).toFixed(2)));
+                        deltaMeters["外"] = Math.max(0, Number((currMeters["外"] - prevMeters["外"]).toFixed(2)));
+                        deltaMeters["總和"] = Math.max(0, Number((currMeters["總和"] - prevMeters["總和"]).toFixed(2)));
+                    } else {
+                        // 如果是第一筆資料（無上月紀錄可減），改從試算表本身 L 欄後的用電度數估算，或預設帶 0
+                        deltaMeters["總和"] = 0; 
+                    }
+
                     totalWater += waterVal; totalElectricity += eleTotalVal; historyTotal += combinedSum;
                     labels.push(monthVal); waterChartData.push(waterVal); eleChartData.push(eleTotalVal);
-                    meterLabels.push(monthVal); meterDataTotal.push(parseFloat(cells[meterIdx["總和"]]) || 0);
+                    
+                    // 只有在有前月差值時，才把月份和用電差值推進去圖表
+                    if (prevMeters !== null) {
+                        meterLabels.push(monthVal);
+                        meterDeltaTotal.push(deltaMeters["總和"]);
+                    }
 
                     const waterPerPerson = Math.floor(waterVal / 4);
                     const waterImpute = waterVal - (waterPerPerson * 4);
@@ -236,9 +269,13 @@ const urlAnnounce = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQkqhXCPp4X
                     globalParsedData.push({
                         month: monthVal, water: waterVal, waterPerPerson: waterPerPerson, waterImpute: waterImpute,
                         eleTotal: eleTotalVal, total: combinedSum,
-                        meters: { "內大": parseFloat(cells[meterIdx["內大"]]) || 0, "內小": parseFloat(cells[meterIdx["內小"]]) || 0, "中": parseFloat(cells[meterIdx["中"]]) || 0, "外": parseFloat(cells[meterIdx["外"]]) || 0, "總和": parseFloat(cells[meterIdx["總和"]]) || 0 },
+                        hasPrev: (prevMeters !== null),
+                        deltaMeters: deltaMeters,
                         rooms: { "內大": parseFloat(cells[roomIdx["內大"]]) || 0, "內小": parseFloat(cells[roomIdx["內小"]]) || 0, "中": parseFloat(cells[roomIdx["中"]]) || 0, "外": parseFloat(cells[roomIdx["外"]]) || 0 }
                     });
+
+                    // 記錄下這一輪的底數，供下一輪相減
+                    prevMeters = currMeters;
                 }
 
                 if (globalParsedData.length === 0) throw new Error("無效的月份數據，請確認試算表格式");
@@ -249,14 +286,14 @@ const urlAnnounce = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQkqhXCPp4X
                     <div class="section-title spacer-top">當月費用摘要 (${latest.month})</div>
                     <div class="stats-grid">
                         <div class="stat-card" onclick="openRoomDetails('ele')">
-                            <div class="stat-label">當月電費 (點擊看房間明細)</div>
+                            <div class="stat-label">當月電費 (點擊看歷月總額)</div>
                             <div class="stat-value">NT$ ${latest.eleTotal.toLocaleString()}</div>
                             <div class="stat-sub">已同步完成公共基金分攤計算</div>
                         </div>
                         <div class="stat-card" onclick="openRoomDetails('water')">
-                            <div class="stat-label">當月水費 (點擊看均分與歷史)</div>
+                            <div class="stat-label">當月水費 (點擊看歷月總額)</div>
                             <div class="stat-value">NT$ ${latest.water.toLocaleString()}</div>
-                            <div class="stat-sub">每房均分：NT$ ${latest.waterPerPerson} (公基金挹注 NT$ ${latest.waterImpute})</div>
+                            <div class="stat-sub">每房均分：NT$ ${latest.waterPerPerson} <span style="color:#16a34a; opacity:0.8; font-size:11px;">(附註：公基金已自動挹注 NT$ ${latest.waterImpute})</span></div>
                         </div>
                         <div class="stat-card highlight" onclick="openRoomDetails('summary')">
                             <div class="stat-label">當月總和 (點擊看小計摘要)</div>
@@ -270,7 +307,7 @@ const urlAnnounce = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQkqhXCPp4X
                         <div class="stat-card" onclick="openRoomDetails('ele')">
                             <div class="stat-label">歷年電費總計</div>
                             <div class="stat-value" style="color: #e11d48;">NT$ ${totalElectricity.toLocaleString()}</div>
-                            <div class="stat-sub">查看歷月各房間帳單明細</div>
+                            <div class="stat-sub">查看歷月電費帳單總額紀錄</div>
                         </div>
                         <div class="stat-card" onclick="openRoomDetails('water')">
                             <div class="stat-label">歷年水費總計</div>
@@ -288,12 +325,12 @@ const urlAnnounce = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQkqhXCPp4X
                     <div class="chart-card"><div class="chart-container"><canvas id="trendChart"></canvas></div></div>
 
                     <div class="gray-section">
-                        <div class="gray-title">⚙️ 歷月電表抄錄底數觀測區</div>
+                        <div class="gray-title">⚙️ 歷月電表抄錄</div>
                         <div class="stats-grid">
                             <div class="stat-card gray-card" onclick="openRoomDetails('meter')">
-                                <div class="stat-label" style="color: #64748b;">當月抄錄總值 (${latest.month})</div>
-                                <div class="stat-value" style="color: #475569;">${latest.meters["總和"]} 度</div>
-                                <div class="stat-sub" style="color: #94a3b8;">點擊展開各房完整電表底數紀錄</div>
+                                <div class="stat-label" style="color: #64748b;">當月消耗用電總值 (${latest.month})</div>
+                                <div class="stat-value" style="color: #475569;">${latest.deltaMeters["總和"]} 度</div>
+                                <div class="stat-sub" style="color: #94a3b8;">點擊展開各房當月實際用電「差值度數」</div>
                             </div>
                         </div>
                         <div class="chart-card" style="background: #f1f5f9; border-color: #cbd5e1;"><div class="chart-container" style="height: 220px;"><canvas id="meterChart"></canvas></div></div>
@@ -311,7 +348,7 @@ const urlAnnounce = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQkqhXCPp4X
 
                 new Chart(document.getElementById('meterChart').getContext('2d'), {
                     type: 'line',
-                    data: { labels: meterLabels, datasets: [{ label: '總電表讀數 (度)', data: meterDataTotal, borderColor: '#64748b', backgroundColor: 'rgba(100, 116, 139, 0.05)', borderWidth: 2, pointBackgroundColor: '#475569', fill: true, tension: 0.2 }]},
+                    data: { labels: meterLabels, datasets: [{ label: '全戶實際用電差值 (度)', data: meterDeltaTotal, borderColor: '#64748b', backgroundColor: 'rgba(100, 116, 139, 0.05)', borderWidth: 2, pointBackgroundColor: '#475569', fill: true, tension: 0.2 }]},
                     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { ticks: { callback: val => val + ' 度' } } } }
                 });
 
@@ -327,27 +364,25 @@ const urlAnnounce = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQkqhXCPp4X
             let htmlContent = "";
 
             if (type === 'ele') {
-                title.innerText = "電費房間明細";
+                // 🛠️【核心修正二】只顯示歷月電費總額即可，不拆分房間
+                title.innerText = "歷月電費總額紀錄";
                 globalParsedData.forEach(item => {
                     htmlContent += `
                         <div class="modal-item-block">
                             <div class="modal-month-title">${item.month}</div>
-                            <div class="modal-row"><span class="modal-row-label">內大</span><span class="modal-row-value">NT$ ${item.rooms["內大"].toLocaleString()}</span></div>
-                            <div class="modal-row"><span class="modal-row-label">內小</span><span class="modal-row-value">NT$ ${item.rooms["內小"].toLocaleString()}</span></div>
-                            <div class="modal-row"><span class="modal-row-label">中房間</span><span class="modal-row-value">NT$ ${item.rooms["中"].toLocaleString()}</span></div>
-                            <div class="modal-row"><span class="modal-row-label">外房間</span><span class="modal-row-value">NT$ ${item.rooms["外"].toLocaleString()}</span></div>
-                            <div class="modal-row total-line"><span class="modal-row-label">總電費金額</span><span class="modal-row-value">NT$ ${item.eleTotal.toLocaleString()}</span></div>
+                            <div class="modal-row total-line" style="border-top:none; margin-top:0; padding-top:0;"><span class="modal-row-label">當月電費總金額</span><span class="modal-row-value" style="color:#e11d48;">NT$ ${item.eleTotal.toLocaleString()}</span></div>
                         </div>`;
                 });
             } else if (type === 'water') {
-                title.innerText = "歷年水費均分明細";
+                // 🛠️【核心修正一、三】只顯示歷月水費總額與均分，且弱化挹注金額為附註
+                title.innerText = "歷月水費明細紀錄";
                 globalParsedData.forEach(item => {
                     htmlContent += `
                         <div class="modal-item-block">
                             <div class="modal-month-title">${item.month}</div>
                             <div class="modal-row"><span class="modal-row-label">全戶總水費</span><span class="modal-row-value">NT$ ${item.water.toLocaleString()}</span></div>
-                            <div class="modal-row"><span class="modal-row-label">每房實付 (除4直接捨去)</span><span class="modal-row-value" style="color:#16a34a;">NT$ ${item.waterPerPerson}</span></div>
-                            <div class="modal-row total-line"><span class="modal-row-label">公基金挹注額</span><span class="modal-row-value" style="color:#dc2626;">NT$ ${item.waterImpute}</span></div>
+                            <div class="modal-row"><span class="modal-row-label">每房實付 (均分)</span><span class="modal-row-value">NT$ ${item.waterPerPerson}</span></div>
+                            <div class="water-impute-note">* 餘數 NT$ ${item.waterImpute} 已由公共基金自動挹注分攤</div>
                         </div>`;
                 });
             } else if (type === 'summary') {
@@ -362,17 +397,26 @@ const urlAnnounce = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQkqhXCPp4X
                         </div>`;
                 });
             } else if (type === 'meter') {
-                title.innerText = "歷月歷史電表底數紀錄";
+                // 🛠️【核心修正五】彈窗顯示各房「本月實際用電差值度數」，排除非歸零的現值誤導
+                title.innerText = "歷月用電差值紀錄 (度)";
                 globalParsedData.forEach(item => {
-                    htmlContent += `
-                        <div class="modal-item-block" style="background:#f8fafc; padding:12px; border-radius:12px; margin-bottom:10px;">
-                            <div class="modal-month-title" style="color:#475569;">${item.month} 抄錄值</div>
-                            <div class="modal-row"><span class="modal-row-label">內大電表</span><span class="modal-row-value">${item.meters["內大"]} 度</span></div>
-                            <div class="modal-row"><span class="modal-row-label">內小電表</span><span class="modal-row-value">${item.meters["內小"]} 度</span></div>
-                            <div class="modal-row"><span class="modal-row-label">中房間電表</span><span class="modal-row-value">${item.meters["中"]} 度</span></div>
-                            <div class="modal-row"><span class="modal-row-label">外房間電表</span><span class="modal-row-value">${item.meters["外"]} 度</span></div>
-                            <div class="modal-row total-line" style="border-color:#cbd5e1;"><span class="modal-row-label" style="color:#334155;">總和底數</span><span class="modal-row-value" style="color:#334155;">${item.meters["總和"]} 度</span></div>
-                        </div>`;
+                    if(!item.hasPrev) {
+                        htmlContent += `
+                            <div class="modal-item-block" style="background:#f8fafc; padding:12px; border-radius:12px; margin-bottom:10px;">
+                                <div class="modal-month-title" style="color:#94a3b8;">${item.month}</div>
+                                <div style="font-size:13px; color:#94a3b8; text-align:center;">此月份為初始入住基準，無上月底數可對比。</div>
+                            </div>`;
+                    } else {
+                        htmlContent += `
+                            <div class="modal-item-block" style="background:#f8fafc; padding:12px; border-radius:12px; margin-bottom:10px;">
+                                <div class="modal-month-title" style="color:#475569;">${item.month} 實際消耗</div>
+                                <div class="modal-row"><span class="modal-row-label">內大房間</span><span class="modal-row-value">${item.deltaMeters["內大"]} 度</span></div>
+                                <div class="modal-row"><span class="modal-row-label">內小房間</span><span class="modal-row-value">${item.deltaMeters["內小"]} 度</span></div>
+                                <div class="modal-row"><span class="modal-row-label">中房間</span><span class="modal-row-value">${item.deltaMeters["中"]} 度</span></div>
+                                <div class="modal-row"><span class="modal-row-label">外房間</span><span class="modal-row-value">${item.deltaMeters["外"]} 度</span></div>
+                                <div class="modal-row total-line" style="border-color:#cbd5e1;"><span class="modal-row-label" style="color:#334155;">全戶用電淨增加</span><span class="modal-row-value" style="color:#4f46e5;">${item.deltaMeters["總和"]} 度</span></div>
+                            </div>`;
+                    }
                 });
             }
 
