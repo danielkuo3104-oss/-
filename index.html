@@ -36,16 +36,86 @@
             opacity: 0.8;
             font-size: 14px;
         }
+
+        /* 📣 全新多等級跑馬燈公告欄 */
+        .marquee-wrapper {
+            background: #ffffff;
+            border-bottom: 1px solid #e2e8f0;
+            height: 44px;
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+        .marquee-title {
+            position: absolute;
+            left: 0; top: 0; bottom: 0;
+            background: #4a5568;
+            color: #ffffff;
+            padding: 0 16px;
+            font-size: 14px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            z-index: 10;
+        }
+        .marquee-content {
+            display: flex;
+            white-space: nowrap;
+            position: absolute;
+            left: 100%;
+            animation: marquee linear infinite;
+            padding-left: 20px;
+        }
+        @keyframes marquee {
+            0% { left: 100%; transform: translate3d(0,0,0); }
+            100% { left: 0; transform: translate3d(-100%,0,0); }
+        }
+        .announcement-item {
+            display: inline-flex;
+            align-items: center;
+            margin-right: 50px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .badge {
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            margin-right: 8px;
+            text-transform: uppercase;
+        }
+        .badge.緊急 {
+            background: #ef4444; color: white;
+            animation: pulse 1s infinite alternate;
+        }
+        .badge.重要 { background: #f97316; color: white; }
+        .badge.普通 { background: #e2e8f0; color: #4a5568; }
+        .text-緊急 { color: #dc2626; font-weight: 700; }
+        .text-重要 { color: #ea580c; }
+        .text-普通 { color: #4a5568; }
+        @keyframes pulse {
+            0% { opacity: 1; } 100% { opacity: 0.6; }
+        }
+
         .main-container {
             max-width: 1200px;
-            margin: -30px auto 40px auto;
+            margin: 0 auto 40px auto;
             padding: 0 20px;
             box-sizing: border-box;
         }
+        
+        /* 💡 修正細節：讓當月摘要區塊與上方標題間隔拉大 */
+        .spacer-top {
+            margin-top: 40px;
+        }
+
         .section-title {
             font-size: 18px;
             font-weight: 600;
-            margin: 30px 0 15px 0;
+            margin: 35px 0 15px 0;
             color: #4a5568;
         }
         .stats-grid {
@@ -105,7 +175,28 @@
             width: 100%;
         }
         
-        /* 宿舍規範區塊 */
+        /* 🔘 全新灰色系歷月電表抄錄值專區 */
+        .gray-section {
+            background: #e4e7eb;
+            border-radius: 28px;
+            padding: 24px;
+            margin-top: 40px;
+            border: 1px solid #cbd5e1;
+        }
+        .gray-title {
+            color: #334155;
+            font-size: 17px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+        .gray-card {
+            background: #f8fafc;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+            border: 1px solid #e2e8f0;
+        }
+
         .rules-card {
             background: #ffffff;
             border-radius: 24px;
@@ -114,16 +205,11 @@
             margin-bottom: 40px;
         }
         .rules-list {
-            margin: 0;
-            padding-left: 20px;
-            color: #4a5568;
-            line-height: 1.8;
+            margin: 0; padding-left: 20px; color: #4a5568; line-height: 1.8;
         }
-        .rules-list li {
-            margin-bottom: 10px;
-        }
+        .rules-list li { margin-bottom: 10px; }
 
-        /* 彈窗 UI 復刻第二張圖 */
+        /* 彈窗 UI */
         .modal-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -136,101 +222,35 @@
             opacity: 0; visibility: hidden;
             transition: all 0.3s ease;
         }
-        .modal-overlay.active {
-            opacity: 1; visibility: visible;
-        }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
         .modal-box {
-            background: #ffffff;
-            width: 90%;
-            max-width: 400px;
-            border-radius: 32px;
-            padding: 32px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.15);
-            transform: translateY(30px);
-            transition: transform 0.3s ease;
-            max-height: 80vh;
-            overflow-y: auto;
+            background: #ffffff; width: 90%; max-width: 420px; border-radius: 32px; padding: 32px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.15); transform: translateY(30px);
+            transition: transform 0.3s ease; max-height: 80vh; overflow-y: auto;
         }
-        .modal-overlay.active .modal-box {
-            transform: translateY(0);
+        .modal-overlay.active .modal-box { transform: translateY(0); }
+        .modal-title { font-size: 24px; font-weight: 700; color: #4f46e5; margin-bottom: 24px; }
+        .modal-item-block { border-bottom: 1px solid #edf2f7; padding: 16px 0; }
+        .modal-item-block:last-child { border-bottom: none; }
+        .modal-month-title { font-size: 18px; font-weight: 700; color: #4f46e5; margin-bottom: 12px; }
+        .modal-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 15px; }
+        .modal-row-label { color: #718096; font-weight: 500; }
+        .modal-row-value { color: #2d3748; font-weight: 600; }
+        .modal-row.total-line { border-top: 1px dashed #e2e8f0; margin-top: 12px; padding-top: 12px; }
+        .modal-row.total-line .modal-row-label { color: #2d3748; font-weight: 600; }
+        .modal-row.total-line .modal-row-value { color: #4f46e5; font-size: 18px; font-weight: 700; }
+        
+        /* 彈窗內備註小字 */
+        .modal-subtext {
+            font-size: 12px; color: #a0aec0; margin-top: 4px; font-weight: 400; line-height: 1.4;
         }
-        .modal-title {
-            font-size: 24px;
-            font-weight: 700;
-            color: #4f46e5;
-            margin-bottom: 24px;
-        }
-        .modal-item-block {
-            border-bottom: 1px solid #edf2f7;
-            padding: 16px 0;
-        }
-        .modal-item-block:last-child {
-            border-bottom: none;
-        }
-        .modal-month-title {
-            font-size: 18px;
-            font-weight: 700;
-            color: #4f46e5;
-            margin-bottom: 12px;
-        }
-        .modal-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 8px;
-            font-size: 15px;
-        }
-        .modal-row-label {
-            color: #718096;
-            font-weight: 500;
-        }
-        .modal-row-value {
-            color: #2d3748;
-            font-weight: 600;
-        }
-        .modal-row.total-line {
-            border-top: 1px dashed #e2e8f0;
-            margin-top: 12px;
-            padding-top: 12px;
-        }
-        .modal-row.total-line .modal-row-label {
-            color: #2d3748;
-            font-weight: 600;
-        }
-        .modal-row.total-line .modal-row-value {
-            color: #4f46e5;
-            font-size: 18px;
-            font-weight: 700;
-        }
+
         .close-btn {
-            background: #f3f4f9;
-            color: #4a5568;
-            border: none;
-            width: 100%;
-            padding: 14px;
-            border-radius: 16px;
-            font-weight: 600;
-            margin-top: 20px;
-            cursor: pointer;
-            transition: background 0.2s;
+            background: #f3f4f9; color: #4a5568; border: none; width: 100%; padding: 14px;
+            border-radius: 16px; font-weight: 600; margin-top: 20px; cursor: pointer;
         }
-        .close-btn:hover {
-            background: #e2e8f0;
-        }
-        .copyright {
-            text-align: center;
-            color: #a0aec0;
-            font-size: 12px;
-            padding-bottom: 30px;
-            letter-spacing: 1px;
-        }
-        .loading {
-            text-align: center;
-            padding: 40px;
-            font-size: 16px;
-            color: #7c3aed;
-            font-weight: 500;
-        }
+        .copyright { text-align: center; color: #a0aec0; font-size: 12px; padding-bottom: 30px; letter-spacing: 1px; }
+        .loading { text-align: center; padding: 40px; font-size: 16px; color: #7c3aed; font-weight: 500; }
     </style>
 </head>
 <body>
@@ -242,11 +262,18 @@
         </div>
     </div>
 
-    <div class="main-container" id="mainContent">
-        <div class="loading">智慧讀取雲端試算表資料中...</div>
+    <!-- 📣 頂部動態跑馬燈公告欄 -->
+    <div class="marquee-wrapper" id="marqueeBar" style="display:none;">
+        <div class="marquee-title">公告欄</div>
+        <div class="marquee-content" id="marqueeContent"></div>
+    </div>
+
+    <div class="main-container id="mainContentBlock">
+        <div id="mainContent">
+            <div class="loading">智慧讀取雲端試算表資料中...</div>
+        </div>
     </div>
     
-    <!-- 宿舍規範區塊 -->
     <div class="main-container">
         <div class="section-title">宿舍規範</div>
         <div class="rules-card">
@@ -260,7 +287,7 @@
         <div class="copyright">© 2026 GUO DANIEL. ALL RIGHTS RESERVED.</div>
     </div>
 
-    <!-- 彈窗組件 -->
+    <!-- 彈窗 -->
     <div class="modal-overlay" id="detailModal" onclick="closeModal(event)">
         <div class="modal-box" onclick="event.stopPropagation()">
             <div class="modal-title" id="modalTitle">明細摘要</div>
@@ -270,60 +297,98 @@
     </div>
 
     <script>
+        // 水電費主表數據通道
         const urlPrimary = "https://docs.google.com/spreadsheets/d/1-vQkqhXCPp4XiHKCEpI3pz4pzcu3sQreQ_qNRLger00ULCHFr9cTbXHMQqAfk7dLa_gUBAIBSJ5sZM4F/gviz/tq?tqx=out:csv";
-        const urlBackup = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQkqhXCPp4XiHKCEpI3pz4pzcu3sQreQ_qNRLger00ULCHFr9cTbXHMQqAfk7dLa_gUBAIBSJ5sZM4F/pub?output=csv";
+        // 公告欄活頁簿專用通道 (帶入 tq?gid=0 的變形抓取，此處使用單獨格式或串接)
+        const urlAnnounce = "https://docs.google.com/spreadsheets/d/1-vQkqhXCPp4XiHKCEpI3pz4pzcu3sQreQ_qNRLger00ULCHFr9cTbXHMQqAfk7dLa_gUBAIBSJ5sZM4F/gviz/tq?sheet=%E5%85%AC%E5%91%8A%E6%AC%84&tqx=out:csv";
 
         let globalParsedData = []; 
 
-        async function initDashboard() {
-            let csvText = "";
-            try {
-                const response = await fetch(urlPrimary);
-                csvText = await response.text();
-                if (!csvText || csvText.split("\n").length < 2) throw new Error("主管道空資料");
-            } catch (e) {
-                try {
-                    const response = await fetch(urlBackup);
-                    csvText = await response.text();
-                } catch (err) {
-                    showError("連線至試算表失敗，請檢查共用權限。");
-                    return;
-                }
-            }
+        // 啟動加載
+        async function startSystem() {
+            loadAnnouncements();
+            initDashboard();
+        }
 
+        // 🟢 異步載入「公告欄」活頁簿並渲染跑馬燈
+        async function loadAnnouncements() {
             try {
-                const cleanText = csvText.replace(/\r/g, "");
+                const response = await fetch(urlAnnounce);
+                const text = await response.text();
+                const cleanText = text.replace(/\r/g, "");
                 const lines = cleanText.split("\n").map(line => line.trim()).filter(line => line);
                 
+                if (lines.length < 2) return; // 沒有資料就維持隱藏
+
+                let html = "";
+                let validCount = 0;
+
+                for (let i = 1; i < lines.length; i++) {
+                    const cells = lines[i].split(",").map(c => c.replace(/["']/g, '').trim());
+                    const content = cells[0];
+                    const level = cells[1] || "普通";
+
+                    if (content) {
+                        validCount++;
+                        html += `
+                            <div class="announcement-item text-${level}">
+                                <span class="badge ${level}">${level}</span> ${content}
+                            </div>`;
+                    }
+                }
+
+                if (validCount > 0) {
+                    document.getElementById('marqueeContent').innerHTML = html + html; // 複製雙份確保跑馬燈無縫循環
+                    const speed = validCount * 12; // 根據公告數量動態設定跑馬燈速度
+                    document.getElementById('marqueeContent').style.animationDuration = `${speed}s`;
+                    document.getElementById('marqueeBar').style.display = "flex";
+                }
+            } catch (e) {
+                console.error("公告欄加載失敗:", e);
+            }
+        }
+
+        async function initDashboard() {
+            try {
+                const response = await fetch(urlPrimary);
+                const csvText = await response.text();
+                
+                const cleanText = csvText.replace(/\r/g, "");
+                const lines = cleanText.split("\n").map(line => line.trim()).filter(line => line);
                 if(lines.length < 2) throw new Error("無足夠的資料列數");
 
-                // 核心定位
+                // 🚀 精確欄位索引配置 (對齊全新試算表)
                 const monthIdx = 0; 
                 const waterIdx = 1;
-                const eleTotalIdx = 12; // M欄(總金額)在第12位
-                const roomIdx = { "內大": 13, "內小": 14, "中": 15, "外": 16 };
+                const eleTotalIdx = 11; // 💡 L 欄「總金額」索引是 11
+                
+                // 電表抄錄底數欄位 (C, D, E, F 欄)
+                const meterIdx = { "內大": 2, "內小": 3, "中": 4, "外": 5, "總和": 6 };
+                // 電費金額分攤欄位 (M, N, O, P 欄)
+                const roomIdx = { "內大": 12, "內小": 13, "中": 14, "外": 15 };
 
                 let totalWater = 0;
                 let totalElectricity = 0;
                 let historyTotal = 0;
+                
                 const labels = [];
                 const waterChartData = [];
                 const eleChartData = [];
+                
+                // 灰色區塊電表抄值所需陣列
+                const meterLabels = [];
+                const meterDataTotal = [];
 
                 globalParsedData = [];
 
-                // 🛠️ 深度清洗過濾：完美跳過「基準值」資料列
                 for(let i = 1; i < lines.length; i++) {
                     const cells = lines[i].split(",").map(c => c.replace(/["'\uFEFF]/g, '').trim());
                     
-                    // 只要第一欄包含「基準」兩個字，或者這一行根本沒寫月份，就直接跳過不計算
-                    if(!cells[monthIdx] || cells[monthIdx].includes("基準")) {
-                        continue;
-                    }
+                    if(!cells[monthIdx] || cells[monthIdx].includes("基準")) continue;
 
                     const monthVal = cells[monthIdx];
                     const waterVal = parseFloat(cells[waterIdx]) || 0;
-                    const eleTotalVal = parseFloat(cells[eleTotalIdx]) || 0;
+                    const eleTotalVal = parseFloat(cells[eleTotalIdx]) || 0; // 拿L欄總金額
                     const combinedSum = waterVal + eleTotalVal;
 
                     totalWater += waterVal;
@@ -334,11 +399,28 @@
                     waterChartData.push(waterVal);
                     eleChartData.push(eleTotalVal);
 
+                    // 記錄電表抄值
+                    meterLabels.push(monthVal);
+                    meterDataTotal.push(parseFloat(cells[meterIdx["總和"]]) || 0);
+
+                    // 🛠️ 核心計算：每房均分水費直接捨去，計算公基金挹注
+                    const waterPerPerson = Math.floor(waterVal / 4);
+                    const waterImpute = waterVal - (waterPerPerson * 4);
+
                     globalParsedData.push({
                         month: monthVal,
                         water: waterVal,
+                        waterPerPerson: waterPerPerson,
+                        waterImpute: waterImpute,
                         eleTotal: eleTotalVal,
                         total: combinedSum,
+                        meters: {
+                            "內大": parseFloat(cells[meterIdx["內大"]]) || 0,
+                            "內小": parseFloat(cells[meterIdx["內小"]]) || 0,
+                            "中": parseFloat(cells[meterIdx["中"]]) || 0,
+                            "外": parseFloat(cells[meterIdx["外"]]) || 0,
+                            "總和": parseFloat(cells[meterIdx["總和"]]) || 0
+                        },
                         rooms: {
                             "內大": parseFloat(cells[roomIdx["內大"]]) || 0,
                             "內小": parseFloat(cells[roomIdx["內小"]]) || 0,
@@ -348,28 +430,27 @@
                     });
                 }
 
-                if (globalParsedData.length === 0) throw new Error("過濾後無效月份資料");
-
                 const latest = globalParsedData[globalParsedData.length - 1];
                 const container = document.getElementById('mainContent');
                 
                 container.innerHTML = `
-                    <div class="section-title">當月費用摘要 (${latest.month})</div>
+                    <!-- 💡 修正細節：間隔拉大 -->
+                    <div class="section-title spacer-top">當月費用摘要 (${latest.month})</div>
                     <div class="stats-grid">
                         <div class="stat-card" onclick="openRoomDetails('ele')">
                             <div class="stat-label">當月電費 (點擊看房間明細)</div>
                             <div class="stat-value">NT$ ${latest.eleTotal.toLocaleString()}</div>
-                            <div class="stat-sub">點擊查看各房間明細</div>
+                            <div class="stat-sub">公基金挹注額已自動同步扣除</div>
                         </div>
                         <div class="stat-card" onclick="openRoomDetails('water')">
-                            <div class="stat-label">當月水費 (點擊看歷史)</div>
+                            <div class="stat-label">當月水費 (點擊看均分與歷史)</div>
                             <div class="stat-value">NT$ ${latest.water.toLocaleString()}</div>
-                            <div class="stat-sub">點擊查看歷史每月明細</div>
+                            <div class="stat-sub">每房均分：NT$ ${latest.waterPerPerson} (公基金挹注 NT$ ${latest.waterImpute})</div>
                         </div>
                         <div class="stat-card highlight" onclick="openRoomDetails('summary')">
-                            <div class="stat-label">當月總和 (點擊看小計)</div>
+                            <div class="stat-label">當月總和 (點擊看小計摘要)</div>
                             <div class="stat-value">NT$ ${latest.total.toLocaleString()}</div>
-                            <div class="stat-sub">水費 + 電費合計</div>
+                            <div class="stat-sub">水費 + 電費合計總額</div>
                         </div>
                     </div>
 
@@ -378,17 +459,17 @@
                         <div class="stat-card" onclick="openRoomDetails('ele')">
                             <div class="stat-label">歷年電費總計</div>
                             <div class="stat-value" style="color: #e11d48;">NT$ ${totalElectricity.toLocaleString()}</div>
-                            <div class="stat-sub">點擊查看各房間明細</div>
+                            <div class="stat-sub">查看歷月各房間帳單明細</div>
                         </div>
                         <div class="stat-card" onclick="openRoomDetails('water')">
                             <div class="stat-label">歷年水費總計</div>
                             <div class="stat-value" style="color: #0284c7;">NT$ ${totalWater.toLocaleString()}</div>
-                            <div class="stat-sub">點擊查看歷史每月明細</div>
+                            <div class="stat-sub">查看歷月水費與公基金分攤</div>
                         </div>
                         <div class="stat-card highlight" style="background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%); border-color: rgba(34, 197, 94, 0.2);" onclick="openRoomDetails('summary')">
                             <div class="stat-label">歷年費用總加總</div>
                             <div class="stat-value" style="color: #16a34a;">NT$ ${historyTotal.toLocaleString()}</div>
-                            <div class="stat-sub">點擊查看歷史總摘要</div>
+                            <div class="stat-sub">查看歷月總和摘要小計</div>
                         </div>
                     </div>
 
@@ -398,45 +479,57 @@
                             <canvas id="trendChart"></canvas>
                         </div>
                     </div>
+
+                    <!-- 🔘 全新灰色系歷月電表抄錄值專區 -->
+                    <div class="gray-section">
+                        <div class="gray-title">⚙️ 歷月電表抄錄底數觀測區</div>
+                        <div class="stats-grid">
+                            <div class="stat-card gray-card" onclick="openRoomDetails('meter')">
+                                <div class="stat-label" style="color: #64748b;">當月抄錄總值 (${latest.month})</div>
+                                <div class="stat-value" style="color: #475569;">${latest.meters["總和"]} 度</div>
+                                <div class="stat-sub" style="color: #94a3b8;">點擊展開各房完整電表底數紀錄</div>
+                            </div>
+                        </div>
+                        <div class="chart-card" style="background: #f1f5f9; border-color: #cbd5e1;">
+                            <div class="chart-container" style="height: 220px;">
+                                <canvas id="meterChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
                 `;
 
-                // 雙線折線圖
+                // 1. 渲染主費用圖表
                 const ctx = document.getElementById('trendChart').getContext('2d');
                 new Chart(ctx, {
                     type: 'line',
                     data: {
                         labels: labels,
                         datasets: [
-                            {
-                                label: '電費總計',
-                                data: eleChartData,
-                                borderColor: '#e11d48',
-                                backgroundColor: 'transparent',
-                                borderWidth: 3,
-                                pointBackgroundColor: '#e11d48',
-                                pointRadius: 4,
-                                tension: 0.3
-                            },
-                            {
-                                label: '水費總計',
-                                data: waterChartData,
-                                borderColor: '#0284c7',
-                                backgroundColor: 'transparent',
-                                borderWidth: 3,
-                                pointBackgroundColor: '#0284c7',
-                                pointRadius: 4,
-                                tension: 0.3
-                            }
+                            { label: '電費總計', data: eleChartData, borderColor: '#e11d48', backgroundColor: 'transparent', borderWidth: 3, pointBackgroundColor: '#e11d48', tension: 0.3 },
+                            { label: '水費總計', data: waterChartData, borderColor: '#0284c7', backgroundColor: 'transparent', borderWidth: 3, pointBackgroundColor: '#0284c7', tension: 0.3 }
                         ]
                     },
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
-                        plugins: { legend: { display: true, position: 'top', labels: { font: { family: 'PingFang TC' } } } },
-                        scales: {
-                            y: { grid: { color: '#edf2f7' }, ticks: { callback: function(val) { return 'NT$ ' + val.toLocaleString(); } } },
-                            x: { grid: { display: false } }
-                        }
+                        plugins: { legend: { display: true, position: 'top' } },
+                        scales: { y: { ticks: { callback: function(val) { return 'NT$ ' + val.toLocaleString(); } } }, x: { grid: { display: false } } }
+                    }
+                });
+
+                // 2. 渲染灰色系電表抄值圖表
+                const mCtx = document.getElementById('meterChart').getContext('2d');
+                new Chart(mCtx, {
+                    type: 'line',
+                    data: {
+                        labels: meterLabels,
+                        datasets: [{ label: '總電表讀數 (度)', data: meterDataTotal, borderColor: '#64748b', backgroundColor: 'rgba(100, 116, 139, 0.05)', borderWidth: 2, pointBackgroundColor: '#475569', fill: true, tension: 0.2 }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: { y: { grid: { color: '#e2e8f0' }, ticks: { callback: function(val) { return val + ' 度'; } } }, x: { grid: { display: false } } }
                     }
                 });
 
@@ -445,7 +538,7 @@
             }
         }
 
-        // 彈窗
+        // 彈窗系統
         function openRoomDetails(type) {
             const overlay = document.getElementById('detailModal');
             const title = document.getElementById('modalTitle');
@@ -462,17 +555,19 @@
                             <div class="modal-row"><span class="modal-row-label">內小</span><span class="modal-row-value">${item.rooms["內小"].toLocaleString()}</span></div>
                             <div class="modal-row"><span class="modal-row-label">中房間</span><span class="modal-row-value">${item.rooms["中"].toLocaleString()}</span></div>
                             <div class="modal-row"><span class="modal-row-label">外房間</span><span class="modal-row-value">${item.rooms["外"].toLocaleString()}</span></div>
-                            <div class="modal-row total-line"><span class="modal-row-label">小計</span><span class="modal-row-value">NT$ ${item.eleTotal.toLocaleString()}</span></div>
+                            <div class="modal-row total-line"><span class="modal-row-label">總金額 (L欄)</span><span class="modal-row-value">NT$ ${item.eleTotal.toLocaleString()}</span></div>
+                            <div class="modal-subtext">* 此金額已由試算表後台扣除公共基金。</div>
                         </div>`;
                 });
             } else if (type === 'water') {
-                title.innerText = "歷年水費明細";
+                title.innerText = "歷年水費均分明細";
                 globalParsedData.forEach(item => {
                     htmlContent += `
                         <div class="modal-item-block">
                             <div class="modal-month-title">${item.month}</div>
-                            <div class="modal-row"><span class="modal-row-label">全戶水費</span><span class="modal-row-value">${item.water.toLocaleString()}</span></div>
-                            <div class="modal-row total-line"><span class="modal-row-label">小計</span><span class="modal-row-value">NT$ ${item.water.toLocaleString()}</span></div>
+                            <div class="modal-row"><span class="modal-row-label">全戶總水費</span><span class="modal-row-value">NT$ ${item.water.toLocaleString()}</span></div>
+                            <div class="modal-row"><span class="modal-row-label">每房實付 (除4無條件捨去)</span><span class="modal-row-value" style="color:#16a34a;">NT$ ${item.waterPerPerson}</span></div>
+                            <div class="modal-row total-line"><span class="modal-row-label">公基金特別挹注</span><span class="modal-row-value" style="color:#dc2626;">NT$ ${item.waterImpute}</span></div>
                         </div>`;
                 });
             } else if (type === 'summary') {
@@ -481,9 +576,23 @@
                     htmlContent += `
                         <div class="modal-item-block">
                             <div class="modal-month-title">${item.month}</div>
-                            <div class="modal-row"><span class="modal-row-label">總電費金額</span><span class="modal-row-value">${item.eleTotal.toLocaleString()}</span></div>
-                            <div class="modal-row"><span class="modal-row-label">總水費金額</span><span class="modal-row-value">${item.water.toLocaleString()}</span></div>
-                            <div class="modal-row total-line"><span class="modal-row-label">總計金額</span><span class="modal-row-value">NT$ ${item.total.toLocaleString()}</span></div>
+                            <div class="modal-row"><span class="modal-row-label">總電費金額</span><span class="modal-row-value">NT$ ${item.eleTotal.toLocaleString()}</span></div>
+                            <div class="modal-row"><span class="modal-row-label">總水費金額</span><span class="modal-row-value">NT$ ${item.water.toLocaleString()}</span></div>
+                            <div class="modal-row total-line"><span class="modal-row-label">總計應付金額</span><span class="modal-row-value">NT$ ${item.total.toLocaleString()}</span></div>
+                        </div>`;
+                });
+            } else if (type === 'meter') {
+                // 🔘 全新灰色觀測區：點擊跳出歷月抄表底數
+                title.innerText = "歷月歷史電表底數紀錄";
+                globalParsedData.forEach(item => {
+                    htmlContent += `
+                        <div class="modal-item-block" style="background:#f8fafc; padding:12px; border-radius:12px; margin-bottom:10px;">
+                            <div class="modal-month-title" style="color:#475569;">${item.month} 抄錄值</div>
+                            <div class="modal-row"><span class="modal-row-label">內大電表</span><span class="modal-row-value">${item.meters["內大"]} 度</span></div>
+                            <div class="modal-row"><span class="modal-row-label">內小電表</span><span class="modal-row-value">${item.meters["內小"]} 度</span></div>
+                            <div class="modal-row"><span class="modal-row-label">中房間電表</span><span class="modal-row-value">${item.meters["中"]} 度</span></div>
+                            <div class="modal-row"><span class="modal-row-label">外房間電表</span><span class="modal-row-value">${item.meters["外"]} 度</span></div>
+                            <div class="modal-row total-line" style="border-color:#cbd5e1;"><span class="modal-row-label" style="color:#334155;">總和底數</span><span class="modal-row-value" style="color:#334155;">${item.meters["總和"]} 度</span></div>
                         </div>`;
                 });
             }
@@ -504,7 +613,8 @@
                 </div>`;
         }
 
-        initDashboard();
+        // 啟動
+        startSystem();
     </script>
 </body>
 </html>
