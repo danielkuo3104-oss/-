@@ -278,9 +278,9 @@
     </div>
 
     <script>
-        // 🚀 帶入全新修正並嚴格區分大小寫的真正發布網址
-        const urlPrimary = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSzn-whbD_1ymRajG9nlc17-l1xCaQwsmg38h2ukNHl/pub?gid=0&output=csv";
-        const urlAnnounce = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSzn-whbD_1ymRajG9nlc17-l1xCaQwsmg38h2ukNHl/pub?gid=1058170538&output=csv"; 
+        // 🚀 精準修正為大寫 I 結尾的公開發布網址
+        const urlPrimary = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR6zS-Y6VdMAt732e7g11p60x_nS34r6-uorv9f-hK_MbyTclSqnG4I7bM3M98wL_8_23-5eA-v9I-I/pub?output=csv";
+        const urlAnnounce = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR6zS-Y6VdMAt732e7g11p60x_nS34r6-uorv9f-hK_MbyTclSqnG4I7bM3M98wL_8_23-5eA-v9I-I/pub?gid=1058170538&output=csv"; 
 
         let globalParsedData = []; 
 
@@ -307,7 +307,7 @@
                     const content = cells[0];
                     const level = cells[1] || "普通";
 
-                    if (content) {
+                    if (content && !content.includes("<!DOCTYPE") && !content.includes("function")) {
                         validCount++;
                         html += `
                             <div class="announcement-item text-${level}">
@@ -335,7 +335,7 @@
                 const lines = cleanText.split("\n").map(line => line.trim()).filter(line => line);
                 if(lines.length < 2) throw new Error("無足夠的資料列數");
 
-                // 🚀 指標索引完全精確配對
+                // 指標索引完全精確配對
                 const monthIdx = 0; 
                 const waterIdx = 1;
                 const eleTotalIdx = 11; // L 欄「總金額」
@@ -357,7 +357,7 @@
                 for(let i = 1; i < lines.length; i++) {
                     const cells = lines[i].split(",").map(c => c.replace(/["'\uFEFF]/g, '').trim());
                     
-                    if(cells.length < 7 || !cells[monthIdx] || cells[monthIdx].includes("基準")) {
+                    if(cells.length < 7 || !cells[monthIdx] || cells[monthIdx].includes("基準") || cells[monthIdx].includes("function") || cells[monthIdx].includes("<script")) {
                         continue;
                     }
 
@@ -528,7 +528,7 @@
                             <div class="modal-row"><span class="modal-row-label">內小</span><span class="modal-row-value">NT$ ${item.rooms["內小"].toLocaleString()}</span></div>
                             <div class="modal-row"><span class="modal-row-label">中房間</span><span class="modal-row-value">NT$ ${item.rooms["中"].toLocaleString()}</span></div>
                             <div class="modal-row"><span class="modal-row-label">外房間</span><span class="modal-row-value">NT$ ${item.rooms["外"].toLocaleString()}</span></div>
-                            <div class="modal-row total-line"><span class="modal-row-label">總電費金額(L欄)</span><span class="modal-row-value">NT$ ${item.eleTotal.toLocaleString()}</span></div>
+                            <div class="modal-row total-line"><span class="modal-row-label">總電費金額</span><span class="modal-row-value">NT$ ${item.eleTotal.toLocaleString()}</span></div>
                         </div>`;
                 });
             } else if (type === 'water') {
