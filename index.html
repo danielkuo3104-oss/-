@@ -16,10 +16,19 @@
             background: linear-gradient(135deg, #69779b 0%, #8696b8 100%);
             color: white; padding: 45px 24px 65px 24px; text-align: left;
             box-shadow: 0 4px 20px rgba(105, 119, 155, 0.15);
+            position: relative; /* 為了讓更新時間絕對定位 */
         }
-        .header-container { max-width: 1200px; margin: 0 auto; }
+        .header-container { max-width: 1200px; margin: 0 auto; position: relative; }
         .header-banner h1 { margin: 0; font-size: 26px; font-weight: 700; letter-spacing: 1.5px; color: #f4f5f7; }
         .header-banner p { margin: 10px 0 0 0; opacity: 0.85; font-size: 13px; letter-spacing: 0.5px; }
+        
+        /* 🕒 頂部 Banner 右下角的資料更新時間樣式 */
+        .update-time-tag {
+            position: absolute; right: 0; bottom: -45px; font-size: 11px;
+            color: rgba(255, 255, 255, 0.75); background: rgba(0, 0, 0, 0.12);
+            padding: 4px 10px; border-radius: 20px; font-weight: 500;
+            letter-spacing: 0.5px; backdrop-filter: blur(4px);
+        }
 
         /* 公告欄跑馬燈 */
         .marquee-wrapper {
@@ -52,8 +61,7 @@
 
         .main-container { max-width: 1200px; margin: 0 auto 40px auto; padding: 0 20px; box-sizing: border-box; }
         
-        /* 🛠️【核心修正：解決標題黏太緊問題】 */
-        /* 讓所有大標題（不論是在電腦或手機）上方主動空出 42px 呼吸空間，下方空 18px 遠離卡片 */
+        /* 標題與空間留白 */
         .section-title { 
             font-size: 16px; 
             font-weight: 600; 
@@ -63,20 +71,14 @@
             display: block;
         }
         
-        /* 標題與圖表切換鈕結構 */
-        .chart-header-row { 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            margin: 0; /* 移除原本衝突的 margin，統一由內建的 section-title 去撐開上下 */
-        }
+        .chart-header-row { display: flex; justify-content: space-between; align-items: center; margin: 0; }
         
         /* 莫蘭迪圖表切換按鈕 */
         .toggle-btn-group { display: flex; background: #e2e6ea; padding: 3px; border-radius: 10px; border: 1px solid #d1d5db; }
         .toggle-btn { background: transparent; border: none; padding: 6px 14px; font-size: 12px; font-weight: 600; color: #626973; border-radius: 8px; cursor: pointer; transition: all 0.2s ease; }
         .toggle-btn.active { background: #ffffff; color: #4a515a; box-shadow: 0 2px 6px rgba(0,0,0,0.06); }
 
-        /* 卡片網格：預設 PC 網格間距 20px */
+        /* 卡片網格 */
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; margin-bottom: 0; }
         
         /* 基礎卡片樣式 */
@@ -94,7 +96,6 @@
         .stat-card.current-ele { background: linear-gradient(135deg, #ffffff 0%, #fdf6f0 100%); border: 1px solid rgba(217, 119, 54, 0.15); }
         .stat-card.current-ele .stat-value { color: #d97736; }
         
-        /* 水費顏色加深，採用高雅的暮色莫蘭迪藍 */
         .stat-card.current-water { background: linear-gradient(135deg, #ffffff 0%, #edf3f7 100%); border: 1px solid rgba(82, 121, 150, 0.18); }
         .stat-card.current-water .stat-value { color: #527996; }
         
@@ -141,7 +142,6 @@
         .modal-row.total-line .modal-row-label { color: #4a515a; font-weight: 600; }
         .modal-row.total-line .modal-row-value { color: #69779b; font-size: 16px; font-weight: 700; }
         
-        /* 公基金注資備註：精緻輕綠色小方塊樣式 */
         .impute-note { font-size: 11px; color: #769476; opacity: 0.9; font-weight: 400; text-align: left; margin-top: 6px; line-height: 1.4; background: #f3f7f3; padding: 6px 10px; border-radius: 8px; border: 1px solid rgba(110, 145, 110, 0.1); }
 
         .close-btn { background: #f0f2f5; color: #626973; border: none; width: 100%; padding: 14px; border-radius: 14px; font-weight: 600; margin-top: 20px; cursor: pointer; transition: background 0.2s; }
@@ -153,25 +153,19 @@
         @media (max-width: 768px) {
             .header-banner { padding: 35px 20px 45px 20px; }
             .header-banner h1 { font-size: 22px; }
+            .update-time-tag { bottom: -28px; right: 20px; font-size: 10px; padding: 3px 8px; }
             .main-container { padding: 0 16px; margin-bottom: 25px; }
             
-            /* 1. 調整手機上的標題外部間距，依然維持足夠的上下留白 */
             .section-title { margin: 38px 0 16px 0; font-size: 15px; }
-            
-            /* 2. 手機版卡片格子之間拉開到 28px */
             .stats-grid { gap: 28px; }
-            
-            /* 3. 微調卡片內部襯距 */
             .stat-card { padding: 20px; border-radius: 18px; box-shadow: 0 6px 16px rgba(140, 149, 159, 0.06); }
             .stat-value { font-size: 22px; }
             
-            /* 4. 手機圖表控制列 */
             .chart-header-row { flex-direction: column; align-items: flex-start; gap: 12px; margin: 0; }
-            .chart-header-row .section-title { margin-bottom: 0; } /* 避免切換按鈕離標題太遠 */
+            .chart-header-row .section-title { margin-bottom: 0; }
             .chart-card { padding: 16px; border-radius: 18px; margin-top: 16px; }
             .chart-container { height: 280px; }
             
-            /* 5. 灰色抄表區 */
             .gray-section { padding: 16px; border-radius: 20px; margin-top: 40px; }
         }
     </style>
@@ -182,6 +176,7 @@
         <div class="header-container">
             <h1>宿舍智慧管理系統</h1>
             <p>新竹市東區建功一路47巷五樓（孟竹國宅）</p>
+            <div class="update-time-tag" id="updateTimeDisplay">資料更新：同步中...</div>
         </div>
     </div>
 
@@ -224,7 +219,19 @@
         let globalParsedData = []; 
         let trendChartInstance = null; 
 
+        // 🕒 計算並自動顯示目前更新時間
+        function updateTimestamp() {
+            const now = new Date();
+            const yyyy = now.getFullYear();
+            const mm = String(now.getMonth() + 1).padStart(2, '0');
+            const dd = String(now.getDate()).padStart(2, '0');
+            const hh = String(now.getHours()).padStart(2, '0');
+            const min = String(now.getMinutes()).padStart(2, '0');
+            document.getElementById('updateTimeDisplay').innerText = `資料更新：${yyyy}/${mm}/${dd} ${hh}:${min}`;
+        }
+
         async function startSystem() {
+            updateTimestamp();
             await loadAnnouncements();
             await initDashboard();
         }
@@ -338,12 +345,12 @@
                             <div class="stat-value">NT$ ${latest.eleTotal.toLocaleString()}</div>
                             <div class="impute-note">附註：公基金已自動挹注 NT$ ${latest.eleImpute}</div>
                         </div>
-                        <div class="stat-card current-water" onclick="openRoomDetails('water')">
-                            <div class="stat-label" style="color: #42637a;">當月水費 (點擊看歷月總額)</div>
+                        <div class="stat-card current-water" onclick="openRoomDetails('currentWater')">
+                            <div class="stat-label" style="color: #42637a;">當月水費 (點擊看當月明細)</div>
                             <div class="stat-value">NT$ ${latest.water.toLocaleString()}</div>
                             <div class="impute-note">附註：公基金已自動挹注 NT$ ${latest.waterImpute}</div>
                         </div>
-                        <div class="stat-card current-total" onclick="openRoomDetails('summary')">
+                        <div class="stat-card current-total" onclick="openRoomDetails('currentSummary')">
                             <div class="stat-label" style="color: #5c7d5c;">當月總和 (點擊看小計摘要)</div>
                             <div class="stat-value">NT$ ${latest.total.toLocaleString()}</div>
                             <div class="stat-sub">水費 + 電費當月總支出額</div>
@@ -357,12 +364,12 @@
                             <div class="stat-value">NT$ ${totalElectricity.toLocaleString()}</div>
                             <div class="stat-sub">查看歷月電費帳單發票紀錄</div>
                         </div>
-                        <div class="stat-card history-card" onclick="openRoomDetails('water')">
+                        <div class="stat-card history-card" onclick="openRoomDetails('historyWater')">
                             <div class="stat-label">歷年水費總計</div>
                             <div class="stat-value">NT$ ${totalWater.toLocaleString()}</div>
                             <div class="stat-sub">查看歷月自來水費單與挹注紀錄</div>
                         </div>
-                        <div class="stat-card history-card" style="background: linear-gradient(135deg, #ffffff 0%, #f6f7f8 100%);" onclick="openRoomDetails('summary')">
+                        <div class="stat-card history-card" style="background: linear-gradient(135deg, #ffffff 0%, #f6f7f8 100%);" onclick="openRoomDetails('historySummary')">
                             <div class="stat-label">歷年費用總加總</div>
                             <div class="stat-value" style="color: #54606e;">NT$ ${historyTotal.toLocaleString()}</div>
                             <div class="stat-sub">查看歷月水電合併摘要小計</div>
@@ -463,10 +470,11 @@
             const title = document.getElementById('modalTitle');
             const body = document.getElementById('modalBody');
             let htmlContent = "";
+            const latestItem = globalParsedData[globalParsedData.length - 1];
 
+            // 1. 當月電費明細
             if (type === 'currentEle') {
                 title.innerText = "當月電費分房明細";
-                const latestItem = globalParsedData[globalParsedData.length - 1];
                 htmlContent = `
                     <div class="modal-item-block">
                         <div class="modal-month-title">${latestItem.month} 實付分攤</div>
@@ -477,6 +485,30 @@
                         <div class="impute-note">* 經電表精算後，公基金已自動挹注分攤 NT$ ${latestItem.eleImpute} 元</div>
                         <div class="modal-row total-line"><span class="modal-row-label">當月電費總額</span><span class="modal-row-value" style="color:#d97736;">NT$ ${latestItem.eleTotal.toLocaleString()}</span></div>
                     </div>`;
+            
+            // 2. 🌟【核心修正】當月水費：只留最新月
+            } else if (type === 'currentWater') {
+                title.innerText = "當月水費明細摘要";
+                htmlContent = `
+                    <div class="modal-item-block">
+                        <div class="modal-month-title">${latestItem.month} 自來水費明細</div>
+                        <div class="modal-row"><span class="modal-row-label">全戶總水費</span><span class="modal-row-value">NT$ ${latestItem.water.toLocaleString()}</span></div>
+                        <div class="modal-row"><span class="modal-row-label">每房實付 (4房均分)</span><span class="modal-row-value">NT$ ${latestItem.waterPerPerson.toLocaleString()}</span></div>
+                        <div class="impute-note">* 餘數 NT$ ${latestItem.waterImpute} 已由公共基金自動挹注分攤</div>
+                    </div>`;
+            
+            // 3. 🌟【核心修正】當月總和：只留最新月
+            } else if (type === 'currentSummary') {
+                title.innerText = "當月水電加總摘要";
+                htmlContent = `
+                    <div class="modal-item-block">
+                        <div class="modal-month-title">${latestItem.month} 支出加總</div>
+                        <div class="modal-row"><span class="modal-row-label">總電費金額</span><span class="modal-row-value">NT$ ${latestItem.eleTotal.toLocaleString()}</span></div>
+                        <div class="modal-row"><span class="modal-row-label">總水費金額</span><span class="modal-row-value">NT$ ${latestItem.water.toLocaleString()}</span></div>
+                        <div class="modal-row total-line"><span class="modal-row-label">當月總計支出</span><span class="modal-row-value" style="color:#6e916e;">NT$ ${latestItem.total.toLocaleString()}</span></div>
+                    </div>`;
+
+            // 4. 歷月電費歷史紀錄（交給歷年）
             } else if (type === 'historyEle') {
                 title.innerText = "歷月電費總額紀錄";
                 globalParsedData.forEach(item => {
@@ -487,7 +519,9 @@
                             <div class="impute-note" style="background:#f7f8fa; color:#828a95;">當月公基金挹注：NT$ ${item.eleImpute}</div>
                         </div>`;
                 });
-            } else if (type === 'water') {
+
+            // 5. 歷月水費歷史紀錄（交給歷年）
+            } else if (type === 'historyWater') {
                 title.innerText = "歷月水費明細紀錄";
                 globalParsedData.forEach(item => {
                     htmlContent += `
@@ -498,8 +532,10 @@
                             <div class="impute-note">* 餘數 NT$ ${item.waterImpute} 已由公共基金自動附註挹注</div>
                         </div>`;
                 });
-            } else if (type === 'summary') {
-                title.innerText = "歷史總和摘要";
+
+            // 6. 歷月加總歷史紀錄（交給歷年）
+            } else if (type === 'historySummary') {
+                title.innerText = "歷史總和摘要紀錄";
                 globalParsedData.forEach(item => {
                     htmlContent += `
                         <div class="modal-item-block">
@@ -509,6 +545,8 @@
                             <div class="modal-row total-line"><span class="modal-row-label">總計支出</span><span class="modal-row-value">NT$ ${item.total.toLocaleString()}</span></div>
                         </div>`;
                 });
+
+            // 7. 電表度數
             } else if (type === 'meter') {
                 title.innerText = "歷月實際用電差值 (度)";
                 htmlContent = `
