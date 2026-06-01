@@ -47,9 +47,6 @@
             font-weight: 600;
             margin: 30px 0 15px 0;
             color: #4a5568;
-            display: flex;
-            align-items: center;
-            gap: 8px;
         }
         .stats-grid {
             display: grid;
@@ -66,7 +63,7 @@
             border: 1px solid rgba(255, 255, 255, 0.6);
             transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.3s ease;
             position: relative;
-            overflow: hidden;
+            cursor: pointer;
         }
         .stat-card:hover {
             transform: translateY(-5px);
@@ -107,6 +104,126 @@
             height: 350px;
             width: 100%;
         }
+        
+        /* 宿舍規範區塊 */
+        .rules-card {
+            background: #ffffff;
+            border-radius: 24px;
+            padding: 28px;
+            box-shadow: 0 10px 25px rgba(160, 174, 192, 0.1);
+            margin-bottom: 40px;
+        }
+        .rules-list {
+            margin: 0;
+            padding-left: 20px;
+            color: #4a5568;
+            line-height: 1.8;
+        }
+        .rules-list li {
+            margin-bottom: 10px;
+        }
+
+        /* 彈窗 UI 復刻第二張圖 */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0; visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        .modal-overlay.active {
+            opacity: 1; visibility: visible;
+        }
+        .modal-box {
+            background: #ffffff;
+            width: 90%;
+            max-width: 400px;
+            border-radius: 32px;
+            padding: 32px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.15);
+            transform: translateY(30px);
+            transition: transform 0.3s ease;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .modal-overlay.active .modal-box {
+            transform: translateY(0);
+        }
+        .modal-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #4f46e5;
+            margin-bottom: 24px;
+        }
+        .modal-item-block {
+            border-bottom: 1px solid #edf2f7;
+            padding: 16px 0;
+        }
+        .modal-item-block:last-child {
+            border-bottom: none;
+        }
+        .modal-month-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #4f46e5;
+            margin-bottom: 12px;
+        }
+        .modal-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            font-size: 15px;
+        }
+        .modal-row-label {
+            color: #718096;
+            font-weight: 500;
+        }
+        .modal-row-value {
+            color: #2d3748;
+            font-weight: 600;
+        }
+        .modal-row.total-line {
+            border-top: 1px dashed #e2e8f0;
+            margin-top: 12px;
+            padding-top: 12px;
+        }
+        .modal-row.total-line .modal-row-label {
+            color: #2d3748;
+            font-weight: 600;
+        }
+        .modal-row.total-line .modal-row-value {
+            color: #4f46e5;
+            font-size: 18px;
+            font-weight: 700;
+        }
+        .close-btn {
+            background: #f3f4f9;
+            color: #4a5568;
+            border: none;
+            width: 100%;
+            padding: 14px;
+            border-radius: 16px;
+            font-weight: 600;
+            margin-top: 20px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .close-btn:hover {
+            background: #e2e8f0;
+        }
+        .copyright {
+            text-align: center;
+            color: #a0aec0;
+            font-size: 12px;
+            padding-bottom: 30px;
+            letter-spacing: 1px;
+        }
         .loading {
             text-align: center;
             padding: 40px;
@@ -120,130 +237,160 @@
 
     <div class="header-banner">
         <div class="header-container">
-            <h1>🏢 宿舍智慧管理系統</h1>
-            <p>🔄 資料已即時高度連結 Google 試算表後台</p>
+            <h1>宿舍智慧管理系統</h1>
+            <p>新竹市東區建功一路47巷五樓（孟竹國宅）</p>
         </div>
     </div>
 
     <div class="main-container" id="mainContent">
-        <div class="loading">📊 智慧讀取雲端試算表資料中...</div>
+        <div class="loading">智慧讀取雲端試算表資料中...</div>
+    </div>
+    
+    <div class="main-container">
+        <div class="section-title">宿舍規範</div>
+        <div class="rules-card">
+            <ul class="rules-list">
+                <li>維護公共區域整潔，個人垃圾請定時清理。</li>
+                <li>節約用電用水，離開房間時請隨手關閉電燈與冷氣。</li>
+                <li>深夜時段請放低音量，避免影響室友及鄰居安寧。</li>
+                <li>公共設備若有損壞，請及時回報管理人群組處理。</li>
+                </ul>
+        </div>
+        <div class="copyright">© 2026 GUO DANIEL. ALL RIGHTS RESERVED.</div>
+    </div>
+
+    <div class="modal-overlay" id="detailModal" onclick="closeModal(event)">
+        <div class="modal-box" onclick="event.stopPropagation()">
+            <div class="modal-title" id="modalTitle">明細摘要</div>
+            <div id="modalBody"></div>
+            <button class="close-btn" onclick="closeModal()">關閉明細</button>
+        </div>
     </div>
 
     <script>
-        // 雙軌備用網址定義
         const urlPrimary = "https://docs.google.com/spreadsheets/d/1-vQkqhXCPp4XiHKCEpI3pz4pzcu3sQreQ_qNRLger00ULCHFr9cTbXHMQqAfk7dLa_gUBAIBSJ5sZM4F/gviz/tq?tqx=out:csv";
         const urlBackup = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQkqhXCPp4XiHKCEpI3pz4pzcu3sQreQ_qNRLger00ULCHFr9cTbXHMQqAfk7dLa_gUBAIBSJ5sZM4F/pub?output=csv";
 
+        let globalParsedData = []; // 儲存全局解析資料供彈窗使用
+
         async function initDashboard() {
             let csvText = "";
-            
-            // 嘗試管道一：安全高相容接口
             try {
                 const response = await fetch(urlPrimary);
                 csvText = await response.text();
-                // 檢查是否吐出空白或不完整資料
-                if (!csvText || csvText.split("\n").length < 2) {
-                    throw new Error("主管道資料不全，切換備用管道");
-                }
+                if (!csvText || csvText.split("\n").length < 2) throw new Error("主管道空資料");
             } catch (e) {
-                console.log(e.message);
-                // 失敗則啟動備用管道：原 CSV 發布接口
                 try {
                     const response = await fetch(urlBackup);
                     csvText = await response.text();
-                } catch (backupError) {
-                    showError("連線至 Google 試算表失敗，請確認網路或試算表共用設定。");
+                } catch (err) {
+                    showError("連線至試算表失敗，請檢查共用權限。");
                     return;
                 }
             }
 
             try {
-                // 清洗換行與雜質
                 const cleanText = csvText.replace(/\r/g, "");
                 const lines = cleanText.split("\n").map(line => line.trim()).filter(line => line);
                 
-                if(lines.length < 2) throw new Error("試算表內尚無足夠的數據列");
+                // 剔除基準值行，只保留有效月份資料
+                const dataLines = lines.filter((line, idx) => idx === 0 || (!line.includes("基準值") && idx !== 2));
 
-                // 模糊欄位比對機制
-                const rawHeaders = lines[0].split(",").map(h => h.replace(/["'\uFEFF]/g, '').trim());
-                const monthIndex = rawHeaders.findIndex(h => h.includes("月"));
-                const eleIndex = rawHeaders.findIndex(h => h.includes("電"));
-                const waterIndex = rawHeaders.findIndex(h => h.includes("水"));
+                if(dataLines.length < 2) throw new Error("無足夠的資料列數");
 
-                if (monthIndex === -1 || eleIndex === -1 || waterIndex === -1) {
-                    throw new Error("找不到對應欄位，請確認試算表第一列包含「月份、電費、水費」。");
-                }
+                const rawHeaders = dataLines[0].split(",").map(h => h.replace(/["'\uFEFF]/g, '').trim());
+                
+                // 動態定位核心指標欄位 (水費B, 電表總金額L)
+                const monthIdx = 0; 
+                const waterIdx = 1;
+                const eleTotalIdx = 12; // M欄(總金額)在以0開始的第12位
+
+                // 房間欄位配對 (依據電費細項 M, N, O, P 欄位位置)
+                const roomIdx = { "內大": 13, "內小": 14, "中": 15, "外": 16 };
 
                 let totalWater = 0;
                 let totalElectricity = 0;
                 let historyTotal = 0;
                 const labels = [];
-                const monthlyTotals = [];
-                const dataRows = [];
+                const waterChartData = [];
+                const eleChartData = [];
 
-                for(let i = 1; i < lines.length; i++) {
-                    const cells = lines[i].split(",").map(c => c.replace(/["']/g, '').trim());
-                    
-                    const monthVal = cells[monthIndex] || "未知";
-                    const eleVal = parseFloat(cells[eleIndex]) || 0;
-                    const waterVal = parseFloat(cells[waterIndex]) || 0;
-                    const sumVal = eleVal + waterVal;
+                globalParsedData = [];
+
+                for(let i = 1; i < dataLines.length; i++) {
+                    const cells = dataLines[i].split(",").map(c => c.replace(/["']/g, '').trim());
+                    if(!cells[monthIdx]) continue;
+
+                    const monthVal = cells[monthIdx];
+                    const waterVal = parseFloat(cells[waterIdx]) || 0;
+                    const eleTotalVal = parseFloat(cells[eleTotalIdx]) || 0;
+                    const combinedSum = waterVal + eleTotalVal;
 
                     totalWater += waterVal;
-                    totalElectricity += eleVal;
-                    historyTotal += sumVal;
+                    totalElectricity += eleTotalVal;
+                    historyTotal += combinedSum;
 
                     labels.push(monthVal);
-                    monthlyTotals.push(sumVal);
-                    
-                    dataRows.push({
+                    waterChartData.push(waterVal);
+                    eleChartData.push(eleTotalVal);
+
+                    globalParsedData.push({
                         month: monthVal,
-                        ele: eleVal,
                         water: waterVal,
-                        total: sumVal
+                        eleTotal: eleTotalVal,
+                        total: combinedSum,
+                        rooms: {
+                            "內大": parseFloat(cells[roomIdx["內大"]]) || 0,
+                            "內小": parseFloat(cells[roomIdx["內小"]]) || 0,
+                            "中": parseFloat(cells[roomIdx["中"]]) || 0,
+                            "外": parseFloat(cells[roomIdx["外"]]) || 0
+                        }
                     });
                 }
 
-                const latest = dataRows[dataRows.length - 1];
+                const latest = globalParsedData[globalParsedData.length - 1];
                 const container = document.getElementById('mainContent');
                 
                 container.innerHTML = `
-                    <div class="section-title">✨ 當月費用摘要 (${latest.month})</div>
+                    <div class="section-title">當月費用摘要 (${latest.month})</div>
                     <div class="stats-grid">
-                        <div class="stat-card">
-                            <div class="stat-label">⚡ 當月電費</div>
-                            <div class="stat-value">NT$ ${latest.ele.toLocaleString()}</div>
-                            <div class="stat-sub">Google 試算表同步</div>
+                        <div class="stat-card" onclick="openRoomDetails('ele')">
+                            <div class="stat-label">當月電費 (點擊看房間明細)</div>
+                            <div class="stat-value">NT$ ${latest.eleTotal.toLocaleString()}</div>
+                            <div class="stat-sub">點擊查看各房間明細</div>
                         </div>
-                        <div class="stat-card">
-                            <div class="stat-label">💧 當月水費</div>
+                        <div class="stat-card" onclick="openRoomDetails('water')">
+                            <div class="stat-label">當月水費 (點擊看歷史)</div>
                             <div class="stat-value">NT$ ${latest.water.toLocaleString()}</div>
-                            <div class="stat-sub">Google 試算表同步</div>
+                            <div class="stat-sub">點擊查看歷史每月明細</div>
                         </div>
-                        <div class="stat-card highlight">
-                            <div class="stat-label">💰 當月總和</div>
+                        <div class="stat-card highlight" onclick="openRoomDetails('summary')">
+                            <div class="stat-label">當月總和 (點擊看小計)</div>
                             <div class="stat-value">NT$ ${latest.total.toLocaleString()}</div>
                             <div class="stat-sub">水費 + 電費合計</div>
                         </div>
                     </div>
 
-                    <div class="section-title">📈 歷年累積統計</div>
+                    <div class="section-title">歷年累積統計</div>
                     <div class="stats-grid">
-                        <div class="stat-card">
-                            <div class="stat-label">⏳ 歷年電費總計</div>
+                        <div class="stat-card" onclick="openRoomDetails('ele')">
+                            <div class="stat-label">歷年電費總計</div>
                             <div class="stat-value" style="color: #e11d48;">NT$ ${totalElectricity.toLocaleString()}</div>
+                            <div class="stat-sub">點擊查看各房間明細</div>
                         </div>
-                        <div class="stat-card">
-                            <div class="stat-label">🌊 歷年水費總計</div>
+                        <div class="stat-card" onclick="openRoomDetails('water')">
+                            <div class="stat-label">歷年水費總計</div>
                             <div class="stat-value" style="color: #0284c7;">NT$ ${totalWater.toLocaleString()}</div>
+                            <div class="stat-sub">點擊查看歷史每月明細</div>
                         </div>
-                        <div class="stat-card highlight" style="background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%); border-color: rgba(34, 197, 94, 0.2);">
-                            <div class="stat-label">📊 歷年費用總加總</div>
+                        <div class="stat-card highlight" style="background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%); border-color: rgba(34, 197, 94, 0.2);" onclick="openRoomDetails('summary')">
+                            <div class="stat-label">歷年費用總加總</div>
                             <div class="stat-value" style="color: #16a34a;">NT$ ${historyTotal.toLocaleString()}</div>
+                            <div class="stat-sub">點擊查看歷史總摘要</div>
                         </div>
                     </div>
 
-                    <div class="section-title">📊 歷年總費用趨勢折線圖 (加總)</div>
+                    <div class="section-title">歷年費用趨勢折線圖</div>
                     <div class="chart-card">
                         <div class="chart-container">
                             <canvas id="trendChart"></canvas>
@@ -251,39 +398,41 @@
                     </div>
                 `;
 
-                // 渲染 Chart.js 圖表
+                // 雙線折線圖渲染 (同時展示電費與水費)
                 const ctx = document.getElementById('trendChart').getContext('2d');
                 new Chart(ctx, {
                     type: 'line',
                     data: {
                         labels: labels,
-                        datasets: [{
-                            label: '每月總費用 (水+電)',
-                            data: monthlyTotals,
-                            borderColor: '#7c3aed',
-                            backgroundColor: 'rgba(124, 58, 237, 0.06)',
-                            borderWidth: 3,
-                            pointBackgroundColor: '#4f46e5',
-                            pointBorderColor: '#ffffff',
-                            pointBorderWidth: 2,
-                            pointRadius: 5,
-                            pointHoverRadius: 7,
-                            tension: 0.3,
-                            fill: true
-                        }]
+                        datasets: [
+                            {
+                                label: '電費總計',
+                                data: eleChartData,
+                                borderColor: '#e11d48',
+                                backgroundColor: 'transparent',
+                                borderWidth: 3,
+                                pointBackgroundColor: '#e11d48',
+                                pointRadius: 4,
+                                tension: 0.3
+                            },
+                            {
+                                label: '水費總計',
+                                data: waterChartData,
+                                borderColor: '#0284c7',
+                                backgroundColor: 'transparent',
+                                borderWidth: 3,
+                                pointBackgroundColor: '#0284c7',
+                                pointRadius: 4,
+                                tension: 0.3
+                            }
+                        ]
                     },
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
-                        plugins: { legend: { display: false } },
+                        plugins: { legend: { display: true, position: 'top', labels: { font: { family: 'PingFang TC' } } } },
                         scales: {
-                            y: {
-                                grid: { color: '#edf2f7' },
-                                ticks: {
-                                    callback: function(value) { return 'NT$ ' + value.toLocaleString(); },
-                                    font: { family: 'PingFang TC' }
-                                }
-                            },
+                            y: { grid: { color: '#edf2f7' }, ticks: { callback: function(val) { return 'NT$ ' + val.toLocaleString(); } } },
                             x: { grid: { display: false } }
                         }
                     }
@@ -294,13 +443,62 @@
             }
         }
 
+        // 彈窗核心控制邏輯 (完全復刻第二張圖架構)
+        function openRoomDetails(type) {
+            const overlay = document.getElementById('detailModal');
+            const title = document.getElementById('modalTitle');
+            const body = document.getElementById('modalBody');
+            let htmlContent = "";
+
+            if (type === 'ele') {
+                title.innerText = "電費房間明細";
+                globalParsedData.forEach(item => {
+                    htmlContent += `
+                        <div class="modal-item-block">
+                            <div class="modal-month-title">${item.month}</div>
+                            <div class="modal-row"><span class="modal-row-label">內大</span><span class="modal-row-value">${item.rooms["內大"].toLocaleString()}</span></div>
+                            <div class="modal-row"><span class="modal-row-label">內小</span><span class="modal-row-value">${item.rooms["內小"].toLocaleString()}</span></div>
+                            <div class="modal-row"><span class="modal-row-label">中房間</span><span class="modal-row-value">${item.rooms["中"].toLocaleString()}</span></div>
+                            <div class="modal-row"><span class="modal-row-label">外房間</span><span class="modal-row-value">${item.rooms["外"].toLocaleString()}</span></div>
+                            <div class="modal-row total-line"><span class="modal-row-label">小計</span><span class="modal-row-value">NT$ ${item.eleTotal.toLocaleString()}</span></div>
+                        </div>`;
+                });
+            } else if (type === 'water') {
+                title.innerText = "歷年水費明細";
+                globalParsedData.forEach(item => {
+                    htmlContent += `
+                        <div class="modal-item-block">
+                            <div class="modal-month-title">${item.month}</div>
+                            <div class="modal-row"><span class="modal-row-label">全戶水費</span><span class="modal-row-value">${item.water.toLocaleString()}</span></div>
+                            <div class="modal-row total-line"><span class="modal-row-label">小計</span><span class="modal-row-value">NT$ ${item.water.toLocaleString()}</span></div>
+                        </div>`;
+                });
+            } else if (type === 'summary') {
+                title.innerText = "歷史總和摘要";
+                globalParsedData.forEach(item => {
+                    htmlContent += `
+                        <div class="modal-item-block">
+                            <div class="modal-month-title">${item.month}</div>
+                            <div class="modal-row"><span class="modal-row-label">總電費金額</span><span class="modal-row-value">${item.eleTotal.toLocaleString()}</span></div>
+                            <div class="modal-row"><span class="modal-row-label">總水費金額</span><span class="modal-row-value">${item.water.toLocaleString()}</span></div>
+                            <div class="modal-row total-line"><span class="modal-row-label">總計金額</span><span class="modal-row-value">NT$ ${item.total.toLocaleString()}</span></div>
+                        </div>`;
+                });
+            }
+
+            body.innerHTML = htmlContent;
+            overlay.classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('detailModal').classList.remove('active');
+        }
+
         function showError(msg) {
             document.getElementById('mainContent').innerHTML = `
                 <div class="loading" style="color: #e53e3e; text-align: left; max-width: 600px; margin: 0 auto;">
                     ❌ 系統載入失敗。<br><br>
-                    <span style="font-size:14px; color:#718096;">
-                        錯誤訊息：${msg}
-                    </span>
+                    <span style="font-size:14px; color:#718096;">錯誤訊息：${msg}</span>
                 </div>`;
         }
 
