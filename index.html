@@ -273,12 +273,16 @@
         function parseCSV(text) {
             const lines = text.split("\n").map(line => line.trim()).filter(line => line);
             if(lines.length === 0) return [];
-            const headers = lines[0].split(",").map(h => h.replace(/^\uFEFF/, '').trim());
+            
+            // 讀取第一列欄位名稱，並自動去掉 UTF-8 BOM 以及所有干擾的雙引號 ""
+            const headers = lines[0].split(",").map(h => h.replace(/^\uFEFF/, '').replace(/["']/g, '').trim());
+            
             return lines.slice(1).map(line => {
-                const values = line.split(",");
+                // 使用正規表達式完美相容帶有雙引號的 CSV 格式
+                const values = line.split(",").map(v => v.replace(/["']/g, '').trim());
                 const obj = {};
                 headers.forEach((header, index) => {
-                    obj[header] = values[index] ? values[index].trim() : "";
+                    obj[header] = values[index] ? values[index] : "";
                 });
                 return obj;
             });
