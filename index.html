@@ -130,29 +130,48 @@
     </div>
 
     <script>
-        const csvUrl = "https://docs.google.com/spreadsheets/d/1-vQkqhXCPp4XiHKCEpI3pz4pzcu3sQreQ_qNRLger00ULCHFr9cTbXHMQqAfk7dLa_gUBAIBSJ5sZM4F/gviz/tq?tqx=out:csv";
+        // 雙軌備用網址定義
+        const urlPrimary = "https://docs.google.com/spreadsheets/d/1-vQkqhXCPp4XiHKCEpI3pz4pzcu3sQreQ_qNRLger00ULCHFr9cTbXHMQqAfk7dLa_gUBAIBSJ5sZM4F/gviz/tq?tqx=out:csv";
+        const urlBackup = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQkqhXCPp4XiHKCEpI3pz4pzcu3sQreQ_qNRLger00ULCHFr9cTbXHMQqAfk7dLa_gUBAIBSJ5sZM4F/pub?output=csv";
 
         async function initDashboard() {
+            let csvText = "";
+            
+            // 嘗試管道一：安全高相容接口
             try {
-                const response = await fetch(csvUrl);
-                const csvText = await response.text();
-                
-                // 🛠️ 終極無敵模糊比對解析法
+                const response = await fetch(urlPrimary);
+                csvText = await response.text();
+                // 檢查是否吐出空白或不完整資料
+                if (!csvText || csvText.split("\n").length < 2) {
+                    throw new Error("主管道資料不全，切換備用管道");
+                }
+            } catch (e) {
+                console.log(e.message);
+                // 失敗則啟動備用管道：原 CSV 發布接口
+                try {
+                    const response = await fetch(urlBackup);
+                    csvText = await response.text();
+                } catch (backupError) {
+                    showError("連線至 Google 試算表失敗，請確認網路或試算表共用設定。");
+                    return;
+                }
+            }
+
+            try {
+                // 清洗換行與雜質
                 const cleanText = csvText.replace(/\r/g, "");
                 const lines = cleanText.split("\n").map(line => line.trim()).filter(line => line);
                 
-                if(lines.length < 2) throw new Error("試算表沒有足夠的資料行數");
+                if(lines.length < 2) throw new Error("試算表內尚無足夠的數據列");
 
-                // 抓取第一行作為欄位索引參考
+                // 模糊欄位比對機制
                 const rawHeaders = lines[0].split(",").map(h => h.replace(/["'\uFEFF]/g, '').trim());
-                
-                // 找出 月份、電費、水費 在第幾個位置 (不管名稱有沒有對齊，用模糊包含來抓)
                 const monthIndex = rawHeaders.findIndex(h => h.includes("月"));
                 const eleIndex = rawHeaders.findIndex(h => h.includes("電"));
                 const waterIndex = rawHeaders.findIndex(h => h.includes("水"));
 
                 if (monthIndex === -1 || eleIndex === -1 || waterIndex === -1) {
-                    throw new Error("找不到對應的標題欄位。抓到的標題為: " + rawHeaders.join(", "));
+                    throw new Error("找不到對應欄位，請確認試算表第一列包含「月份、電費、水費」。");
                 }
 
                 let totalWater = 0;
@@ -162,9 +181,7 @@
                 const monthlyTotals = [];
                 const dataRows = [];
 
-                // 解析每一行數據
                 for(let i = 1; i < lines.length; i++) {
-                    // 使用標準的引號切割法
                     const cells = lines[i].split(",").map(c => c.replace(/["']/g, '').trim());
                     
                     const monthVal = cells[monthIndex] || "未知";
@@ -188,8 +205,8 @@
                 }
 
                 const latest = dataRows[dataRows.length - 1];
-
                 const container = document.getElementById('mainContent');
+                
                 container.innerHTML = `
                     <div class="section-title">✨ 當月費用摘要 (${latest.month})</div>
                     <div class="stats-grid">
@@ -234,6 +251,7 @@
                     </div>
                 `;
 
+                // 渲染 Chart.js 圖表
                 const ctx = document.getElementById('trendChart').getContext('2d');
                 new Chart(ctx, {
                     type: 'line',
@@ -272,15 +290,18 @@
                 });
 
             } catch (error) {
-                console.error("初始化失敗:", error);
-                document.getElementById('mainContent').innerHTML = `
-                    <div class="loading" style="color: #e53e3e; text-align: left; max-width: 600px; margin: 0 auto;">
-                        ❌ 系統載入失敗。<br><br>
-                        <span style="font-size:14px; color:#718096;">
-                            錯誤訊息：${error.message}
-                        </span>
-                    </div>`;
+                showError(error.message);
             }
+        }
+
+        function showError(msg) {
+            document.getElementById('mainContent').innerHTML = `
+                <div class="loading" style="color: #e53e3e; text-align: left; max-width: 600px; margin: 0 auto;">
+                    ❌ 系統載入失敗。<br><br>
+                    <span style="font-size:14px; color:#718096;">
+                        錯誤訊息：${msg}
+                    </span>
+                </div>`;
         }
 
         initDashboard();
