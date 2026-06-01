@@ -141,6 +141,7 @@
     </div>
 
     <script>
+        // 採用安全的 Google Visualization 數據通道
         const csvUrl = "https://docs.google.com/spreadsheets/d/1-vQkqhXCPp4XiHKCEpI3pz4pzcu3sQreQ_qNRLger00ULCHFr9cTbXHMQqAfk7dLa_gUBAIBSJ5sZM4F/gviz/tq?tqx=out:csv";
 
         async function initDashboard() {
@@ -149,7 +150,7 @@
                 const csvText = await response.text();
                 const data = parseCSV(csvText);
                 
-                if (data.length === 0) throw new Error("無資料");
+                if (data.length === 0) throw new Error("無有效資料，請檢查試算表內容");
 
                 let totalWater = 0;
                 let totalElectricity = 0;
@@ -270,23 +271,29 @@
             }
         }
 
+        // 🌟 強效無敵 CSV 解析器：完美清洗 Google /gviz 管道帶引號與雜質的資料
         function parseCSV(text) {
-            // 先把整篇文字中所有看不見的 \r 換行雜質全部消滅
             const cleanText = text.replace(/\r/g, "");
             const lines = cleanText.split("\n").map(line => line.trim()).filter(line => line);
             if(lines.length === 0) return [];
             
-            // 讀取第一列欄位名稱，並自動去掉 UTF-8 BOM 以及所有干擾的雙引號 ""
-            const headers = lines[0].split(",").map(h => h.replace(/^\uFEFF/, '').replace(/["']/g, '').trim());
+            // 完美移除首行標頭的雙引號及不可見的 UTF-8 BOM 符號
+            const headers = splitCSVLine(lines[0]);
             
             return lines.slice(1).map(line => {
-                const values = line.split(",").map(v => v.replace(/["']/g, '').trim());
+                const values = splitCSVLine(line);
                 const obj = {};
                 headers.forEach((header, index) => {
-                    obj[header] = values[index] ? values[index] : "";
+                    obj[header] = values[index] !== undefined ? values[index] : "";
                 });
                 return obj;
             });
+        }
+
+        // 核心解析黑科技：利用正則表達式，完美剝除外層雙引號並精準切割欄位
+        function splitCSVLine(line) {
+            const matches = line.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || line.split(",");
+            return matches.map(v => v.replace(/^["']|["']$/g, '').trim());
         }
 
         initDashboard();
