@@ -6,7 +6,6 @@
     <title>宿舍智慧管理系統</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        /* 全域樣式：復刻 Manus 的紫色科技感漸層背景 */
         body {
             font-family: 'PingFang TC', 'SF Pro Display', 'Microsoft JhengHei', sans-serif;
             background: linear-gradient(135deg, #f3f4f9 0%, #e8ebf5 100%);
@@ -15,8 +14,6 @@
             min-height: 100vh;
             color: #2d3748;
         }
-
-        /* 頂部大型紫色漸層 Banner */
         .header-banner {
             background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
             color: white;
@@ -39,16 +36,12 @@
             opacity: 0.8;
             font-size: 14px;
         }
-
-        /* 主要內容容器 */
         .main-container {
             max-width: 1200px;
             margin: -30px auto 40px auto;
             padding: 0 20px;
             box-sizing: border-box;
         }
-
-        /* 區塊標題 */
         .section-title {
             font-size: 18px;
             font-weight: 600;
@@ -58,20 +51,16 @@
             align-items: center;
             gap: 8px;
         }
-
-        /* 數據卡片網格：自動適應手機與電腦 (RWD) */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
             gap: 20px;
             margin-bottom: 30px;
         }
-
-        /* 核心 UI 設計：Manus 風格的高質感圓角、陰影與懸停動畫 */
         .stat-card {
             background: rgba(255, 255, 255, 0.85);
             backdrop-filter: blur(10px);
-            border-radius: 24px; /* 自定義流暢大圓角 */
+            border-radius: 24px;
             padding: 24px;
             box-shadow: 0 10px 25px rgba(160, 174, 192, 0.1);
             border: 1px solid rgba(255, 255, 255, 0.6);
@@ -79,21 +68,9 @@
             position: relative;
             overflow: hidden;
         }
-        /* 滑鼠懸停時微升並加深陰影 */
         .stat-card:hover {
             transform: translateY(-5px);
             box-shadow: 0 15px 30px rgba(160, 174, 192, 0.2);
-        }
-        .stat-card::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; width: 4px; height: 100%;
-            background: #7c3aed; /* 左側紫色裝飾線條 */
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-        .stat-card:hover::before {
-            opacity: 1;
         }
         .stat-label {
             font-size: 14px;
@@ -111,8 +88,6 @@
             color: #a0aec0;
             margin-top: 6px;
         }
-
-        /* 專屬亮色設計：當月總和卡片凸顯 */
         .stat-card.highlight {
             background: linear-gradient(135deg, #ffffff 0%, #f5f3ff 100%);
             border: 1px solid rgba(124, 58, 237, 0.2);
@@ -120,8 +95,6 @@
         .stat-card.highlight .stat-value {
             color: #4f46e5;
         }
-
-        /* 圖表區塊大卡片 */
         .chart-card {
             background: #ffffff;
             border-radius: 24px;
@@ -134,8 +107,6 @@
             height: 350px;
             width: 100%;
         }
-
-        /* 載入中動畫 */
         .loading {
             text-align: center;
             padding: 40px;
@@ -159,7 +130,6 @@
     </div>
 
     <script>
-        // 🌟 已更換為符合手機端 Google 政策的安全數據通道
         const csvUrl = "https://docs.google.com/spreadsheets/d/1-vQkqhXCPp4XiHKCEpI3pz4pzcu3sQreQ_qNRLger00ULCHFr9cTbXHMQqAfk7dLa_gUBAIBSJ5sZM4F/gviz/tq?tqx=out:csv";
 
         async function initDashboard() {
@@ -167,58 +137,75 @@
                 const response = await fetch(csvUrl);
                 const csvText = await response.text();
                 
-                // 解析 CSV 資料
-                const data = parseCSV(csvText);
+                // 🛠️ 終極無敵模糊比對解析法
+                const cleanText = csvText.replace(/\r/g, "");
+                const lines = cleanText.split("\n").map(line => line.trim()).filter(line => line);
                 
-                if (data.length === 0) throw new Error("試算表中沒有足夠的資料");
+                if(lines.length < 2) throw new Error("試算表沒有足夠的資料行數");
 
-                // 數據處理計算
+                // 抓取第一行作為欄位索引參考
+                const rawHeaders = lines[0].split(",").map(h => h.replace(/["'\uFEFF]/g, '').trim());
+                
+                // 找出 月份、電費、水費 在第幾個位置 (不管名稱有沒有對齊，用模糊包含來抓)
+                const monthIndex = rawHeaders.findIndex(h => h.includes("月"));
+                const eleIndex = rawHeaders.findIndex(h => h.includes("電"));
+                const waterIndex = rawHeaders.findIndex(h => h.includes("水"));
+
+                if (monthIndex === -1 || eleIndex === -1 || waterIndex === -1) {
+                    throw new Error("找不到對應的標題欄位。抓到的標題為: " + rawHeaders.join(", "));
+                }
+
                 let totalWater = 0;
                 let totalElectricity = 0;
                 let historyTotal = 0;
-
-                // 趨勢圖所需陣列
                 const labels = [];
                 const monthlyTotals = [];
+                const dataRows = [];
 
-                data.forEach(row => {
-                    const water = parseFloat(row['水費']) || 0;
-                    const electricity = parseFloat(row['電費']) || 0;
-                    const monthlySum = water + electricity;
+                // 解析每一行數據
+                for(let i = 1; i < lines.length; i++) {
+                    // 使用標準的引號切割法
+                    const cells = lines[i].split(",").map(c => c.replace(/["']/g, '').trim());
+                    
+                    const monthVal = cells[monthIndex] || "未知";
+                    const eleVal = parseFloat(cells[eleIndex]) || 0;
+                    const waterVal = parseFloat(cells[waterIndex]) || 0;
+                    const sumVal = eleVal + waterVal;
 
-                    totalWater += water;
-                    totalElectricity += electricity;
-                    historyTotal += monthlySum;
+                    totalWater += waterVal;
+                    totalElectricity += eleVal;
+                    historyTotal += sumVal;
 
-                    labels.push(row['月份'] || '未知月份');
-                    monthlyTotals.push(monthlySum);
-                });
+                    labels.push(monthVal);
+                    monthlyTotals.push(sumVal);
+                    
+                    dataRows.push({
+                        month: monthVal,
+                        ele: eleVal,
+                        water: waterVal,
+                        total: sumVal
+                    });
+                }
 
-                // 取得最新月份的資料 (最後一列)
-                const latestRow = data[data.length - 1];
-                const currentMonth = latestRow['月份'] || '無資料';
-                const currentWater = parseFloat(latestRow['水費']) || 0;
-                const currentElectricity = parseFloat(latestRow['電費']) || 0;
-                const currentTotal = currentWater + currentElectricity;
+                const latest = dataRows[dataRows.length - 1];
 
-                // 動態渲染網頁介面 (填入真實數據與貨幣格式化)
                 const container = document.getElementById('mainContent');
                 container.innerHTML = `
-                    <div class="section-title">✨ 當月費用摘要 (${currentMonth})</div>
+                    <div class="section-title">✨ 當月費用摘要 (${latest.month})</div>
                     <div class="stats-grid">
                         <div class="stat-card">
                             <div class="stat-label">⚡ 當月電費</div>
-                            <div class="stat-value">NT$ ${currentElectricity.toLocaleString()}</div>
+                            <div class="stat-value">NT$ ${latest.ele.toLocaleString()}</div>
                             <div class="stat-sub">Google 試算表同步</div>
                         </div>
                         <div class="stat-card">
                             <div class="stat-label">💧 當月水費</div>
-                            <div class="stat-value">NT$ ${currentWater.toLocaleString()}</div>
+                            <div class="stat-value">NT$ ${latest.water.toLocaleString()}</div>
                             <div class="stat-sub">Google 試算表同步</div>
                         </div>
                         <div class="stat-card highlight">
                             <div class="stat-label">💰 當月總和</div>
-                            <div class="stat-value">NT$ ${currentTotal.toLocaleString()}</div>
+                            <div class="stat-value">NT$ ${latest.total.toLocaleString()}</div>
                             <div class="stat-sub">水費 + 電費合計</div>
                         </div>
                     </div>
@@ -247,7 +234,6 @@
                     </div>
                 `;
 
-                // 繪製高質感的動態折線圖 (高度還原 Manus 懸停微互動)
                 const ctx = document.getElementById('trendChart').getContext('2d');
                 new Chart(ctx, {
                     type: 'line',
@@ -264,16 +250,14 @@
                             pointBorderWidth: 2,
                             pointRadius: 5,
                             pointHoverRadius: 7,
-                            tension: 0.3, /* 讓折線變平滑流暢的曲線 */
+                            tension: 0.3,
                             fill: true
                         }]
                     },
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
-                        plugins: {
-                            legend: { display: false } /* 隱藏頂部單調的標籤 */
-                        },
+                        plugins: { legend: { display: false } },
                         scales: {
                             y: {
                                 grid: { color: '#edf2f7' },
@@ -282,9 +266,7 @@
                                     font: { family: 'PingFang TC' }
                                 }
                             },
-                            x: {
-                                grid: { display: false }
-                            }
+                            x: { grid: { display: false } }
                         }
                     }
                 });
@@ -292,39 +274,15 @@
             } catch (error) {
                 console.error("初始化失敗:", error);
                 document.getElementById('mainContent').innerHTML = `
-                    <div class="loading" style="color: #e53e3e;">
-                        ❌ 系統載入失敗。<br>
-                        <span style="font-size:13px; color:#718096; display:inline-block; margin-top:10px;">
-                            請確認 Google 試算表的欄位標頭是否精確命名為「月份」、「電費」、「水費」(直式架構)。
+                    <div class="loading" style="color: #e53e3e; text-align: left; max-width: 600px; margin: 0 auto;">
+                        ❌ 系統載入失敗。<br><br>
+                        <span style="font-size:14px; color:#718096;">
+                            錯誤訊息：${error.message}
                         </span>
                     </div>`;
             }
         }
 
-        // 🌟 升級版資料清洗解析器：完美相容 /gviz 接口的雙引號與 \r 換行符號
-        function parseCSV(text) {
-            // 移除所有看不見的 \r 雜質
-            const cleanText = text.replace(/\r/g, "");
-            const lines = cleanText.split("\n").map(line => line.trim()).filter(line => line);
-            if(lines.length === 0) return [];
-            
-            // 解析第一列標題，並自動去掉 UTF-8 BOM 還有兩側的雙引號 ""
-            const headers = lines[0].split(",").map(h => h.replace(/^\uFEFF/, '').replace(/^["']|["']$/g, '').trim());
-            
-            return lines.slice(1).map(line => {
-                // 用正則表達式切分欄位，完美抽離引號
-                const matches = line.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || line.split(",");
-                const cleanValues = matches.map(v => v.replace(/^["']|["']$/g, '').trim());
-                
-                const obj = {};
-                headers.forEach((header, index) => {
-                    obj[header] = cleanValues[index] !== undefined ? cleanValues[index] : "";
-                });
-                return obj;
-            });
-        }
-
-        // 啟動系統
         initDashboard();
     </script>
 </body>
