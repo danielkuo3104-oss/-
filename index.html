@@ -245,7 +245,6 @@
         </div>
     </div>
 
-    <!-- 頂部動態跑馬燈公告欄 -->
     <div class="marquee-wrapper" id="marqueeBar" style="display:none;">
         <div class="marquee-title">公告欄</div>
         <div class="marquee-content" id="marqueeContent"></div>
@@ -270,7 +269,6 @@
         <div class="copyright">© 2026 GUO DANIEL. ALL RIGHTS RESERVED.</div>
     </div>
 
-    <!-- 彈窗 -->
     <div class="modal-overlay" id="detailModal" onclick="closeModal(event)">
         <div class="modal-box" onclick="event.stopPropagation()">
             <div class="modal-title" id="modalTitle">明細摘要</div>
@@ -280,9 +278,9 @@
     </div>
 
     <script>
-        // 🌟 改用最純淨、絕不夾雜網頁代碼碎屑的發布連結管道
+        // 🚀 帶入全新修正並嚴格區分大小寫的真正發布網址
         const urlPrimary = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSzn-whbD_1ymRajG9nlc17-l1xCaQwsmg38h2ukNHl/pub?gid=0&output=csv";
-        const urlAnnounce = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSzn-whbD_1ymRajG9nlc17-l1xCaQwsmg38h2ukNHl/pub?gid=1849184511&output=csv"; // 💡 請確認你公告欄分頁的真實 gid 值
+        const urlAnnounce = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSzn-whbD_1ymRajG9nlc17-l1xCaQwsmg38h2ukNHl/pub?gid=1058170538&output=csv"; 
 
         let globalParsedData = []; 
 
@@ -296,7 +294,6 @@
             try {
                 const response = await fetch(urlAnnounce);
                 const text = await response.text();
-                // 如果抓到的是包含 HTML 標籤的污染網頁，直接拒絕解析避免崩潰
                 if (text.includes("<!doctype html") || text.includes("<script")) return;
 
                 const lines = text.replace(/\r/g, "").split("\n").map(l => l.trim()).filter(l => l);
@@ -310,7 +307,7 @@
                     const content = cells[0];
                     const level = cells[1] || "普通";
 
-                    if (content && !content.includes("<!DOCTYPE") && !content.includes("function")) {
+                    if (content) {
                         validCount++;
                         html += `
                             <div class="announcement-item text-${level}">
@@ -334,19 +331,14 @@
                 const response = await fetch(urlPrimary);
                 const csvText = await response.text();
                 
-                // 超級過濾：如果 Google 管道吐出垃圾代碼，立刻進行文字清洗截斷
                 let cleanText = csvText.replace(/\r/g, "");
-                if (cleanText.includes("/* Google total success len ")) {
-                    cleanText = cleanText.split("/* Google total success len ")[0];
-                }
-
                 const lines = cleanText.split("\n").map(line => line.trim()).filter(line => line);
                 if(lines.length < 2) throw new Error("無足夠的資料列數");
 
-                // 🚀 核心指標索引對齊
+                // 🚀 指標索引完全精確配對
                 const monthIdx = 0; 
                 const waterIdx = 1;
-                const eleTotalIdx = 11; // 💡 L 欄「總金額」
+                const eleTotalIdx = 11; // L 欄「總金額」
                 const meterIdx = { "內大": 2, "內小": 3, "中": 4, "外": 5, "總和": 6 };
                 const roomIdx = { "內大": 12, "內小": 13, "中": 14, "外": 15 };
 
@@ -365,14 +357,13 @@
                 for(let i = 1; i < lines.length; i++) {
                     const cells = lines[i].split(",").map(c => c.replace(/["'\uFEFF]/g, '').trim());
                     
-                    // 防禦機制：若欄位太少或是包含代碼碎屑、基準值，直接丟棄此行
-                    if(cells.length < 7 || !cells[monthIdx] || cells[monthIdx].includes("基準") || cells[monthIdx].includes("function") || cells[monthIdx].includes("<script")) {
+                    if(cells.length < 7 || !cells[monthIdx] || cells[monthIdx].includes("基準")) {
                         continue;
                     }
 
                     const monthVal = cells[monthIdx];
                     const waterVal = parseFloat(cells[waterIdx]) || 0;
-                    const eleTotalVal = parseFloat(cells[eleTotalIdx]) || 0; // 精準取L欄總金額
+                    const eleTotalVal = parseFloat(cells[eleTotalIdx]) || 0; 
                     const combinedSum = waterVal + eleTotalVal;
 
                     totalWater += waterVal;
@@ -463,7 +454,6 @@
                         </div>
                     </div>
 
-                    <!-- 🔘 灰色系歷月電表抄錄值專區 -->
                     <div class="gray-section">
                         <div class="gray-title">⚙️ 歷月電表抄錄底數觀測區</div>
                         <div class="stats-grid">
@@ -481,7 +471,7 @@
                     </div>
                 `;
 
-                // 圖表1
+                // 費用圖表
                 const ctx = document.getElementById('trendChart').getContext('2d');
                 new Chart(ctx, {
                     type: 'line',
@@ -500,7 +490,7 @@
                     }
                 });
 
-                // 圖表2
+                // 灰色度數圖表
                 const mCtx = document.getElementById('meterChart').getContext('2d');
                 new Chart(mCtx, {
                     type: 'line',
@@ -538,7 +528,7 @@
                             <div class="modal-row"><span class="modal-row-label">內小</span><span class="modal-row-value">NT$ ${item.rooms["內小"].toLocaleString()}</span></div>
                             <div class="modal-row"><span class="modal-row-label">中房間</span><span class="modal-row-value">NT$ ${item.rooms["中"].toLocaleString()}</span></div>
                             <div class="modal-row"><span class="modal-row-label">外房間</span><span class="modal-row-value">NT$ ${item.rooms["外"].toLocaleString()}</span></div>
-                            <div class="modal-row total-line"><span class="modal-row-label">總電費金額</span><span class="modal-row-value">NT$ ${item.eleTotal.toLocaleString()}</span></div>
+                            <div class="modal-row total-line"><span class="modal-row-label">總電費金額(L欄)</span><span class="modal-row-value">NT$ ${item.eleTotal.toLocaleString()}</span></div>
                         </div>`;
                 });
             } else if (type === 'water') {
@@ -569,11 +559,11 @@
                     htmlContent += `
                         <div class="modal-item-block" style="background:#f8fafc; padding:12px; border-radius:12px; margin-bottom:10px;">
                             <div class="modal-month-title" style="color:#475569;">${item.month} 抄錄值</div>
-                            <div class="modal-row"><span class="modal-label">內大電表</span><span class="modal-value">${item.meters["內大"]} 度</span></div>
-                            <div class="modal-row"><span class="modal-label">內小電表</span><span class="modal-value">${item.meters["內小"]} 度</span></div>
-                            <div class="modal-row"><span class="modal-label">中房間電表</span><span class="modal-value">${item.meters["中"]} 度</span></div>
-                            <div class="modal-row"><span class="modal-label">外房間電表</span><span class="modal-value">${item.meters["外"]} 度</span></div>
-                            <div class="modal-row total-line" style="border-color:#cbd5e1;"><span class="modal-label" style="color:#334155;">總和底數</span><span class="modal-value" style="color:#334155;">${item.meters["總和"]} 度</span></div>
+                            <div class="modal-row"><span class="modal-row-label">內大電表</span><span class="modal-row-value">${item.meters["內大"]} 度</span></div>
+                            <div class="modal-row"><span class="modal-row-label">內小電表</span><span class="modal-row-value">${item.meters["內小"]} 度</span></div>
+                            <div class="modal-row"><span class="modal-row-label">中房間電表</span><span class="modal-row-value">${item.meters["中"]} 度</span></div>
+                            <div class="modal-row"><span class="modal-row-label">外房間電表</span><span class="modal-row-value">${item.meters["外"]} 度</span></div>
+                            <div class="modal-row total-line" style="border-color:#cbd5e1;"><span class="modal-row-label" style="color:#334155;">總和底數</span><span class="modal-row-value" style="color:#334155;">${item.meters["總和"]} 度</span></div>
                         </div>`;
                 });
             }
