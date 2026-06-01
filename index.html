@@ -148,9 +148,9 @@
     </div>
 
     <script>
-        // 🚀【核心修正】這裡換成「發布到網路」所產生的真正公開 CSV 連結
-        const urlPrimary = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR6zS-Y6VdMAt732e7g11p60x_nS34r6-uorv9f-hK_MbyTclSqnG4I7bM3M98wL_8_23-5eA-v9I-I/pub?output=csv&gid=0";
-        const urlAnnounce = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR6zS-Y6VdMAt732e7g11p60x_nS34r6-uorv9f-hK_MbyTclSqnG4I7bM3M98wL_8_23-5eA-v9I-I/pub?output=csv&gid=1058170538"; 
+        // 🔒【終極強制修正】直接將你提供的金鑰代入並強制轉為公開 CSV 讀取路徑
+        const urlPrimary = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQkqhXCPp4XiHKCEpI3pz4pzcu3sQreQ_qNRLger00ULCHFr9cTbXHMQqAfk7dLa_gUBAIBSJ5sZM4F/pub?output=csv&gid=0";
+const urlAnnounce = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQkqhXCPp4XiHKCEpI3pz4pzcu3sQreQ_qNRLger00ULCHFr9cTbXHMQqAfk7dLa_gUBAIBSJ5sZM4F/pub?output=csv&gid=1058170538";
 
         let globalParsedData = []; 
 
@@ -200,9 +200,8 @@
                 const response = await fetch(urlPrimary);
                 const csvText = await response.text();
                 
-                // 🛡️ 安全過濾器：如果拿到的是登入畫面 HTML，直接拋出錯誤引導使用者
                 if (csvText.includes("<!doctype html") || csvText.includes("<script") || csvText.includes("login") || csvText.includes("Google Accounts")) {
-                    throw new Error("試算表未正確發布至網路（抓到的是登入保護頁面），請確認是否選擇了『發布為 CSV 格式』。");
+                    throw new Error("試算表後台尚未將發布類型正確轉換。請到試算表『共用』>『發布到網路』，在點擊發布按鈕上方的選單中，確認將『網頁』改成『逗號分隔值(.csv)』後關閉視窗。");
                 }
 
                 let cleanText = csvText.replace(/\r/g, "");
