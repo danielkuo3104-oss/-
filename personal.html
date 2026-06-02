@@ -24,7 +24,7 @@
         
         .update-time-tag {
             position: absolute; right: 0; bottom: -45px; font-size: 11px;
-            color: rgba(255, 255, 255, 0.75); background: rgba(0,  black, 0, 0.12);
+            color: rgba(255, 255, 255, 0.75); background: rgba(0, 0, 0, 0.12);
             padding: 4px 10px; border-radius: 20px; font-weight: 500;
             letter-spacing: 0.5px; backdrop-filter: blur(4px);
         }
@@ -51,7 +51,7 @@
         .profile-title-name { font-size: 24px; font-weight: 700; color: #69779b; }
         .profile-subtitle-room { font-size: 14px; color: #8a929a; font-weight: 500; margin-top: 4px; }
         
-        /* 🎨 優化後的莫蘭迪無違規與低調違規標籤 */
+        /* 🎨 莫蘭迪無違規與低調違規標籤 */
         .profile-violation-clean { background: #ebf5ee; color: #437353; padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; box-shadow: inset 0 1px 2px rgba(0,0,0,0.02); }
         .profile-violation-warn { background: #fdf5f2; color: #bc6c3a; padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; box-shadow: inset 0 1px 2px rgba(0,0,0,0.02); }
         
@@ -147,10 +147,16 @@
     </div>
 
     <script>
+        // 核心試算表資料來源
         const urlPrimary = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQkqhXCPp4XiHKCEpI3pz4pzcu3sQreQ_qNRLger00ULCHFr9cTbXHMQqAfk7dLa_gUBAIBSJ5sZM4F/pub?output=csv&gid=0";
+        
+        // 🔗 需求三：請將下方替換為你依照上方步驟獲取的「房客資訊分頁」獨立 CSV 連結
+        const urlTenantInfo = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQkqhXCPp4XiHKCEpI3pz4pzcu3sQreQ_qNRLger00ULCHFr9cTbXHMQqAfk7dLa_gUBAIBSJ5sZM4F/pub?output=csv";
 
         const tenantNames = { "內大": "洪健棋", "內小": "郭丹騏", "中": "尹奕竤", "外": "林易諒" };
-        const tenantViolations = { "內大": "0", "內小": "0", "中": "0", "外": "0" };
+        
+        // 預設為 0，稍後會透過 urlTenantInfo 動態覆蓋
+        let tenantViolations = { "內大": "0", "內小": "0", "中": "0", "外": "0" };
 
         let globalParsedData = []; 
         let personalChartInstance = null;
@@ -176,8 +182,42 @@
             });
         }
 
+        // 動態抓取房客資訊分頁的 F 欄
+        async function fetchTenantViolations() {
+            if (!urlTenantInfo || urlTenantInfo.includes("請替換")) return;
+            try {
+                const response = await fetch(urlTenantInfo);
+                const csvText = await response.text();
+                if (csvText.includes("<!doctype html")) return;
+
+                const lines = csvText.replace(/\r/g, "").split("\n").map(line => line.trim()).filter(line => line);
+                
+                // 從第二行（index 1）開始解析各房客的 F 欄 (index 5)
+                for (let i = 1; i < lines.length; i++) {
+                    const cells = lines[i].split(",").map(c => c.replace(/["']/g, '').trim());
+                    const rowText = lines[i];
+                    
+                    let matchedKey = null;
+                    if (rowText.includes("內大")) matchedKey = "內大";
+                    else if (rowText.includes("內小")) matchedKey = "內小";
+                    else if (rowText.includes("中")) matchedKey = "中";
+                    else if (rowText.includes("外")) matchedKey = "外";
+
+                    // F 欄是 index 5
+                    if (matchedKey && cells[5] !== undefined) {
+                        tenantViolations[matchedKey] = cells[5] || "0";
+                    }
+                }
+            } catch (e) {
+                console.error("動態違規次數抓取失敗，將採用預設值 0：", e);
+            }
+        }
+
         async function loadDataAndRender() {
             try {
+                // 同步抓取核心數據與違規次數分頁
+                await fetchTenantViolations();
+
                 const response = await fetch(urlPrimary);
                 const csvText = await response.text();
                 
@@ -240,13 +280,11 @@
             const currentEle = latest.rooms[roomKey] || 0;
             const currentWater = latest.waterPerRoom;
 
-            // 🚀 計算累計總金額
             const totalRentSum = globalParsedData.reduce((sum, d) => sum + (d.rents[roomKey] || 0), 0);
             const totalWaterSum = globalParsedData.reduce((sum, d) => sum + d.waterPerRoom, 0);
             const totalEleSum = globalParsedData.reduce((sum, d) => sum + (d.rooms[roomKey] || 0), 0);
             const overallGrandTotal = totalRentSum + totalWaterSum + totalEleSum;
 
-            // 🚀 改變突兀的違規呈現
             const violationElement = (violations === "0" || !violations) 
                 ? `<div class="profile-violation-clean">✓ 良好無違規紀錄</div>`
                 : `<div class="profile-violation-warn">⚠️ 違規次數：${violations} 次</div>`;
@@ -265,14 +303,10 @@
 
                 <div class="section-title">| 宿舍房租</div>
                 <div class="stats-grid">
-                    <div class="stat-card current-rent">
-                        <div class="stat-label">本月應繳房租</div>
-                        <div class="stat-value">NT$ ${currentRent.toLocaleString()}</div>
-                    </div>
                     <div class="stat-card current-rent" onclick="openPersonalHistoryPop('rent', '${roomKey}')">
-                        <div class="stat-label">歷月房租累計</div>
-                        <div class="stat-value" style="font-size:22px;">NT$ ${totalRentSum.toLocaleString()}</div>
-                        <div class="stat-sub">點擊展開歷史明細</div>
+                        <div class="stat-label">本月應繳房租 (點擊看歷史)</div>
+                        <div class="stat-value">NT$ ${currentRent.toLocaleString()}</div>
+                        <div class="stat-sub" style="color: #b56a6a; font-weight: 500;">歷月房租總累計：NT$ ${totalRentSum.toLocaleString()}</div>
                     </div>
                 </div>
 
@@ -328,12 +362,11 @@
                     </div>
                     <div class="summary-item" style="border-left: 1px dashed #cbd1d6; padding-left: 20px;">
                         <div class="summary-item-label" style="color: #4a515a; font-weight: 600;">歷月總花費累計</div>
-                        <div class="summary-item-value" style="color: #6e916e; font-size: 18px;">NT$ ${overallGrandTotal.toLocaleString()}</div>
+                        <div class="summary-item-value" style="color: #4a515a; font-size: 18px;">NT$ ${overallGrandTotal.toLocaleString()}</div>
                     </div>
                 </div>
             `;
 
-            // 🚀 繪製個人分析折線圖（剔除房租數據，僅留水電）
             if(personalChartInstance) personalChartInstance.destroy();
             personalChartInstance = new Chart(document.getElementById('personalTrendChart').getContext('2d'), {
                 type: 'line',
