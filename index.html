@@ -105,15 +105,14 @@
         .stat-card.history-card { background: #ffffff; border: 1px solid #e1e4e8; }
         .stat-card.history-card .stat-value { color: #4a515a; }
         
-        /* 🌟【視覺調整一】鮮豔且兼顧高級感的高飽和度霓虹莫蘭迪紫卡片 */
-        .stat-card.history-purple { 
-            background: linear-gradient(135deg, #7b2cbf 0%, #9d4edd 100%); 
-            border: 1px solid rgba(157, 78, 221, 0.2); 
-            box-shadow: 0 8px 24px rgba(123, 44, 191, 0.15);
-        }
-        .stat-card.history-purple .stat-label { color: rgba(255, 255, 255, 0.8); }
-        .stat-card.history-purple .stat-value { color: #ffffff; text-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .stat-card.history-purple .stat-sub { color: rgba(255, 255, 255, 0.7); }
+        /* 歷年累積卡片 */
+        .stat-card.history-card { background: #ffffff; border: 1px solid #e1e4e8; }
+        .stat-card.history-card .stat-value { color: #4a515a; }
+        
+        /* 🌟【修正：只改字的顏色】鮮豔的高級莫蘭迪紫文字，卡片依然保持白底 */
+        .stat-card.history-purple { background: #ffffff; border: 1px solid #e1e4e8; }
+        .stat-card.history-purple .stat-label { color: #9d4edd; font-weight: 600; }
+        .stat-card.history-purple .stat-value { color: #7b2cbf; }
 
         .chart-card { background: #ffffff; border-radius: 20px; padding: 24px; box-shadow: 0 8px 20px rgba(140, 149, 159, 0.08); border: 1px solid #e1e4e8; margin-bottom: 0; }
         .chart-container { position: relative; height: 350px; width: 100%; }
