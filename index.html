@@ -114,10 +114,8 @@
         .stat-card.history-card { background: #ffffff; border: 1px solid #e1e4e8; }
         .stat-card.history-card .stat-value { color: #4a515a; }
         
-       .stat-card.history-purple { background: #ffffff; border: 1px solid #e1e4e8; }
-        /* 這裡把 .stat-label 的顏色設定刪掉了，它會自動恢復成預設的灰色 */
+        .stat-card.history-purple { background: #ffffff; border: 1px solid #e1e4e8; }
         .stat-card.history-purple .stat-label { font-weight: 600; } 
-        /* 只有數字維持精緻的莫蘭迪紫 */
         .stat-card.history-purple .stat-value { color: #7b2cbf; }
 
         .chart-card { background: #ffffff; border-radius: 20px; padding: 24px; box-shadow: 0 8px 20px rgba(140, 149, 159, 0.08); border: 1px solid #e1e4e8; margin-bottom: 0; }
@@ -338,25 +336,41 @@
                     });
                 }
 
-                const latest = globalParsedData[globalParsedData.length - 1];
+                // 🚀 智慧跨月判定邏輯 (處理水電費兩個月一次的狀況)
+                const lastIdx = globalParsedData.length - 1;
+                let eleIdx = lastIdx;
+                let waterIdx = lastIdx;
+
+                if (globalParsedData[lastIdx].eleTotal === 0 && lastIdx > 0) eleIdx = lastIdx - 1;
+                if (globalParsedData[lastIdx].water === 0 && lastIdx > 0) waterIdx = lastIdx - 1;
+
+                const dispEle = globalParsedData[eleIdx];
+                const dispWater = globalParsedData[waterIdx];
+                const latest = globalParsedData[lastIdx];
+
+                const eleRemark = eleIdx !== lastIdx ? `<div style="font-size: 11px; color: #b56a6a; margin-top: 8px; font-weight: 600;">* 當月無帳單，顯示 ${dispEle.month} 費用</div>` : '';
+                const waterRemark = waterIdx !== lastIdx ? `<div style="font-size: 11px; color: #b56a6a; margin-top: 8px; font-weight: 600;">* 當月無帳單，顯示 ${dispWater.month} 費用</div>` : '';
                 
                 document.getElementById('mainContent').innerHTML = `
-                    <div class="section-title">當月費用摘要 (${latest.month})</div>
+                    <div class="section-title">近期費用摘要 (目前統計至 ${latest.month})</div>
                     <div class="stats-grid">
                         <div class="stat-card current-ele" onclick="openRoomDetails('currentEle')">
-                            <div class="stat-label">當月電費 (點擊看房間明細)</div>
-                            <div class="stat-value">NT$ ${latest.eleTotal.toLocaleString()}</div>
-                            <div class="impute-green-badge">✓ 公基金挹注 NT$ ${latest.eleImpute}</div>
+                            <div class="stat-label">近期電費 (點擊看房間明細)</div>
+                            <div class="stat-value">NT$ ${dispEle.eleTotal.toLocaleString()}</div>
+                            <div class="impute-green-badge">✓ 公基金挹注 NT$ ${dispEle.eleImpute}</div>
+                            ${eleRemark}
                         </div>
                         <div class="stat-card current-water" onclick="openRoomDetails('currentWater')">
-                            <div class="stat-label">當月水費 (點擊看當月明細)</div>
-                            <div class="stat-value">NT$ ${latest.water.toLocaleString()}</div>
-                            <div class="stat-sub">每房實付：NT$ ${latest.waterPerRoom}</div>
-                            <div class="impute-green-badge">✓ 公基金挹注 NT$ ${latest.waterImpute}</div>
+                            <div class="stat-label">近期水費 (點擊看當月明細)</div>
+                            <div class="stat-value">NT$ ${dispWater.water.toLocaleString()}</div>
+                            <div class="stat-sub">每房實付：NT$ ${dispWater.waterPerRoom}</div>
+                            <div class="impute-green-badge">✓ 公基金挹注 NT$ ${dispWater.waterImpute}</div>
+                            ${waterRemark}
                         </div>
                         <div class="stat-card current-total" onclick="openRoomDetails('currentSummary')">
                             <div class="stat-label">當月總和 (點擊看小計摘要)</div>
                             <div class="stat-value">NT$ ${latest.total.toLocaleString()}</div>
+                            <div class="stat-sub" style="margin-top: 8px;">*(僅計算 ${latest.month} 有出帳之項目)</div>
                         </div>
                     </div>
 
@@ -372,11 +386,10 @@
                             <div class="stat-value">NT$ ${totalWater.toLocaleString()}</div>
                             <div class="stat-sub">查看歷月自來水費單與挹注紀錄</div>
                         </div>
-                       <div class="stat-card history-purple" onclick="openRoomDetails('historySummary')">
+                        <div class="stat-card history-purple" onclick="openRoomDetails('historySummary')">
                             <div class="stat-label">歷年費用加總</div>
                             <div class="stat-value">NT$ ${historyTotal.toLocaleString()}</div>
                             <div class="stat-sub">查看歷月水電合併摘要小計</div>
-
                         </div> 
                     </div>
 
@@ -474,37 +487,47 @@
             const title = document.getElementById('modalTitle');
             const body = document.getElementById('modalBody');
             let htmlContent = "";
-            const latestItem = globalParsedData[globalParsedData.length - 1];
+
+            // 🚀 重新計算要抓取的月份（確保明細視窗顯示的資料與卡片一致）
+            const lastIdx = globalParsedData.length - 1;
+            let eleItem = globalParsedData[lastIdx];
+            if (eleItem.eleTotal === 0 && lastIdx > 0) eleItem = globalParsedData[lastIdx - 1];
+
+            let waterItem = globalParsedData[lastIdx];
+            if (waterItem.water === 0 && lastIdx > 0) waterItem = globalParsedData[lastIdx - 1];
+            
+            const latestItem = globalParsedData[lastIdx];
 
             if (type === 'currentEle') {
-                title.innerText = "當月電費分房明細";
+                title.innerText = `${eleItem.month} 電費分房明細`;
                 htmlContent = `
                     <div class="modal-item-block">
-                        <div class="modal-month-title">${latestItem.month} 實付分攤</div>
-                        <div class="modal-row"><span class="modal-row-label">${tenantNames["內大"]}</span><span class="modal-row-value">NT$ ${latestItem.rooms["內大"].toLocaleString()}</span></div>
-                        <div class="modal-row"><span class="modal-row-label">${tenantNames["內小"]}</span><span class="modal-row-value">NT$ ${latestItem.rooms["內小"].toLocaleString()}</span></div>
-                        <div class="modal-row"><span class="modal-row-label">${tenantNames["中"]}</span><span class="modal-row-value">NT$ ${latestItem.rooms["中"].toLocaleString()}</span></div>
-                        <div class="modal-row"><span class="modal-row-label">${tenantNames["外"]}</span><span class="modal-row-value">NT$ ${latestItem.rooms["外"].toLocaleString()}</span></div>
-                        <div style="font-size: 11px; color: #437353; background: #ebf5ee; padding: 6px 10px; border-radius: 6px; margin-top: 10px; font-weight: 600;">* 經電表精算後，公基金已自動挹注分攤 NT$ ${latestItem.eleImpute} 元</div>
-                        <div class="modal-row total-line"><span class="modal-row-label">當月電費總額</span><span class="modal-row-value" style="color:#d97736;">NT$ ${latestItem.eleTotal.toLocaleString()}</span></div>
+                        <div class="modal-month-title">${eleItem.month} 實付分攤</div>
+                        <div class="modal-row"><span class="modal-row-label">${tenantNames["內大"]}</span><span class="modal-row-value">NT$ ${eleItem.rooms["內大"].toLocaleString()}</span></div>
+                        <div class="modal-row"><span class="modal-row-label">${tenantNames["內小"]}</span><span class="modal-row-value">NT$ ${eleItem.rooms["內小"].toLocaleString()}</span></div>
+                        <div class="modal-row"><span class="modal-row-label">${tenantNames["中"]}</span><span class="modal-row-value">NT$ ${eleItem.rooms["中"].toLocaleString()}</span></div>
+                        <div class="modal-row"><span class="modal-row-label">${tenantNames["外"]}</span><span class="modal-row-value">NT$ ${eleItem.rooms["外"].toLocaleString()}</span></div>
+                        <div style="font-size: 11px; color: #437353; background: #ebf5ee; padding: 6px 10px; border-radius: 6px; margin-top: 10px; font-weight: 600;">* 經電表精算後，公基金已自動挹注分攤 NT$ ${eleItem.eleImpute} 元</div>
+                        <div class="modal-row total-line"><span class="modal-row-label">電費總額</span><span class="modal-row-value" style="color:#d97736;">NT$ ${eleItem.eleTotal.toLocaleString()}</span></div>
                     </div>`;
             } else if (type === 'currentWater') {
-                title.innerText = "當月水費明細摘要";
+                title.innerText = `${waterItem.month} 水費明細摘要`;
                 htmlContent = `
                     <div class="modal-item-block">
-                        <div class="modal-month-title">${latestItem.month} 自來水費明細</div>
-                        <div class="modal-row"><span class="modal-row-label">全戶總水費</span><span class="modal-row-value">NT$ ${latestItem.water.toLocaleString()}</span></div>
-                        <div class="modal-row"><span class="modal-row-label">每房實付 (4房均分)</span><span class="modal-row-value">NT$ ${latestItem.waterPerRoom.toLocaleString()}</span></div>
-                        <div style="font-size: 11px; color: #437353; background: #ebf5ee; padding: 6px 10px; border-radius: 6px; margin-top: 10px; font-weight: 600;">* 餘數 NT$ ${latestItem.waterImpute} 已由公共基金自動挹注分攤</div>
+                        <div class="modal-month-title">${waterItem.month} 自來水費明細</div>
+                        <div class="modal-row"><span class="modal-row-label">全戶總水費</span><span class="modal-row-value">NT$ ${waterItem.water.toLocaleString()}</span></div>
+                        <div class="modal-row"><span class="modal-row-label">每房實付 (4房均分)</span><span class="modal-row-value">NT$ ${waterItem.waterPerRoom.toLocaleString()}</span></div>
+                        <div style="font-size: 11px; color: #437353; background: #ebf5ee; padding: 6px 10px; border-radius: 6px; margin-top: 10px; font-weight: 600;">* 餘數 NT$ ${waterItem.waterImpute} 已由公共基金自動挹注分攤</div>
                     </div>`;
             } else if (type === 'currentSummary') {
-                title.innerText = "當月水電加總摘要";
+                title.innerText = `${latestItem.month} 水電加總摘要`;
                 htmlContent = `
                     <div class="modal-item-block">
                         <div class="modal-month-title">${latestItem.month} 支出加總</div>
                         <div class="modal-row"><span class="modal-row-label">總電費金額</span><span class="modal-row-value">NT$ ${latestItem.eleTotal.toLocaleString()}</span></div>
                         <div class="modal-row"><span class="modal-row-label">總水費金額</span><span class="modal-row-value">NT$ ${latestItem.water.toLocaleString()}</span></div>
                         <div class="modal-row total-line"><span class="modal-row-label">當月總計支出</span><span class="modal-row-value" style="color:#6e916e;">NT$ ${latestItem.total.toLocaleString()}</span></div>
+                        <div style="font-size: 11px; color: #8a929a; margin-top: 10px; text-align: center;">* 若該項目為 0，表示當月無該項帳單</div>
                     </div>`;
             } else if (type === 'historyEle') {
                 title.innerText = "歷月電費總額紀錄";
