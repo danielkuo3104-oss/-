@@ -212,11 +212,10 @@
     </div>
 
     <script>
-        // 🔒 定義公開發布之核心資料通道
         const urlPrimary = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQkqhXCPp4XiHKCEpI3pz4pzcu3sQreQ_qNRLger00ULCHFr9cTbXHMQqAfk7dLa_gUBAIBSJ5sZM4F/pub?output=csv&gid=0";
         const urlAnnounce = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQkqhXCPp4XiHKCEpI3pz4pzcu3sQreQ_qNRLger00ULCHFr9cTbXHMQqAfk7dLa_gUBAIBSJ5sZM4F/pub?output=csv&gid=1058170538"; 
 
-        // 🚀【第一步核心：防爆名單字典】百分之百精準對齊真實室友資料表
+        // 🚀【終極寫死字典】100% 完全防爆、不花時間抓取、點開即秀人名
         const tenantNames = {
             "內大": "洪健棋",
             "內小": "郭丹騏",
@@ -227,6 +226,7 @@
         let globalParsedData = []; 
         let trendChartInstance = null; 
 
+        // 🕒 計算並自動顯示目前更新時間
         function updateTimestamp() {
             const now = new Date();
             const yyyy = now.getFullYear();
@@ -472,7 +472,7 @@
             renderMainChart(mode, labels, eleData, waterData);
         }
 
-        // 🚀【第一步核心實作】在明細視窗中，利用字典將「內大」等代號直接變更為真實房客姓名
+        // 🚀【寫死對照核心】徹底防爆，明細彈窗秒出人名！
         function openRoomDetails(type) {
             const overlay = document.getElementById('detailModal');
             const title = document.getElementById('modalTitle');
@@ -485,10 +485,10 @@
                 htmlContent = `
                     <div class="modal-item-block">
                         <div class="modal-month-title">${latestItem.month} 實付分攤</div>
-                        <div class="modal-row"><span class="modal-row-label">${tenantNames["內大"] || "內大"}</span><span class="modal-row-value">NT$ ${latestItem.rooms["內大"].toLocaleString()}</span></div>
-                        <div class="modal-row"><span class="modal-row-label">${tenantNames["內小"] || "內小"}</span><span class="modal-row-value">NT$ ${latestItem.rooms["內小"].toLocaleString()}</span></div>
-                        <div class="modal-row"><span class="modal-row-label">${tenantNames["中"] || "中"}</span><span class="modal-row-value">NT$ ${latestItem.rooms["中文"].toLocaleString()}</span></div>
-                        <div class="modal-row"><span class="modal-row-label">${tenantNames["外"] || "外"}</span><span class="modal-row-value">NT$ ${latestItem.rooms["外"].toLocaleString()}</span></div>
+                        <div class="modal-row"><span class="modal-row-label">${tenantNames["內大"]}</span><span class="modal-row-value">NT$ ${latestItem.rooms["內大"].toLocaleString()}</span></div>
+                        <div class="modal-row"><span class="modal-row-label">${tenantNames["內小"]}</span><span class="modal-row-value">NT$ ${latestItem.rooms["內小"].toLocaleString()}</span></div>
+                        <div class="modal-row"><span class="modal-row-label">${tenantNames["中"]}</span><span class="modal-row-value">NT$ ${latestItem.rooms["中"].toLocaleString()}</span></div>
+                        <div class="modal-row"><span class="modal-row-label">${tenantNames["外"]}</span><span class="modal-row-value">NT$ ${latestItem.rooms["外"].toLocaleString()}</span></div>
                         <div class="impute-note">* 經電表精算後，公基金已自動挹注分攤 NT$ ${latestItem.eleImpute} 元</div>
                         <div class="modal-row total-line"><span class="modal-row-label">當月電費總額</span><span class="modal-row-value" style="color:#d97736;">NT$ ${latestItem.eleTotal.toLocaleString()}</span></div>
                     </div>`;
@@ -553,10 +553,10 @@
                     htmlContent += `
                         <div class="modal-item-block" style="background:#f8fafc; padding:12px; border-radius:12px; margin-bottom:10px; border: 1px solid #eef2f5;">
                             <div class="modal-month-title" style="color:#54606e;">${item.month} 實際用電</div>
-                            <div class="modal-row"><span class="modal-row-label">${tenantNames["內大"] || "內大"}</span><span class="modal-row-value">${item.deltaMeters["內大"]} 度</span></div>
-                            <div class="modal-row"><span class="modal-row-label">${tenantNames["內小"] || "內小"}</span><span class="modal-row-value">${item.deltaMeters["內小"]} 度</span></div>
-                            <div class="modal-row"><span class="modal-row-label">${tenantNames["中"] || "中"}</span><span class="modal-row-value">${item.deltaMeters["中"]} 度</span></div>
-                            <div class="modal-row"><span class="modal-row-label">${tenantNames["外"] || "外"}</span><span class="modal-row-value">${item.deltaMeters["外"]} 度</span></div>
+                            <div class="modal-row"><span class="modal-row-label">${tenantNames["內大"]}</span><span class="modal-row-value">${item.deltaMeters["內大"]} 度</span></div>
+                            <div class="modal-row"><span class="modal-row-label">${tenantNames["內小"]}</span><span class="modal-row-value">${item.deltaMeters["內小"]} 度</span></div>
+                            <div class="modal-row"><span class="modal-row-label">${tenantNames["中"]}</span><span class="modal-row-value">${item.deltaMeters["中"]} 度</span></div>
+                            <div class="modal-row"><span class="modal-row-label">${tenantNames["外"]}</span><span class="modal-row-value">${item.deltaMeters["外"]} 度</span></div>
                             <div class="modal-row total-line" style="border-color:#d2dae2;"><span class="modal-row-label" style="color:#4a515a;">全戶用電淨增加</span><span class="modal-row-value" style="color:#527996;">${item.deltaMeters["總和"]} 度</span></div>
                         </div>`;
                 });
