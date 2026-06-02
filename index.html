@@ -370,9 +370,9 @@
                 }
 
                 const latest = globalParsedData[globalParsedData.length - 1];
-                const container = document.getElementById('mainContent');
                 
-                container.innerHTML = `
+                // 🌟【修正：恢復為最原始的 mainContent 容器，確保不爆掉閃退】
+                document.getElementById('mainContent').innerHTML = `
                     <div class="section-title">當月費用摘要 (${latest.month})</div>
                     <div class="stats-grid">
                         <div class="stat-card current-ele" onclick="openRoomDetails('currentEle')">
@@ -383,12 +383,11 @@
                         <div class="stat-card current-water" onclick="openRoomDetails('currentWater')">
                             <div class="stat-label">當月水費 (點擊看當月明細)</div>
                             <div class="stat-value">NT$ ${latest.water.toLocaleString()}</div>
-                            <div class="impute-note">附註：公基金已自動挹注 NT$ ${latest.waterImpute}</div>
+                            <div class="stat-sub">每房實付：NT$ ${latest.waterPerRoom}</div>
                         </div>
                         <div class="stat-card current-total" onclick="openRoomDetails('currentSummary')">
                             <div class="stat-label">當月總和 (點擊看小計摘要)</div>
                             <div class="stat-value">NT$ ${latest.total.toLocaleString()}</div>
-                            <div class="stat-sub">水費 + 電費當月總支出額</div>
                         </div>
                     </div>
 
@@ -421,7 +420,7 @@
                     <div class="chart-card"><div class="chart-container"><canvas id="trendChart"></canvas></div></div>
 
                     <div class="gray-section">
-                        <div class="gray-title">⚙️ 歷月電表抄錄</div>
+                        <div class="gray-title">歷月電表抄錄</div>
                         <div class="stats-grid">
                             <div class="stat-card gray-card" onclick="openRoomDetails('meter')">
                                 <div class="stat-label" style="color: #7e8794;">當月消耗用電總值 (${latest.month})</div>
