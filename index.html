@@ -212,16 +212,21 @@
     </div>
 
     <script>
-        // 🔒 固定使用你取得的正確公開 CSV 發布網址
+        // 🔒 定義公開發布之核心資料通道
         const urlPrimary = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQkqhXCPp4XiHKCEpI3pz4pzcu3sQreQ_qNRLger00ULCHFr9cTbXHMQqAfk7dLa_gUBAIBSJ5sZM4F/pub?output=csv&gid=0";
         const urlAnnounce = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQkqhXCPp4XiHKCEpI3pz4pzcu3sQreQ_qNRLger00ULCHFr9cTbXHMQqAfk7dLa_gUBAIBSJ5sZM4F/pub?output=csv&gid=1058170538"; 
-        const urlTenants = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQkqhXCPp4XiHKCEpI3pz4pzcu3sQreQ_qNRLger00ULCHFr9cTbXHMQqAfk7dLa_gUBAIBSJ5sZM4F/pub?output=csv&gid=143232120"; // 房客資訊分頁
+
+        // 🚀【第一步核心：防爆名單字典】百分之百精準對齊真實室友資料表
+        const tenantNames = {
+            "內大": "洪健棋",
+            "內小": "郭丹騏",
+            "中": "尹奕竤",
+            "外": "林易諒"
+        };
 
         let globalParsedData = []; 
         let trendChartInstance = null; 
-        let tenantNames = {}; // 🚀 用於建立房號與人名的交叉對照
 
-        // 🕒 計算並自動顯示目前更新時間
         function updateTimestamp() {
             const now = new Date();
             const yyyy = now.getFullYear();
@@ -234,30 +239,8 @@
 
         async function startSystem() {
             updateTimestamp();
-            await fetchTenantNames(); // 🚀 先去撈取房客名稱對照
             await loadAnnouncements();
             await initDashboard();
-        }
-
-        // 🚀【核心修正】從房客資訊分頁非同步抓取人名
-        async function fetchTenantNames() {
-            try {
-                const response = await fetch(urlTenants);
-                const text = await response.text();
-                const lines = text.split("\n").map(l => l.trim()).filter(l => l);
-                lines.shift(); // 移除第一行標頭
-
-                lines.forEach(line => {
-                    const cells = line.split(",").map(c => c.replace(/["']/g, '').trim());
-                    if (cells.length >= 2) {
-                        const roomKey = cells[0];   // 內大
-                        const realName = cells[1];  // 洪健棋
-                        tenantNames[roomKey] = realName;
-                    }
-                });
-            } catch (e) {
-                console.error("房客姓名對照載入失敗:", e);
-            }
         }
 
         async function loadAnnouncements() {
@@ -320,7 +303,7 @@
 
                 for(let i = 1; i < lines.length; i++) {
                     const cells = lines[i].split(",").map(c => c.replace(/["'\uFEFF]/g, '').trim());
-                    if(cells.length < 12 || !cells[monthIdx] || cells[monthIdx].includes("基準") || cells[monthIdx].includes("<script")) continue;
+                    if(cells.length < 16 || !cells[monthIdx] || cells[monthIdx].includes("基準") || cells[monthIdx].includes("<script")) continue;
 
                     const monthVal = cells[monthIdx];
                     const waterVal = parseFloat(cells[waterIdx]) || 0;
@@ -435,7 +418,6 @@
             }
         }
 
-        // 渲染主分析圖表
         function renderMainChart(type, labels, eleData, waterData) {
             const ctx = document.getElementById('trendChart').getContext('2d');
             if(trendChartInstance) { trendChartInstance.destroy(); } 
@@ -490,7 +472,7 @@
             renderMainChart(mode, labels, eleData, waterData);
         }
 
-        // 🚀【核心修正】在明細彈窗渲染中，自動將代號轉換為真實房客姓名
+        // 🚀【第一步核心實作】在明細視窗中，利用字典將「內大」等代號直接變更為真實房客姓名
         function openRoomDetails(type) {
             const overlay = document.getElementById('detailModal');
             const title = document.getElementById('modalTitle');
@@ -505,7 +487,7 @@
                         <div class="modal-month-title">${latestItem.month} 實付分攤</div>
                         <div class="modal-row"><span class="modal-row-label">${tenantNames["內大"] || "內大"}</span><span class="modal-row-value">NT$ ${latestItem.rooms["內大"].toLocaleString()}</span></div>
                         <div class="modal-row"><span class="modal-row-label">${tenantNames["內小"] || "內小"}</span><span class="modal-row-value">NT$ ${latestItem.rooms["內小"].toLocaleString()}</span></div>
-                        <div class="modal-row"><span class="modal-row-label">${tenantNames["中"] || "中"}</span><span class="modal-row-value">NT$ ${latestItem.rooms["中"].toLocaleString()}</span></div>
+                        <div class="modal-row"><span class="modal-row-label">${tenantNames["中"] || "中"}</span><span class="modal-row-value">NT$ ${latestItem.rooms["中文"].toLocaleString()}</span></div>
                         <div class="modal-row"><span class="modal-row-label">${tenantNames["外"] || "外"}</span><span class="modal-row-value">NT$ ${latestItem.rooms["外"].toLocaleString()}</span></div>
                         <div class="impute-note">* 經電表精算後，公基金已自動挹注分攤 NT$ ${latestItem.eleImpute} 元</div>
                         <div class="modal-row total-line"><span class="modal-row-label">當月電費總額</span><span class="modal-row-value" style="color:#d97736;">NT$ ${latestItem.eleTotal.toLocaleString()}</span></div>
