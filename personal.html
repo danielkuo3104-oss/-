@@ -98,15 +98,15 @@
         .td-ele { color: #bc6c3a; font-weight: 600; }    /* 橘 */
         .table-total-bold { font-weight: 700; color: #6e916e; }
 
-        /* 下方總額彙整區塊樣式 */
+        /* 🚀 修正排版：使用 Grid 系統打造電腦一排4個、手機完美2x2 */
         .total-summary-box {
             margin-top: 20px; background: #ffffff; padding: 24px; border-radius: 20px;
             border: 1px solid #e1e4e8; box-shadow: 0 6px 18px rgba(0,0,0,0.02);
-            display: flex; justify-content: space-between; flex-wrap: wrap; gap: 20px;
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px;
         }
-        .summary-item { min-width: 140px; }
         .summary-item-label { font-size: 12px; color: #8a929a; margin-bottom: 6px; font-weight: 500; }
         .summary-item-value { font-size: 16px; font-weight: 700; }
+        .summary-item-total { border-left: 1px dashed #cbd1d6; padding-left: 20px; }
 
         .copyright { font-size: 11px; color: #9ba3ab; text-align: center; letter-spacing: 0.5px; margin-top: 30px; }
 
@@ -118,6 +118,30 @@
         .modal-row { display:flex; justify-content:space-between; padding:10px 0; font-size:13px; color:#5a6168; border-bottom:1px solid #f0f2f5; }
         .close-btn { width:100%; background:#69779b; color:white; border:none; padding:12px; border-radius:12px; font-size:14px; font-weight:600; cursor:pointer; margin-top:20px; transition:background 0.2s; }
         .close-btn:hover { background:#586585; }
+
+        /* 🚀 手機版專屬樣式調整 */
+        @media (max-width: 768px) {
+            .header-banner { padding: 35px 20px 45px 20px; }
+            .header-banner h1 { font-size: 22px; }
+            .update-time-tag { bottom: -28px; right: 20px; font-size: 10px; padding: 3px 8px; }
+            .main-container { padding: 0 16px; margin-bottom: 25px; }
+            .section-title { margin: 38px 0 16px 0; font-size: 15px; }
+            .stats-grid { gap: 20px; }
+            .stat-card { padding: 20px; border-radius: 18px; }
+            .stat-value { font-size: 22px; }
+            .chart-card { padding: 16px; border-radius: 18px; margin-top: 16px; }
+            .chart-container { height: 280px; }
+            
+            /* 強制手機版為完美的 2x2 網格 */
+            .total-summary-box {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 24px 16px; padding: 20px;
+            }
+            .summary-item-total {
+                border-left: none; /* 手機版移除分隔線，保持排版乾淨平衡 */
+                padding-left: 0;
+            }
+        }
     </style>
 </head>
 <body>
@@ -306,6 +330,7 @@
                     <div class="stat-card current-rent" onclick="openPersonalHistoryPop('rent', '${roomKey}')">
                         <div class="stat-label">本月應繳房租 (點擊看歷史)</div>
                         <div class="stat-value">NT$ ${currentRent.toLocaleString()}</div>
+                        <div class="stat-sub" style="color: #b56a6a; font-weight: 500;">歷月房租總累計：NT$ ${totalRentSum.toLocaleString()}</div>
                     </div>
                 </div>
 
@@ -359,7 +384,7 @@
                         <div class="summary-item-label">歷月電費總計</div>
                         <div class="summary-item-value" style="color: #bc6c3a;">NT$ ${totalEleSum.toLocaleString()}</div>
                     </div>
-                    <div class="summary-item" style="border-left: 1px dashed #cbd1d6; padding-left: 20px;">
+                    <div class="summary-item summary-item-total">
                         <div class="summary-item-label" style="color: #4a515a; font-weight: 600;">歷月總花費累計</div>
                         <div class="summary-item-value" style="color: #6e916e; font-size: 18px;">NT$ ${overallGrandTotal.toLocaleString()}</div>
                     </div>
