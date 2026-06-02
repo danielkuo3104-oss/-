@@ -215,7 +215,7 @@
         const urlPrimary = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQkqhXCPp4XiHKCEpI3pz4pzcu3sQreQ_qNRLger00ULCHFr9cTbXHMQqAfk7dLa_gUBAIBSJ5sZM4F/pub?output=csv&gid=0";
         const urlAnnounce = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQkqhXCPp4XiHKCEpI3pz4pzcu3sQreQ_qNRLger00ULCHFr9cTbXHMQqAfk7dLa_gUBAIBSJ5sZM4F/pub?output=csv&gid=1058170538"; 
 
-        // 🚀【終極寫死字典】100% 完全防爆、不花時間抓取、點開即秀人名
+        // 🚀【靜態對照字典】精準鎖定人名，不花時間載入
         const tenantNames = {
             "內大": "洪健棋",
             "內小": "郭丹騏",
@@ -472,7 +472,7 @@
             renderMainChart(mode, labels, eleData, waterData);
         }
 
-        // 🚀【寫死對照核心】徹底防爆，明細彈窗秒出人名！
+        // 🎯【完美對齊與防爆修正】
         function openRoomDetails(type) {
             const overlay = document.getElementById('detailModal');
             const title = document.getElementById('modalTitle');
@@ -532,6 +532,7 @@
                         </div>`;
                 });
             } else if (type === 'historySummary') {
+                // 🌟【完美回歸：歷史明細水電拆分】
                 title.innerText = "歷史水電帳單紀錄明細";
                 globalParsedData.forEach(item => {
                     htmlContent += `
