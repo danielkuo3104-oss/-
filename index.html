@@ -33,45 +33,19 @@
         .nav-link { padding: 16px 24px; font-size: 14px; font-weight: 600; color: #8a929a; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.25s ease; text-decoration: none; }
         .nav-link.active { color: #69779b; border-bottom-color: #69779b; }
 
-        /* 公告欄跑馬燈 */
-        .marquee-wrapper {
-            background: #ffffff; border-bottom: 1px solid #e1e4e8; height: 44px;
-            overflow: hidden; position: relative; display: flex; align-items: center;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
-        }
-        .marquee-title {
-            position: absolute; left: 0; top: 0; bottom: 0; background: #7a828a;
-            color: #ffffff; padding: 0 16px; font-size: 13px; font-weight: 600;
-            display: flex; align-items: center; z-index: 10; letter-spacing: 1px;
-        }
-        .marquee-content {
-            display: flex; white-space: nowrap; position: absolute; left: 100%;
-            animation: marquee linear infinite; padding-left: 20px;
-        }
-        @keyframes marquee {
-            0% { left: 100%; transform: translate3d(0,0,0); }
-            100% { left: 0; transform: translate3d(-100%,0,0); }
-        }
+        .marquee-wrapper { background: #ffffff; border-bottom: 1px solid #e1e4e8; height: 44px; overflow: hidden; position: relative; display: flex; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.02); }
+        .marquee-title { position: absolute; left: 0; top: 0; bottom: 0; background: #7a828a; color: #ffffff; padding: 0 16px; font-size: 13px; font-weight: 600; display: flex; align-items: center; z-index: 10; letter-spacing: 1px; }
+        .marquee-content { display: flex; white-space: nowrap; position: absolute; left: 100%; animation: marquee linear infinite; padding-left: 20px; }
+        @keyframes marquee { 0% { left: 100%; transform: translate3d(0,0,0); } 100% { left: 0; transform: translate3d(-100%,0,0); } }
         .announcement-item { display: inline-flex; align-items: center; margin-right: 50px; font-size: 13px; font-weight: 500; }
         .badge { padding: 3px 9px; border-radius: 6px; font-size: 11px; font-weight: 700; margin-right: 8px; }
-        .badge.緊急 { background: #d96b6b; color: white; animation: pulse 1s infinite alternate; }
+        .badge.緊急 { background: #d96b6b; color: white; }
         .badge.重要 { background: #d9886b; color: white; }
         .badge.普通 { background: #cbd1d6; color: #5a6168; }
-        .text-緊急 { color: #b54a4a; font-weight: 700; }
-        .text-重要 { color: #b56a4a; }
-        .text-普通 { color: #5a6168; }
-        @keyframes pulse { 0% { opacity: 1; } 100% { opacity: 0.6; } }
 
         .main-container { max-width: 1200px; margin: 0 auto 40px auto; padding: 0 20px; box-sizing: border-box; }
         .loading { padding: 40px 0; text-align: center; font-size: 14px; color: #8a929a; }
-        .section-title { 
-            font-size: 16px; 
-            font-weight: 600; 
-            color: #626973; 
-            letter-spacing: 1px; 
-            margin: 42px 0 18px 0; 
-            display: block;
-        }
+        .section-title { font-size: 16px; font-weight: 600; color: #626973; letter-spacing: 1px; margin: 42px 0 18px 0; display: block; }
         
         .chart-header-row { display: flex; justify-content: space-between; align-items: center; margin: 0; }
         .toggle-btn-group { display: flex; background: #e2e6ea; padding: 3px; border-radius: 10px; border: 1px solid #d1d5db; }
@@ -89,32 +63,17 @@
         .stat-value { font-size: 24px; font-weight: 700; color: #3a414a; }
         .stat-sub { font-size: 12px; color: #9ba3ab; margin-top: 8px; line-height: 1.5; }
         
-        /* 🌿 專屬於公基金挹注的淡綠色標籤風格 */
-        .impute-green-badge {
-            display: inline-block; font-size: 11px; font-weight: 600; color: #437353;
-            background: #ebf5ee; border: 1px solid #d5ebd9; padding: 4px 10px;
-            border-radius: 8px; margin-top: 10px;
-        }
-        
-        /* ⚠️ 跨月無帳單提示標籤 */
-        .cross-month-badge {
-            display: inline-block; font-size: 11px; font-weight: 600; color: #b56a6a;
-            background: rgba(181, 106, 106, 0.06); border: 1px solid rgba(181, 106, 106, 0.15);
-            padding: 4px 10px; border-radius: 8px; margin-top: 8px;
-        }
+        .impute-green-badge { display: inline-block; font-size: 11px; font-weight: 600; color: #437353; background: #ebf5ee; border: 1px solid #d5ebd9; padding: 4px 10px; border-radius: 8px; margin-top: 10px; }
+        .cross-month-badge { display: inline-block; font-size: 11px; font-weight: 600; color: #b56a6a; background: rgba(181, 106, 106, 0.06); border: 1px solid rgba(181, 106, 106, 0.15); padding: 4px 10px; border-radius: 8px; margin-top: 8px; }
         
         .stat-card.current-ele { background: linear-gradient(135deg, #ffffff 0%, #fdf6f0 100%); border: 1px solid rgba(217, 119, 54, 0.15); }
         .stat-card.current-ele .stat-value { color: #d97736; }
-        
         .stat-card.current-water { background: linear-gradient(135deg, #ffffff 0%, #edf3f7 100%); border: 1px solid rgba(82, 121, 150, 0.18); }
         .stat-card.current-water .stat-value { color: #527996; }
-        
         .stat-card.current-total { background: linear-gradient(135deg, #ffffff 0%, #f3f6f3 100%); border: 1px solid rgba(110, 145, 110, 0.15); }
         .stat-card.current-total .stat-value { color: #6e916e; }
 
         .stat-card.history-card { background: #ffffff; border: 1px solid #e1e4e8; }
-        .stat-card.history-card .stat-value { color: #4a515a; }
-        
         .stat-card.history-purple { background: #ffffff; border: 1px solid #e1e4e8; }
         .stat-card.history-purple .stat-label { font-weight: 600; } 
         .stat-card.history-purple .stat-value { color: #7b2cbf; }
@@ -124,15 +83,14 @@
         
         .gray-section { background: #e6ebf0; border-radius: 24px; padding: 24px; margin-top: 45px; border: 1px solid #d2dae2; }
         .gray-title { color: #54606e; font-size: 15px; font-weight: 600; margin-bottom: 16px; letter-spacing: 0.5px; }
-        .gray-card { background: #f5f8fa; border-radius: 16px; padding: 20px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.01); border: 1px solid #dbe2e8; }
+        .gray-card { background: #f5f8fa; border-radius: 16px; padding: 20px; border: 1px solid #dbe2e8; }
         .meter-chart-spacer { margin-top: 25px; }
 
         .rules-card { background: #ffffff; border-radius: 20px; padding: 26px; box-shadow: 0 8px 20px rgba(140, 149, 159, 0.08); border: 1px solid #e1e4e8; margin-bottom: 40px; }
         .rules-list { margin: 0; padding-left: 20px; color: #626973; line-height: 1.8; font-size: 13px; }
         .rules-list li { margin-bottom: 10px; }
-        .copyright { font-size: 11px; color: #9ba3ab; text-align: center; letter-spacing: 0.5px; margin-top: 30px; }
+        .copyright { font-size: 11px; color: #9ba3ab; text-align: center; letter-spacing: 0.5px; }
 
-        /* 彈出視窗樣式 */
         .modal-overlay { position: fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.4); display:none; justify-content:center; align-items:center; z-index:1000; backdrop-filter: blur(4px); }
         .modal-overlay.active { display:flex; }
         .modal-box { background:#ffffff; width:90%; max-width:500px; border-radius:24px; padding:28px; box-shadow:0 12px 30px rgba(0,0,0,0.15); max-height:80vh; overflow-y:auto; }
@@ -212,21 +170,21 @@
         const urlAnnounce = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQkqhXCPp4XiHKCEpI3pz4pzcu3sQreQ_qNRLger00ULCHFr9cTbXHMQqAfk7dLa_gUBAIBSJ5sZM4F/pub?output=csv&gid=1058170538"; 
 
         const tenantNames = { "內大": "洪健棋", "內小": "郭丹騏", "中": "尹奕竤", "外": "林易諒" };
-
         let globalParsedData = []; 
         let trendChartInstance = null; 
 
         function updateTimestamp() {
-            const now = new Date();
-            const yyyy = now.getFullYear();
-            const mm = String(now.getMonth() + 1).padStart(2, '0');
-            const dd = String(now.getDate()).padStart(2, '0');
-            const hh = String(now.getHours()).padStart(2, '0');
-            const min = String(now.getMinutes()).padStart(2, '0');
-            document.getElementById('updateTimeDisplay').innerText = `資料更新：${yyyy}/${mm}/${dd} ${hh}:${min}`;
+            try {
+                const now = new Date();
+                const yyyy = now.getFullYear();
+                const mm = String(now.getMonth() + 1).padStart(2, '0');
+                const dd = String(now.getDate()).padStart(2, '0');
+                const hh = String(now.getHours()).padStart(2, '0');
+                const min = String(now.getMinutes()).padStart(2, '0');
+                document.getElementById('updateTimeDisplay').innerText = `資料更新：${yyyy}/${mm}/${dd} ${hh}:${min}`;
+            } catch(e) { console.error("Timestamp error", e); }
         }
 
-        // 🚀 修復：讓公告加載與主數據分開執行，避免任何一方卡住導致畫面空白
         function startSystem() {
             updateTimestamp();
             loadAnnouncements(); 
@@ -247,15 +205,13 @@
 
                 for (let i = 1; i < lines.length; i++) {
                     const cells = lines[i].split(",").map(c => c.replace(/["']/g, '').trim());
+                    if(cells.length < 1 || !cells[0]) continue;
                     const content = cells[0];
                     const level = cells[1] || "普通";
 
                     if (content && !content.includes("<!DOCTYPE")) {
                         validCount++;
-                        html += `
-                            <div class="announcement-item text-${level}">
-                                <span class="badge ${level}">${level}</span> ${content}
-                            </div>`;
+                        html += `<div class="announcement-item text-${level}"><span class="badge ${level}">${level}</span> ${content}</div>`;
                     }
                 }
 
@@ -264,9 +220,7 @@
                     document.getElementById('marqueeContent').style.animationDuration = `${validCount * 12}s`;
                     document.getElementById('marqueeBar').style.display = "flex";
                 }
-            } catch (e) {
-                console.error("公告欄加載失敗:", e);
-            }
+            } catch (e) { console.error("公告欄加載失敗:", e); }
         }
 
         async function initDashboard() {
@@ -274,7 +228,7 @@
                 const response = await fetch(urlPrimary);
                 const csvText = await response.text();
                 
-                if (csvText.includes("<!doctype html") || csvText.includes("<script") || csvText.includes("login")) {
+                if (csvText.includes("<!doctype html") || csvText.includes("<script")) {
                     throw new Error("試算表載入失敗，可能是權限未公開。");
                 }
 
@@ -285,18 +239,17 @@
                 const monthIdx = 0; const waterIdx = 1; const eleTotalIdx = 11; 
                 const deltaIdx = { "內大": 7, "內小": 8, "中": 9, "外": 10, "總和": 6 }; 
                 const roomCostIdx = { "內大": 12, "內小": 13, "中": 14, "外": 15 }; 
-                const rentCostIdx = { "內大": 23, "內小": 24, "中": 25, "外": 26 };
 
                 let totalWater = 0; let totalElectricity = 0; let historyTotal = 0;
                 const labels = []; const waterChartData = []; const eleChartData = [];
                 const meterLabels = []; const meterDeltaTotal = [];
                 globalParsedData = [];
 
+                // 🚀 防彈解析機制：即便表格中間有空缺也不會當機
                 for(let i = 1; i < lines.length; i++) {
-                    const cells = lines[i].split(",").map(c => c.replace(/["'\uFEFF]/g, '').trim());
+                    const cells = lines[i].split(",").map(c => c ? c.replace(/["'\uFEFF]/g, '').trim() : "");
                     
-                    // 🚀 放寬欄位長度審查，只要有月份名稱就執行解析，防止後方空值導致整行被略過而當機
-                    if(cells.length < 10 || !cells[monthIdx] || cells[monthIdx].includes("基準")) continue;
+                    if(!cells[monthIdx] || cells[monthIdx].includes("基準")) continue;
 
                     const monthVal = cells[monthIdx];
                     const waterVal = parseFloat(cells[waterIdx]) || 0;
@@ -330,12 +283,6 @@
                             "內小": parseFloat(cells[roomCostIdx["內小"]]) || 0, 
                             "中": parseFloat(cells[roomCostIdx["中"]]) || 0, 
                             "外": parseFloat(cells[roomCostIdx["外"]]) || 0 
-                        },
-                        rents: {
-                            "內大": parseFloat(cells[rentCostIdx["內大"]]) || 0,
-                            "內小": parseFloat(cells[rentCostIdx["內小"]]) || 0,
-                            "中": parseFloat(cells[rentCostIdx["中"]]) || 0,
-                            "外": parseFloat(cells[rentCostIdx["外"]]) || 0
                         }
                     });
                 }
@@ -345,7 +292,7 @@
                 const lastIdx = globalParsedData.length - 1;
                 const latest = globalParsedData[lastIdx];
 
-                // 🚀 智慧跨月回溯邏輯：如果這個月沒帳單(0元)，就往前找上個月的資料
+                // 🚀 智慧跨月回溯邏輯
                 let eleIdx = lastIdx;
                 let waterIdx = lastIdx;
                 
@@ -422,13 +369,14 @@
                     </div>
                 `;
 
-                renderMainChart('line', labels, eleChartData, waterChartData);
-
-                new Chart(document.getElementById('meterChart').getContext('2d'), {
-                    type: 'line',
-                    data: { labels: labels, datasets: [{ label: '全戶用電淨增加 (度)', data: meterDeltaTotal, borderColor: '#7e8794', backgroundColor: 'rgba(126, 135, 148, 0.04)', borderWidth: 2, pointBackgroundColor: '#626973', fill: true, tension: 0.2 }]},
-                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { ticks: { callback: val => val + ' 度' } } } }
-                });
+                try {
+                    renderMainChart('line', labels, eleChartData, waterChartData);
+                    new Chart(document.getElementById('meterChart').getContext('2d'), {
+                        type: 'line',
+                        data: { labels: labels, datasets: [{ label: '全戶用電淨增加 (度)', data: meterDeltaTotal, borderColor: '#7e8794', backgroundColor: 'rgba(126, 135, 148, 0.04)', borderWidth: 2, pointBackgroundColor: '#626973', fill: true, tension: 0.2 }]},
+                        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { ticks: { callback: val => val + ' 度' } } } }
+                    });
+                } catch(e) { console.error("圖表繪製失敗:", e); }
 
             } catch (error) {
                 showError(error.message);
@@ -461,14 +409,7 @@
                             { label: '水費帳單', data: waterData, backgroundColor: 'rgba(82, 121, 150, 0.85)', borderRadius: 4 }
                         ]
                     },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        scales: {
-                            x: { stacked: true },
-                            y: { stacked: true, ticks: { callback: val => 'NT$ ' + val.toLocaleString() } }
-                        }
-                    }
+                    options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true }, y: { stacked: true, ticks: { callback: val => 'NT$ ' + val.toLocaleString() } } } }
                 });
             }
         }
@@ -476,13 +417,8 @@
         function switchChartMode(mode) {
             const btnLine = document.getElementById('btnLine');
             const btnBar = document.getElementById('btnBar');
-            
-            if(mode === 'line') {
-                btnLine.classList.add('active'); btnBar.classList.remove('active');
-            } else {
-                btnBar.classList.add('active'); btnLine.classList.remove('active');
-            }
-
+            if(mode === 'line') { btnLine.classList.add('active'); btnBar.classList.remove('active'); } 
+            else { btnBar.classList.add('active'); btnLine.classList.remove('active'); }
             const labels = globalParsedData.map(d => d.month);
             const eleData = globalParsedData.map(d => d.eleTotal);
             const waterData = globalParsedData.map(d => d.water);
@@ -602,7 +538,7 @@
             document.getElementById('mainContent').innerHTML = `
                 <div class="loading" style="color: #b54a4a; text-align: left; max-width: 600px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
                     ❌ <b>系統載入失敗</b><br><br>
-                    <span style="font-size:13px; color:#828a95; line-height: 1.6;">${msg}<br>請確認您的 Google 試算表：<br>1. 是否已正確點選「檔案 > 共用 > 發布到網路」<br>2. 欄位格式是否正確沒有空缺</span>
+                    <span style="font-size:13px; color:#828a95; line-height: 1.6;">${msg}<br><br>請確認您的 Google 試算表：<br>1. 是否已正確點選「檔案 > 共用 > 發布到網路」<br>2. 月份是否有空行斷層</span>
                 </div>`;
         }
 
