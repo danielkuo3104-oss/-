@@ -77,6 +77,9 @@
         .badge.緊急 { background: #d96b6b; color: white; animation: pulse 1s infinite alternate; }
         .badge.重要 { background: #d9886b; color: white; }
         .badge.普通 { background: #cbd1d6; color: #5a6168; }
+        .text-緊急 { color: #b54a4a; font-weight: 700; }
+        .text-重要 { color: #b56a4a; }
+        .text-普通 { color: #5a6168; }
         @keyframes pulse { 0% { opacity: 1; } 100% { opacity: 0.6; } }
 
         /* 頁面容器 */
@@ -109,7 +112,7 @@
         .stat-value { font-size: 24px; font-weight: 700; color: #3a414a; }
         .stat-sub { font-size: 12px; color: #9ba3ab; margin-top: 8px; line-height: 1.5; }
 
-        /* 特殊色系卡片 */
+        /* 特特殊色系卡片 */
         .current-ele { background: linear-gradient(135deg, #fff 0%, #fdf6f0 100%); border-color: rgba(217, 119, 54, 0.15); }
         .current-ele .stat-value { color: var(--m-orange); }
         .current-water { background: linear-gradient(135deg, #fff 0%, #edf3f7 100%); border-color: rgba(82, 121, 150, 0.18); }
@@ -238,9 +241,10 @@
     </div>
 
     <script>
-        const urlMaster = `https://docs.google.com/spreadsheets/d/e/2PACX-1vQkqhXCPp4XiHKCEpI3pz4pzcu3sQreQ_qNRLger00ULCHFr9cTbXHMQqAfk7dLa_gUBAIBSJ5sZM4F/pub?output=csv&gid=0`; // 費用總表
-        const urlAnnounce = `https://docs.google.com/spreadsheets/d/e/2PACX-1vQkqhXCPp4XiHKCEpI3pz4pzcu3sQreQ_qNRLger00ULCHFr9cTbXHMQqAfk7dLa_gUBAIBSJ5sZM4F/pub?output=csv&gid=1058170538`; // 公告欄
-        const urlTenants = `https://docs.google.com/spreadsheets/d/e/2PACX-1vQkqhXCPp4XiHKCEpI3pz4pzcu3sQreQ_qNRLger00ULCHFr9cTbXHMQqAfk7dLa_gUBAIBSJ5sZM4F/pub?output=csv&gid=143232120`; // 房客資訊
+        // 🔒 使用完全打通、且安全發布的公開 CSV 通道網址金鑰
+        const urlMaster = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQkqhXCPp4XiHKCEpI3pz4pzcu3sQreQ_qNRLger00ULCHFr9cTbXHMQqAfk7dLa_gUBAIBSJ5sZM4F/pub?output=csv&gid=0"; // 費用總表
+        const urlAnnounce = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQkqhXCPp4XiHKCEpI3pz4pzcu3sQreQ_qNRLger00ULCHFr9cTbXHMQqAfk7dLa_gUBAIBSJ5sZM4F/pub?output=csv&gid=1058170538"; // 公告欄
+        const urlTenants = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQkqhXCPp4XiHKCEpI3pz4pzcu3sQreQ_qNRLger00ULCHFr9cTbXHMQqAfk7dLa_gUBAIBSJ5sZM4F/pub?output=csv&gid=143232120"; // 房客資訊
 
         let masterData = []; 
         let tenantMap = {}; 
@@ -257,7 +261,12 @@
 
         function updateTimestamp() {
             const now = new Date();
-            document.getElementById('updateTimeDisplay').innerText = `資料更新：${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}/${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+            const yyyy = now.getFullYear();
+            const mm = String(now.getMonth() + 1).padStart(2, '0');
+            const dd = String(now.getDate()).padStart(2, '0');
+            const hh = String(now.getHours()).padStart(2, '0');
+            const min = String(now.getMinutes()).padStart(2, '0');
+            document.getElementById('updateTimeDisplay').innerText = `資料更新：${yyyy}/${mm}/${dd} ${hh}:${min}`;
         }
 
         async function fetchTenantInfo() {
@@ -290,36 +299,56 @@
 
         async function loadAnnouncements() {
             try {
-                const res = await fetch(urlAnnounce);
-                const csv = await res.text();
-                const lines = csv.split("\n").map(l => l.trim()).filter(l => l);
+                const response = await fetch(urlAnnounce);
+                const text = await response.text();
+                if (text.includes("<!doctype html") || text.includes("<script") || text.includes("login")) return;
+
+                const lines = text.replace(/\r/g, "").split("\n").map(l => l.trim()).filter(l => l);
                 if (lines.length < 2) return;
+
                 let html = "";
+                let validCount = 0;
+
                 for (let i = 1; i < lines.length; i++) {
                     const cells = lines[i].split(",").map(c => c.replace(/["']/g, '').trim());
-                    if (cells[0]) {
-                        html += `<div class="announcement-item"><span class="badge ${cells[1]||'普通'}">${cells[1]||'普通'}</span> ${cells[0]}</div>`;
+                    const content = cells[0];
+                    const level = cells[1] || "普通";
+
+                    if (content && !content.includes("<!DOCTYPE")) {
+                        validCount++;
+                        html += `<div class="announcement-item text-${level}"><span class="badge ${level}">${level}</span> ${content}</div>`;
                     }
                 }
-                document.getElementById('marqueeContent').innerHTML = html + html;
-                document.getElementById('marqueeBar').style.display = "flex";
-            } catch(e) {}
+
+                if (validCount > 0) {
+                    document.getElementById('marqueeContent').innerHTML = html + html;
+                    document.getElementById('marqueeContent').style.animationDuration = `${validCount * 12}s`;
+                    document.getElementById('marqueeBar').style.display = "flex";
+                }
+            } catch (e) { console.error(e); }
         }
 
         async function fetchMasterData() {
             try {
                 const res = await fetch(urlMaster);
-                const csv = await res.text();
-                const lines = csv.split("\n").map(line => line.trim()).filter(line => line);
+                const csvText = await res.text();
                 
+                if (csvText.includes("<!doctype html") || csvText.includes("<script") || csvText.includes("login")) {
+                    throw new Error("試算表載入失敗。");
+                }
+
+                let cleanText = csvText.replace(/\r/g, "");
+                const lines = cleanText.split("\n").map(line => line.trim()).filter(line => line);
+                if(lines.length < 2) throw new Error("無數據");
+
                 masterData = [];
-                // 精確欄位索引配置：
-                // A:月份(0), B:水費(1), G:總度數差(6), H:內大差(7), I:內小差(8), J:中差(9), K:外差(10), L:電費總金額(11)
-                // M:內大電(12), N:內小電(13), O:中電(14), P:外電(15)
-                // W:內大租(22), X:內小租(23), Y:中租(24), Z:外租(25)
+                // 🔒【高精確欄位索引重定義】
+                // A(0):月份, B(1):水費, G(6):總度數差, H(7):內大差, I(8):內小差, J(9):中差, K(10):外差, L(11):電費總金額
+                // M(12):內大電, N(13):內小電, O(14):中電, P(15):外電
+                // W(22):內大租, X(23):內小租, Y(24):中租, Z(25):外租
                 for(let i = 1; i < lines.length; i++) {
                     const cells = lines[i].split(",").map(c => c.replace(/["'\uFEFF]/g, '').trim());
-                    if(cells.length < 16 || cells[0].includes("基準")) continue;
+                    if(cells.length < 16 || !cells[0] || cells[0].includes("基準") || cells[0].includes("<script")) continue;
 
                     const waterTotal = parseFloat(cells[1]) || 0;
                     const eleTotal = parseFloat(cells[11]) || 0;
@@ -332,11 +361,10 @@
                         "總和": Number(((parseFloat(cells[6]) || 0) / 10).toFixed(1))
                     };
 
-                    // 🎯【計算當月電費公基金注資】
                     const roomSum = (parseFloat(cells[12])||0) + (parseFloat(cells[13])||0) + (parseFloat(cells[14])||0) + (parseFloat(cells[15])||0);
                     const eleImpute = Math.max(0, Math.floor(eleTotal - roomSum));
 
-                    const item = {
+                    masterData.push({
                         month: cells[0],
                         waterTotal: waterTotal,
                         waterPerRoom: Math.floor(waterTotal / 4),
@@ -346,14 +374,12 @@
                         deltaMeters: deltaMeters,
                         eleRooms: { "內大": parseFloat(cells[12])||0, "內小": parseFloat(cells[13])||0, "中": parseFloat(cells[14])||0, "外": parseFloat(cells[15])||0 },
                         rentRooms: { "內大": parseFloat(cells[22])||0, "內小": parseFloat(cells[23])||0, "中": parseFloat(cells[24])||0, "外": parseFloat(cells[25])||0 }
-                    };
-                    masterData.push(item);
+                    });
                 }
                 renderHome();
-            } catch(e) { console.error(e); document.getElementById('homeContent').innerText = "數據加載失敗，請檢查網絡。"; }
+            } catch(e) { console.error(e); showError(e.message); }
         }
 
-        // 🏠 渲染首頁（完整救回所有圖表與電表觀測區）
         function renderHome() {
             const latest = masterData[masterData.length - 1];
             const container = document.getElementById('homeContent');
@@ -361,12 +387,12 @@
             container.innerHTML = `
                 <div class="section-title">當月費用摘要 (${latest.month})</div>
                 <div class="stats-grid">
-                    <div class="stat-card current-ele" onclick="openRoomDetails('ele')">
+                    <div class="stat-card current-ele" onclick="openRoomDetails('currentEle')">
                         <div class="stat-label" style="color: #bc6c3a;">當月電費 (點擊看房間明細)</div>
                         <div class="stat-value">NT$ ${latest.eleTotal.toLocaleString()}</div>
                         <div class="impute-note">附註：公基金已自動挹注 NT$ ${latest.eleImpute}</div>
                     </div>
-                    <div class="stat-card current-water" onclick="openRoomDetails('water')">
+                    <div class="stat-card current-water" onclick="openRoomDetails('currentWater')">
                         <div class="stat-label" style="color: #42637a;">當月水費 (點擊看當月明細)</div>
                         <div class="stat-value">NT$ ${latest.waterTotal.toLocaleString()}</div>
                         <div class="impute-note">附註：公基金已自動挹注 NT$ ${latest.waterImpute}</div>
@@ -426,7 +452,7 @@
                     labels: masterData.map(d => d.month),
                     datasets: [{ label: '全戶用電淨增加 (度)', data: masterData.map(d => d.deltaMeters["總和"]), borderColor: '#7e8794', backgroundColor: 'rgba(126, 135, 148, 0.04)', borderWidth: 2, pointBackgroundColor: '#626973', fill: true, tension: 0.2 }]
                 },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { ticks: { callback: val => val + ' 度' } } } }
             });
         }
 
@@ -448,7 +474,7 @@
                             { label: '水費帳單', data: waterData, borderColor: '#527996', backgroundColor: 'transparent', borderWidth: 2.5, pointBackgroundColor: '#527996', tension: 0.25 }
                         ]
                     },
-                    options: { responsive: true, maintainAspectRatio: false }
+                    options: { responsive: true, maintainAspectRatio: false, scales: { y: { ticks: { callback: val => 'NT$ ' + val.toLocaleString() } } } }
                 });
             } else {
                 trendChartInstance = new Chart(ctx, {
@@ -456,11 +482,11 @@
                     data: {
                         labels: labels,
                         datasets: [
-                            { label: '電費帳單', data: eleData, backgroundColor: 'rgba(217, 119, 54, 0.85)' },
-                            { label: '水費帳單', data: waterData, backgroundColor: 'rgba(82, 121, 150, 0.85)' }
+                            { label: '電費帳單', data: eleData, backgroundColor: 'rgba(217, 119, 54, 0.85)', borderRadius: 4 },
+                            { label: '水費帳單', data: waterData, backgroundColor: 'rgba(82, 121, 150, 0.85)', borderRadius: 4 }
                         ]
                     },
-                    options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true }, y: { stacked: true } } }
+                    options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true }, y: { stacked: true, ticks: { callback: val => 'NT$ ' + val.toLocaleString() } } } }
                 });
             }
         }
@@ -471,7 +497,6 @@
             renderMainChart(mode);
         }
 
-        // 👤 渲染個人資訊區
         function renderPersonalData() {
             const roomKey = document.getElementById('tenantSelector').value;
             const tenant = tenantList.find(t => t.roomKey === roomKey);
@@ -491,7 +516,7 @@
 
                 <div class="section-title">宿舍房租</div>
                 <div class="stats-grid">
-                    <div class="stat-card" style="background:#fffaf6">
+                    <div class="stat-card" style="background:#fffaf6; border-color: rgba(217, 119, 54, 0.1);">
                         <div class="stat-label">本月房租</div>
                         <div class="stat-value" style="color:#bc6c3a">NT$ ${myRent.toLocaleString()}</div>
                     </div>
@@ -563,13 +588,13 @@
             let htmlContent = "";
             const latest = masterData[masterData.length - 1];
 
-            if (type === 'ele') {
+            if (type === 'currentEle') {
                 title.innerText = "當月分房電費明細";
                 Object.keys(latest.eleRooms).forEach(room => {
                     htmlContent += `<div class="modal-row"><span class="modal-row-label">${tenantMap[room] || room}</span><span class="modal-row-value">NT$ ${latest.eleRooms[room].toLocaleString()}</span></div>`;
                 });
                 htmlContent += `<div class="impute-note">* 公基金已自動挹注分攤：NT$ ${latest.eleImpute} 元</div>`;
-            } else if (type === 'water') {
+            } else if (type === 'currentWater') {
                 title.innerText = "當月水費明細摘要";
                 htmlContent = `<div class="modal-row"><span class="modal-row-label">全戶總水費</span><span class="modal-row-value">NT$ ${latest.waterTotal.toLocaleString()}</span></div>
                                <div class="modal-row"><span class="modal-row-label">每房實付 (4房均分)</span><span class="modal-row-value">NT$ ${latest.waterPerRoom.toLocaleString()}</span></div>
@@ -615,6 +640,14 @@
         }
 
         function closeModal() { document.getElementById('detailModal').classList.remove('active'); }
+
+        function showError(msg) {
+            document.getElementById('homeContent').innerHTML = `
+                <div class="loading" style="color: #b54a4a; text-align: left; max-width: 600px; margin: 0 auto;">
+                    ❌ 系統載入失敗。<br><br>
+                    <span style="font-size:13px; color:#828a95;">${msg}</span>
+                </div>`;
+        }
 
         startSystem();
     </script>
