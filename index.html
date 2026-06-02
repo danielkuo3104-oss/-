@@ -16,13 +16,12 @@
             background: linear-gradient(135deg, #69779b 0%, #8696b8 100%);
             color: white; padding: 45px 24px 65px 24px; text-align: left;
             box-shadow: 0 4px 20px rgba(105, 119, 155, 0.15);
-            position: relative; /* 為了讓更新時間絕對定位 */
+            position: relative;
         }
         .header-container { max-width: 1200px; margin: 0 auto; position: relative; }
         .header-banner h1 { margin: 0; font-size: 26px; font-weight: 700; letter-spacing: 1.5px; color: #f4f5f7; }
         .header-banner p { margin: 10px 0 0 0; opacity: 0.85; font-size: 13px; letter-spacing: 0.5px; }
         
-        /* 🕒 頂部 Banner 右下角的資料更新時間樣式 */
         .update-time-tag {
             position: absolute; right: 0; bottom: -45px; font-size: 11px;
             color: rgba(255, 255, 255, 0.75); background: rgba(0, 0, 0, 0.12);
@@ -30,7 +29,7 @@
             letter-spacing: 0.5px; backdrop-filter: blur(4px);
         }
 
-        /* 🧭 莫蘭迪分頁切換按鈕導覽列 */
+        /* 🧭 莫蘭迪分頁切換選單導覽列 */
         .nav-tabs { display: flex; justify-content: center; background: #ffffff; border-bottom: 1px solid #e1e4e8; gap: 30px; padding: 0 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.02); }
         .nav-link { padding: 16px 24px; font-size: 14px; font-weight: 600; color: #8a929a; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.25s ease; }
         .nav-link.active { color: #69779b; border-bottom-color: #69779b; }
@@ -70,7 +69,8 @@
 
         /* 標題與空間留白 */
         .section-title { font-size: 16px; font-weight: 600; color: #626973; letter-spacing: 1px; margin: 42px 0 18px 0; display: block; }
-        .chart-header-row { display: flex; justify-content: space-between; align-items: center; margin: 0; }
+        .chart-header-row { display: flex; justify-content: space-between; align-items: center; margin: 42px 0 18px 0; }
+        .chart-header-row .section-title { margin: 0; }
         
         /* 莫蘭迪圖表切換按鈕 */
         .toggle-btn-group { display: flex; background: #e2e6ea; padding: 3px; border-radius: 10px; border: 1px solid #d1d5db; }
@@ -236,7 +236,7 @@
     </div>
 
     <script>
-        // 🔒 死鎖三大核心公開 CSV 發布網址 (對齊 gid)
+        // 🔒 死鎖三大核心公開 CSV 發布網址
         const urlPrimary = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQkqhXCPp4XiHKCEpI3pz4pzcu3sQreQ_qNRLger00ULCHFr9cTbXHMQqAfk7dLa_gUBAIBSJ5sZM4F/pub?output=csv&gid=0";
         const urlAnnounce = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQkqhXCPp4XiHKCEpI3pz4pzcu3sQreQ_qNRLger00ULCHFr9cTbXHMQqAfk7dLa_gUBAIBSJ5sZM4F/pub?output=csv&gid=1058170538";
         const urlTenants = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQkqhXCPp4XiHKCEpI3pz4pzcu3sQreQ_qNRLger00ULCHFr9cTbXHMQqAfk7dLa_gUBAIBSJ5sZM4F/pub?output=csv&gid=143232120";
@@ -259,18 +259,18 @@
 
         async function startSystem() {
             updateTimestamp();
-            await fetchTenantMeta(); // 先抓姓名
-            await loadAnnouncements(); // 再載公告
-            await initDashboard(); // 最後撈總表
+            await fetchTenantMeta(); 
+            await loadAnnouncements(); 
+            await initDashboard(); 
         }
 
-        // 🟢 跨頁讀取房客名稱
+        // 🟢 跨頁讀取房客名稱 (gid=143232120)
         async function fetchTenantMeta() {
             try {
                 const response = await fetch(urlTenants);
                 const text = await response.text();
                 const lines = text.split("\n").map(l => l.trim()).filter(l => l);
-                lines.shift(); // 移除標題
+                lines.shift(); 
 
                 const selectBox = document.getElementById('personalTenantSelect');
                 selectBox.innerHTML = "";
@@ -278,8 +278,8 @@
                 lines.forEach(line => {
                     const cells = line.split(",").map(c => c.replace(/["']/g, '').trim());
                     if(cells.length >= 2) {
-                        const roomKey = cells[0];   // 內大
-                        const nameVal = cells[1];   // 洪健棋
+                        const roomKey = cells[0];   // 內大, 內小, 中, 外
+                        const nameVal = cells[1];   // 房客姓名
                         const vioVal = cells[5] || "0"; // 違規
                         
                         tenantNames[roomKey] = nameVal;
@@ -330,17 +330,17 @@
                 const lines = cleanText.split("\n").map(line => line.trim()).filter(line => line);
                 if(lines.length < 2) throw new Error("無數據");
 
-                // 🔒 精準重構欄位對齊索引數字
+                // 🔒【高精確欄位索引配置：死鎖你給的最新截圖位置】
                 const monthIdx = 0; const waterIdx = 1; const eleTotalIdx = 11;
                 const deltaIdx = { "內大": 7, "內小": 8, "中": 9, "外": 10, "總和": 6 };
-                const roomCostIdx = { "內大": 12, "內小": 13, "中": 14, "外": 15 };
-                const rentCostIdx = { "內大": 23, "內小": 24, "中": 25, "外": 26 }; // X, Y, Z, AA 欄
+                const roomCostIdx = { "內大": 12, "內小": 13, "中": 14, "外": 15 }; // M, N, O, P 欄是各房電費
+                const rentCostIdx = { "內大": 23, "內小": 24, "中": 25, "外": 26 }; // X, Y, Z, AA 欄是各房房租
 
                 globalParsedData = [];
 
                 for(let i = 1; i < lines.length; i++) {
                     const cells = lines[i].split(",").map(c => c.replace(/["'\uFEFF]/g, '').trim());
-                    if(cells.length < 16 || !cells[monthIdx] || cells[monthIdx].includes("基準") || cells[monthIdx].includes("<script")) continue;
+                    if(cells.length < 26 || !cells[monthIdx] || cells[monthIdx].includes("基準") || cells[monthIdx].includes("<script")) continue;
 
                     const monthVal = cells[monthIdx];
                     const waterVal = parseFloat(cells[waterIdx]) || 0;
@@ -384,7 +384,6 @@
             } catch (error) { showError(error.message); }
         }
 
-        // 🏠 渲染完全對齊的莫蘭迪首頁
         function renderMasterDashboard() {
             const latest = globalParsedData[globalParsedData.length - 1];
             const container = document.getElementById('mainDashboardContainer');
@@ -397,7 +396,7 @@
                 <div class="section-title">當月費用摘要 (${latest.month})</div>
                 <div class="stats-grid">
                     <div class="stat-card current-ele" onclick="openRoomDetails('currentEle')">
-                        <div class="stat-label">當月電費 (點擊看各人明細)</div>
+                        <div class="stat-label">當月電費 (點擊看房間明細)</div>
                         <div class="stat-value">NT$ ${latest.eleTotal.toLocaleString()}</div>
                         <div class="impute-note">附註：公基金已自動挹注 NT$ ${latest.eleImpute}</div>
                     </div>
@@ -428,7 +427,7 @@
                     <div class="stat-card history-card" onclick="openRoomDetails('historySummary')">
                         <div class="stat-label">歷年費用總加總</div>
                         <div class="stat-value">NT$ ${historyTotal.toLocaleString()}</div>
-                        <div class="stat-sub">查看歷月水電合併摘要小計</div>
+                        <div class="stat-sub">查看歷月總和摘要小計</div>
                     </div>
                 </div>
 
@@ -455,7 +454,6 @@
             `;
             renderMainChart('line');
 
-            // 灰色度度圖
             new Chart(document.getElementById('meterChart').getContext('2d'), {
                 type: 'line',
                 data: {
@@ -507,7 +505,7 @@
             renderMainChart(mode);
         }
 
-        // 👤 頁面二：房客個人資訊區精準重構（完美復刻示意圖面板）
+        // 👤 渲染「個人資訊區」
         function renderPersonalSection() {
             const roomKey = document.getElementById('personalTenantSelect').value;
             if(!roomKey) return;
@@ -526,7 +524,7 @@
                     <div class="profile-header-flex">
                         <div>
                             <div class="profile-title-name">${name}</div>
-                            <div class="profile-subtitle-room">${roomKey}房間 房客屬性看板</div>
+                            <div class="profile-subtitle-room">${roomKey}房間 房客個人看板</div>
                         </div>
                         <div class="profile-violation-badge">⚠️ 違規次數：${violations} 次</div>
                     </div>
@@ -582,7 +580,6 @@
                 </div>
             `;
 
-            // 渲染個人專屬折線趨勢圖
             if(personalChartInstance) personalChartInstance.destroy();
             personalChartInstance = new Chart(document.getElementById('personalTrendChart').getContext('2d'), {
                 type: 'line',
@@ -598,7 +595,6 @@
             });
         }
 
-        // 🟢 流暢切換主頁面
         function switchMainPage(pageId) {
             document.querySelectorAll('.page-view').forEach(p => p.classList.remove('active'));
             document.getElementById('btnNavHome').classList.remove('active');
@@ -649,9 +645,16 @@
                     htmlContent += `<div class="modal-item-block"><div class="modal-month-title">${item.month}</div><div class="modal-row"><span class="modal-row-label">水費總額</span><span class="modal-row-value">NT$ ${item.water.toLocaleString()}</span></div></div>`;
                 });
             } else if (type === 'historySummary') {
-                title.innerText = "歷史總和摘要紀錄";
+                // 🌟【救回水電拆分歷史】
+                title.innerText = "歷史水電帳單紀錄明細";
                 globalParsedData.forEach(item => {
-                    htmlContent += `<div class="modal-item-block"><div class="modal-month-title">${item.month}</div><div class="modal-row"><span class="modal-row-label">總計支出</span><span class="modal-row-value">NT$ ${item.total.toLocaleString()}</span></div></div>`;
+                    htmlContent += `
+                        <div class="modal-item-block">
+                            <div class="modal-month-title">${item.month}</div>
+                            <div class="modal-row"><span class="modal-row-label">水費金額</span><span class="modal-row-value">NT$ ${item.water.toLocaleString()}</span></div>
+                            <div class="modal-row"><span class="modal-row-label">電費金額</span><span class="modal-row-value">NT$ ${item.eleTotal.toLocaleString()}</span></div>
+                            <div class="modal-row total-line"><span class="modal-row-label">當月支出小計</span><span class="modal-row-value">NT$ ${item.total.toLocaleString()}</span></div>
+                        </div>`;
                 });
             } else if (type === 'meter') {
                 title.innerText = "歷月實際用電差值 (度)";
@@ -660,10 +663,10 @@
                     htmlContent += `
                         <div class="modal-item-block" style="background:#f8fafc; padding:12px; border-radius:12px; margin-bottom:10px; border: 1px solid #eef2f5;">
                             <div class="modal-month-title">${item.month} 實際用電</div>
-                            <div class="modal-row"><span class="modal-row-label">${tenantNames["內大"]||"內大"}</span><span class="modal-row-value">${item.deltaMeters["內大"]} 度</span></div>
-                            <div class="modal-row"><span class="modal-row-label">${tenantNames["內小"]||"內小"}</span><span class="modal-row-value">${item.deltaMeters["內小"]} 度</span></div>
-                            <div class="modal-row"><span class="modal-row-label">${tenantNames["中"]||"中"}</span><span class="modal-row-value">${item.deltaMeters["中"]} 度</span></div>
-                            <div class="modal-row"><span class="modal-row-label">${tenantNames["外"]||"外"}</span><span class="modal-row-value">${item.deltaMeters["外"]} 度</span></div>
+                            <div class="modal-row"><span class="modal-row-label">${tenantNames["內大"] || "內大"}</span><span class="modal-row-value">${item.deltaMeters["內大"]} 度</span></div>
+                            <div class="modal-row"><span class="modal-row-label">${tenantNames["內小"] || "內小"}</span><span class="modal-row-value">${item.deltaMeters["內小"]} 度</span></div>
+                            <div class="modal-row"><span class="modal-row-label">${tenantNames["中"] || "中"}</span><span class="modal-row-value">${item.deltaMeters["中"]} 度</span></div>
+                            <div class="modal-row"><span class="modal-row-label">${tenantNames["外"] || "外"}</span><span class="modal-row-value">${item.deltaMeters["外"]} 度</span></div>
                             <div class="modal-row total-line"><span class="modal-row-label">全戶用電增加</span><span class="modal-row-value">${item.deltaMeters["總和"]} 度</span></div>
                         </div>`;
                 });
