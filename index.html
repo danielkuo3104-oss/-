@@ -105,6 +105,10 @@
         /* 歷年累積卡片 */
         .stat-card.history-card { background: #ffffff; border: 1px solid #e1e4e8; }
         .stat-card.history-card .stat-value { color: #4a515a; }
+        
+        /* 🌟 莫蘭迪紫色主題卡片樣式 */
+        .stat-card.history-purple { background: linear-gradient(135deg, #ffffff 0%, #f7f5f8 100%); border: 1px solid rgba(142, 122, 147, 0.15); }
+        .stat-card.history-purple .stat-value { color: #8e7a93; }
 
         .chart-card { background: #ffffff; border-radius: 20px; padding: 24px; box-shadow: 0 8px 20px rgba(140, 149, 159, 0.08); border: 1px solid #e1e4e8; margin-bottom: 0; }
         .chart-container { position: relative; height: 350px; width: 100%; }
@@ -376,10 +380,10 @@
                             <div class="stat-value">NT$ ${totalWater.toLocaleString()}</div>
                             <div class="stat-sub">查看歷月自來水費單與挹注紀錄</div>
                         </div>
-                        <div class="stat-card history-card" onclick="openRoomDetails('historySummary')">
-                            <div class="stat-label">歷年費用總加總</div>
+                        <div class="stat-card history-purple" onclick="openRoomDetails('historySummary')">
+                            <div class="stat-label" style="color: #928596;">歷年費用加總</div>
                             <div class="stat-value">NT$ ${historyTotal.toLocaleString()}</div>
-                            <div class="stat-sub">查看歷月水電合併摘要小計</div>
+                            <div class="stat-sub" style="color: #b0a3b3;">查看歷月水電合併摘要小計</div>
                         </div>
                     </div>
 
@@ -472,7 +476,6 @@
             renderMainChart(mode, labels, eleData, waterData);
         }
 
-        // 🎯【完美對齊與防爆修正】
         function openRoomDetails(type) {
             const overlay = document.getElementById('detailModal');
             const title = document.getElementById('modalTitle');
@@ -532,7 +535,6 @@
                         </div>`;
                 });
             } else if (type === 'historySummary') {
-                // 🌟【完美回歸：歷史明細水電拆分】
                 title.innerText = "歷史水電帳單紀錄明細";
                 globalParsedData.forEach(item => {
                     htmlContent += `
@@ -548,7 +550,7 @@
                 htmlContent = `
                     <div style="background:#eef2f5; padding:12px; border-radius:12px; font-size:12px; color:#54606e; margin-bottom:15px; line-height:1.5; border: 1px solid #dbe2e8;">
                         📌 <b>初始入住電表基準值：</b><br>
-                        內大: 63370 | 內小: 40104 | 中: 36646 | 外: 74799
+                        內大: 6337.0 | 內小: 4010.4 | 中: 3664.6 | 外: 7479.9
                     </div>`;
                 globalParsedData.forEach(item => {
                     htmlContent += `
