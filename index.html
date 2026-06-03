@@ -209,7 +209,6 @@
     </div>
 
     <script>
-        // 🎯 採用指定單一工作表的精準 CSV 匯出連結
         const urlPrimary = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQkqhXCPp4XiHKCEpI3pz4pzcu3sQreQ_qNRLger00ULCHFr9cTbXHMQqAfk7dLa_gUBAIBSJ5sZM4F/pub?gid=0&single=true&output=csv";
         const urlAnnounce = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQkqhXCPp4XiHKCEpI3pz4pzcu3sQreQ_qNRLger00ULCHFr9cTbXHMQqAfk7dLa_gUBAIBSJ5sZM4F/pub?gid=1058170538&single=true&output=csv"; 
 
@@ -228,7 +227,6 @@
             document.getElementById('updateTimeDisplay').innerText = `資料更新：${yyyy}/${mm}/${dd} ${hh}:${min}`;
         }
 
-        // 加上 Fetch 安全超時阻斷，防堵異常 HTML 掛載卡死
         async function fetchWithTimeout(resource, options = {}) {
             const { timeout = 6000 } = options;
             const controller = new AbortController();
@@ -287,15 +285,8 @@
                 const lines = cleanText.split("\n").map(line => line.trim()).filter(line => line);
                 if(lines.length < 2) throw new Error("試算表內無有效花費數據");
 
-                // 🎯 完美對齊費用總表 Index 結構
-                const monthIdx = 0;       // A欄：月份
-                const waterIdx = 1;       // B欄：水費
-                const eleTotalIdx = 11;   // L欄：總電費 (Index 11)
-                
-                // 電表度數增加差值 (G欄開始為 6)
+                const monthIdx = 0; const waterIdx = 1; const eleTotalIdx = 11; 
                 const deltaIdx = { "總和": 6, "內大": 7, "內小": 8, "中": 9, "外": 10 }; 
-                
-                // 各房電費實付金額分攤 (M ~ P 欄)
                 const roomCostIdx = { "內大": 12, "內小": 13, "中": 14, "外": 15 }; 
 
                 let totalWater = 0; let totalElectricity = 0; let historyTotal = 0;
@@ -306,7 +297,6 @@
                 for(let i = 1; i < lines.length; i++) {
                     const cells = lines[i].split(",").map(c => c.replace(/["'\uFEFF]/g, '').trim());
                     
-                    // 🌟 嚴格安全防線：欄位長度低於 16 欄、空白行、或基準列直接安全過濾
                     if(cells.length < 16 || !cells[monthIdx] || cells[monthIdx].includes("基準") || cells[monthIdx].includes("<script")) {
                         continue;
                     }
@@ -316,12 +306,13 @@
                     const eleTotalVal = parseFloat(cells[eleTotalIdx]) || 0; 
                     const combinedSum = waterVal + eleTotalVal;
 
+                    // 🎯 核心更動：所有電表抄錄度數差值全面除以 10 並修正精確度
                     const deltaMeters = {
-                        "總和": parseFloat(cells[deltaIdx["總和"]]) || 0,
-                        "內大": parseFloat(cells[deltaIdx["內大"]]) || 0,
-                        "內小": parseFloat(cells[deltaIdx["內小"]]) || 0,
-                        "中": parseFloat(cells[deltaIdx["中"]]) || 0,
-                        "外": parseFloat(cells[deltaIdx["外"]]) || 0
+                        "總和": Number(((parseFloat(cells[deltaIdx["總和"]]) || 0) / 10).toFixed(1)),
+                        "內大": Number(((parseFloat(cells[deltaIdx["內大"]]) || 0) / 10).toFixed(1)),
+                        "內小": Number(((parseFloat(cells[deltaIdx["內小"]]) || 0) / 10).toFixed(1)),
+                        "中": Number(((parseFloat(cells[deltaIdx["中"]]) || 0) / 10).toFixed(1)),
+                        "外": Number(((parseFloat(cells[deltaIdx["外"]]) || 0) / 10).toFixed(1))
                     };
 
                     totalWater += waterVal; totalElectricity += eleTotalVal; historyTotal += combinedSum;
@@ -358,19 +349,18 @@
 
                 const lastIdx = globalParsedData.length - 1;
                 const latest = globalParsedData[lastIdx];
-                
+
                 let eleIdx = lastIdx;
-                let currentWaterIdx = lastIdx; // 🎯 改成這個名字，避開衝突！
-                                
-                // 如果當月是0，就往前抓有紀錄的上個月
+                let currentWaterIdx = lastIdx; 
+                
                 while(eleIdx > 0 && globalParsedData[eleIdx].eleTotal === 0) eleIdx--;
                 while(currentWaterIdx > 0 && globalParsedData[currentWaterIdx].water === 0) currentWaterIdx--;
                 
                 const dispEle = globalParsedData[eleIdx];
-                const dispWater = globalParsedData[currentWaterIdx]; // 🎯 這裡同步改成新名字
+                const dispWater = globalParsedData[currentWaterIdx]; 
 
                 const eleRemark = (eleIdx !== lastIdx) ? `<div style="font-size: 11px; color: #b56a6a; margin-top: 8px; font-weight: 600;">* 當月無帳單，顯示 ${dispEle.month} 費用</div>` : "";
-                const waterRemark = (waterIdx !== lastIdx) ? `<div style="font-size: 11px; color: #b56a6a; margin-top: 8px; font-weight: 600;">* 當月無帳單，顯示 ${dispWater.month} 費用</div>` : "";
+                const waterRemark = (currentWaterIdx !== lastIdx) ? `<div style="font-size: 11px; color: #b56a6a; margin-top: 8px; font-weight: 600;">* 當月無帳單，顯示 ${dispWater.month} 費用</div>` : "";
                 
                 document.getElementById('mainContent').innerHTML = `
                     <div class="section-title">近期費用摘要 (目前結算至 ${latest.month})</div>
@@ -565,10 +555,11 @@
                 });
             } else if (type === 'meter') {
                 title.innerText = "歷月實際用電差值 (度)";
+                // 🎯 核心更動：初始入住電表基準提示值也同步除以 10 計算
                 htmlContent = `
                     <div style="background:#eef2f5; padding:12px; border-radius:12px; font-size:12px; color:#54606e; margin-bottom:15px; line-height:1.5; border: 1px solid #dbe2e8;">
                         📌 <b>初始入住電表基準值：</b><br>
-                        內大: 6337.0 | 內小: 4010.4 | 中: 3664.6 | 外: 7479.9
+                        內大: 633.7 | 內小: 401.0 | 中: 366.5 | 外: 748.0
                     </div>`;
                 globalParsedData.forEach(item => {
                     htmlContent += `
