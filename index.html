@@ -145,6 +145,20 @@
         .detail-table th, .detail-table td { padding: 10px 12px; border-bottom: 1px solid #f0f2f5; text-align: left; }
         .detail-table th { background: #f8fafc; color: #8a929a; font-weight: 600; }
 
+        /* 🌿 新增：首頁開場值日生草綠色彈出視窗樣式 */
+        .duty-modal { max-width: 420px; text-align: center; border: 1px solid rgba(110, 145, 110, 0.2); }
+        .duty-title { color: #4a515a; font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+        .duty-timer-sub { font-size: 11px; color: #9ba3ab; margin-bottom: 22px; font-weight: 500; }
+        .duty-main-box { background: #f4f7f4; border-radius: 18px; padding: 20px; margin-bottom: 16px; border: 1px solid #e3eae3; }
+        .duty-current-label { font-size: 12px; color: #738273; font-weight: 600; letter-spacing: 0.5px; }
+        .duty-current-value { font-size: 26px; font-weight: 700; color: #6e916e; margin: 8px 0; }
+        .duty-current-room { font-size: 12px; color: #8a929a; font-weight: 500; }
+        .duty-next-box { display: flex; justify-content: space-between; align-items: center; background: #ffffff; padding: 14px 20px; border-radius: 14px; border: 1px solid #eaecef; font-size: 13px; }
+        .duty-next-label { color: #8a929a; font-weight: 500; }
+        .duty-next-value { color: #5a616a; font-weight: 700; }
+        .duty-btn { width:100%; background:#6e916e; color:white; border:none; padding:13px; border-radius:12px; font-size:14px; font-weight:600; cursor:pointer; margin-top:20px; box-shadow: 0 4px 12px rgba(110, 145, 110, 0.15); transition: background 0.2s; }
+        .duty-btn:hover { background:#5c7a5c; }
+
         @media (max-width: 768px) {
             .header-banner { padding: 35px 20px 45px 20px; }
             .header-banner h1 { font-size: 22px; }
@@ -209,14 +223,36 @@
         </div>
     </div>
 
+    <div class="modal-overlay" id="dutyModal" onclick="closeDutyModal()">
+        <div class="modal-box duty-modal" onclick="event.stopPropagation()">
+            <div class="duty-title">本週值日生公告</div>
+            <div class="duty-timer-sub" id="dutyTimerText">視窗將於 5 秒後自動關閉</div>
+            
+            <div class="duty-main-box">
+                <div class="duty-current-label">✨ 當前值日生</div>
+                <div class="duty-current-value" id="currentDutyName">載入中...</div>
+                <div class="duty-current-room" id="currentDutyRoom">-</div>
+            </div>
+
+            <div class="duty-next-box">
+                <span class="duty-next-label">倫替下一位</span>
+                <span class="duty-next-value" id="nextDutyName">載入中...</span>
+            </div>
+
+            <button class="duty-btn" onclick="closeDutyModal()">我瞭解了</button>
+        </div>
+    </div>
+
     <script>
         const urlPrimary = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQkqhXCPp4XiHKCEpI3pz4pzcu3sQreQ_qNRLger00ULCHFr9cTbXHMQqAfk7dLa_gUBAIBSJ5sZM4F/pub?gid=0&single=true&output=csv";
         const urlAnnounce = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQkqhXCPp4XiHKCEpI3pz4pzcu3sQreQ_qNRLger00ULCHFr9cTbXHMQqAfk7dLa_gUBAIBSJ5sZM4F/pub?gid=1058170538&single=true&output=csv"; 
+        const urlTenantInfo = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQkqhXCPp4XiHKCEpI3pz4pzcu3sQreQ_qNRLger00ULCHFr9cTbXHMQqAfk7dLa_gUBAIBSJ5sZM4F/pub?gid=1423212010&single=true&output=csv";
 
         const tenantNames = { "內大": "洪健棋", "內小": "郭丹騏", "中": "尹奕竤", "外": "林易諒" };
 
         let globalParsedData = []; 
         let trendChartInstance = null; 
+        let dutyCountdownTimer = null;
 
         function updateTimestamp() {
             const now = new Date();
@@ -235,6 +271,72 @@
             const response = await fetch(resource, { ...options, signal: controller.signal });
             clearTimeout(id);
             return response;
+        }
+
+        // 🌿 新增：非同步串接房客資訊並解析值日生標記 (V與N)
+        async function loadDutyStatus() {
+            try {
+                const response = await fetchWithTimeout(urlTenantInfo, { timeout: 4000 });
+                const csvText = await response.text();
+                if (csvText.includes("<!doctype html")) return;
+
+                const lines = csvText.replace(/\r/g, "").split("\n").map(line => line.trim()).filter(line => line);
+                
+                let currentDuty = { name: "未設定", room: "" };
+                let nextDuty = { name: "未設定", room: "" };
+
+                for (let i = 1; i < lines.length; i++) {
+                    const cells = lines[i].split(",").map(c => c.replace(/["']/g, '').trim());
+                    const roomKey = cells[0];
+                    const nameVal = cells[1];
+                    const dutyMarker = cells[6]; // 第七欄：值日生註記
+
+                    if (dutyMarker === "V" || dutyMarker === "v") {
+                        currentDuty.name = nameVal || tenantNames[roomKey];
+                        currentDuty.room = roomKey;
+                    } else if (dutyMarker === "N" || dutyMarker === "n") {
+                        nextDuty.name = nameVal || tenantNames[roomKey];
+                        nextDuty.room = roomKey;
+                    }
+                }
+
+                // 將抓取到的資料渲染進彈出視窗
+                document.getElementById('currentDutyName').innerText = currentDuty.name;
+                document.getElementById('currentDutyRoom').innerText = currentDuty.room ? `${currentDuty.room}房間` : "-";
+                document.getElementById('nextDutyName').innerText = nextDuty.room ? `${nextDuty.name} (${nextDuty.room})` : nextDuty.name;
+
+                // 喚醒視窗並開始 5 秒倒數
+                triggerDutyModal();
+
+            } catch (e) {
+                console.error("值日生資料抓取失敗:", e);
+                // 發生錯誤時預設不阻擋使用者，不跳出視窗
+            }
+        }
+
+        // 🌿 新增：控制值日生視窗的觸發與計時器
+        function triggerDutyModal() {
+            const dutyModal = document.getElementById('dutyModal');
+            const timerText = document.getElementById('dutyTimerText');
+            dutyModal.classList.add('active');
+
+            let secondsLeft = 5;
+            dutyCountdownTimer = setInterval(() => {
+                secondsLeft--;
+                if (secondsLeft <= 0) {
+                    closeDutyModal();
+                } else {
+                    timerText.innerText = `視窗將於 ${secondsLeft} 秒後自動關閉`;
+                }
+            }, 1000);
+        }
+
+        // 🌿 新增：關閉值日生視窗並清除計時器
+        function closeDutyModal() {
+            document.getElementById('dutyModal').classList.remove('active');
+            if (dutyCountdownTimer) {
+                clearInterval(dutyCountdownTimer);
+            }
         }
 
         async function loadAnnouncements() {
@@ -454,6 +556,9 @@
                         } 
                     }
                 });
+
+                // 核心數據看板載入成功後，接著非同步加載值日生彈出視窗
+                loadDutyStatus();
 
             } catch (error) {
                 document.getElementById('mainContent').innerHTML = `
