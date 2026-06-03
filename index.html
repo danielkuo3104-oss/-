@@ -86,6 +86,7 @@
         .stat-value { font-size: 24px; font-weight: 700; color: #3a414a; }
         .stat-sub { font-size: 12px; color: #9ba3ab; margin-top: 8px; line-height: 1.5; }
         
+        /* 🌿 專屬於公基金挹注的淡綠色標籤風格 */
         .impute-green-badge {
             display: inline-block;
             font-size: 11px;
@@ -127,6 +128,7 @@
         .rules-list li { margin-bottom: 10px; }
         .copyright { font-size: 11px; color: #9ba3ab; text-align: center; letter-spacing: 0.5px; }
 
+        /* 彈出視窗樣式 */
         .modal-overlay { position: fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.4); display:none; justify-content:center; align-items:center; z-index:1000; backdrop-filter: blur(4px); }
         .modal-overlay.active { display:flex; }
         .modal-box { background:#ffffff; width:90%; max-width:500px; border-radius:24px; padding:28px; box-shadow:0 12px 30px rgba(0,0,0,0.15); max-height:80vh; overflow-y:auto; }
@@ -176,7 +178,7 @@
 
     <div class="main-container">
         <div id="mainContent">
-            <div class="loading" id="loadingText">📡 系統啟動中...</div>
+            <div class="loading">📡 智慧建構數據看板中，請稍候...</div>
         </div>
     </div>
     
@@ -209,12 +211,6 @@
 
         let globalParsedData = []; 
         let trendChartInstance = null; 
-        
-        function updateLoading(msg) {
-            const el = document.getElementById('loadingText');
-            if (el) el.innerText = msg;
-            console.log(msg); // 同步印出到瀏覽器 F12 控制台
-        }
 
         function updateTimestamp() {
             const now = new Date();
@@ -227,7 +223,6 @@
         }
 
         async function startSystem() {
-            updateLoading("📡 系統啟動，準備抓取資料...");
             updateTimestamp();
             await loadAnnouncements();
             await initDashboard();
@@ -235,7 +230,6 @@
 
         async function loadAnnouncements() {
             try {
-                updateLoading("📥 正在獲取公告資料...");
                 const response = await fetch(urlAnnounce);
                 const text = await response.text();
                 if (text.includes("<!doctype html") || text.includes("<script") || text.includes("login")) return;
@@ -272,35 +266,37 @@
 
         async function initDashboard() {
             try {
-                updateLoading("📥 正在下載費用試算表 CSV...");
                 const response = await fetch(urlPrimary);
                 const csvText = await response.text();
                 
                 if (csvText.includes("<!doctype html") || csvText.includes("<script") || csvText.includes("login")) {
-                    throw new Error("試算表載入失敗，權限可能未公開。");
+                    throw new Error("試算表載入失敗 (權限可能未公開)。");
                 }
 
-                updateLoading("⚙️ CSV 下載完成，開始解析資料...");
+                // 🌟 使用最原始的切分方式，一模一樣！
                 let cleanText = csvText.replace(/\r/g, "");
                 const lines = cleanText.split("\n").map(line => line.trim()).filter(line => line);
-                if(lines.length < 2) throw Error("無數據");
+                if(lines.length < 2) throw new Error("試算表內無數據");
 
                 const monthIdx = 0; const waterIdx = 1; const eleTotalIdx = 11; 
                 const deltaIdx = { "內大": 7, "內小": 8, "中": 9, "外": 10, "總和": 6 }; 
                 const roomCostIdx = { "內大": 12, "內小": 13, "中": 14, "外": 15 }; 
-                const rentCostIdx = { "內大": 23, "內小": 24, "中": 25, "外": 26 };
 
                 let totalWater = 0; let totalElectricity = 0; let historyTotal = 0;
+                const labels = []; const waterChartData = []; const eleChartData = [];
+                const meterLabels = []; const meterDeltaTotal = [];
                 globalParsedData = [];
 
-                updateLoading("🔎 逐月資料整理中...");
-                
-                // ⚠️ 這裡完全保留你的原始讀取方式
                 for(let i = 1; i < lines.length; i++) {
                     const cells = lines[i].split(",").map(c => c.replace(/["'\uFEFF]/g, '').trim());
-                    if(cells.length < 26 || !cells[monthIdx] || cells[monthIdx].includes("基準") || cells[monthIdx].includes("<script")) continue;
+                    
+                    // 🌟 修正點：移除 cells.length < 26，防止因後方未填寫導致卡死！
+                    if(!cells[monthIdx] || cells[monthIdx].includes("基準") || cells[monthIdx].includes("<script")) {
+                        continue;
+                    }
 
                     const monthVal = cells[monthIdx];
+                    // 🌟 修正點：加上 || 0 確保沒填資料時自動補 0，不變 NaN
                     const waterVal = parseFloat(cells[waterIdx]) || 0;
                     const eleTotalVal = parseFloat(cells[eleTotalIdx]) || 0; 
                     const combinedSum = waterVal + eleTotalVal;
@@ -308,12 +304,20 @@
                     const deltaMeters = {
                         "內大": Number(((parseFloat(cells[deltaIdx["內大"]]) || 0) / 10).toFixed(1)),
                         "內小": Number(((parseFloat(cells[deltaIdx["內小"]]) || 0) / 10).toFixed(1)),
-                        "中": Number(((parseFloat(cells[deltaIdx["長各"]]) || parseFloat(cells[deltaIdx["中"]]) || 0) / 10).toFixed(1)),
+                        "中": Number(((parseFloat(cells[deltaIdx["中"]]) || parseFloat(cells[deltaIdx["長各"]]) || 0) / 10).toFixed(1)),
                         "外": Number(((parseFloat(cells[deltaIdx["外"]]) || 0) / 10).toFixed(1)),
                         "總和": Number(((parseFloat(cells[deltaIdx["總和"]]) || 0) / 10).toFixed(1))
                     };
 
                     totalWater += waterVal; totalElectricity += eleTotalVal; historyTotal += combinedSum;
+                    
+                    labels.push(monthVal); 
+                    // 🌟 圖表修正：如果是 0，就塞入 null 讓圖表自動跳過不畫線
+                    waterChartData.push(waterVal > 0 ? waterVal : null); 
+                    eleChartData.push(eleTotalVal > 0 ? eleTotalVal : null);
+                    
+                    meterLabels.push(monthVal); 
+                    meterDeltaTotal.push(deltaMeters["總和"] > 0 ? deltaMeters["總和"] : null);
 
                     const waterPerRoom = Math.floor(waterVal / 4);
                     const waterImpute = waterVal - (waterPerRoom * 4);
@@ -330,49 +334,40 @@
                             "內小": parseFloat(cells[roomCostIdx["內小"]]) || 0, 
                             "中": parseFloat(cells[roomCostIdx["中"]]) || 0, 
                             "外": parseFloat(cells[roomCostIdx["外"]]) || 0 
-                        },
-                        rents: {
-                            "內大": parseFloat(cells[rentCostIdx["內大"]]) || 0,
-                            "內小": parseFloat(cells[rentCostIdx["內小"]]) || 0,
-                            "中": parseFloat(cells[rentCostIdx["中"]]) || 0,
-                            "外": parseFloat(cells[rentCostIdx["外"]]) || 0
                         }
                     });
                 }
                 
-                if (globalParsedData.length === 0) throw new Error("無符合的月份資料 (請確認試算表格式長度)");
+                if (globalParsedData.length === 0) throw new Error("無符合月份紀錄");
 
-                updateLoading("🧠 執行智慧跨月回溯邏輯...");
-
-                // 🚀 新增：0值回溯邏輯
+                // 🌟 後處理資料：智慧跨月零值判斷
                 const lastIdx = globalParsedData.length - 1;
                 const latest = globalParsedData[lastIdx];
-                
+
                 let eleIdx = lastIdx;
                 let waterIdx = lastIdx;
                 
+                // 如果當月是0，就往前抓有紀錄的上個月
                 while(eleIdx > 0 && globalParsedData[eleIdx].eleTotal === 0) eleIdx--;
                 while(waterIdx > 0 && globalParsedData[waterIdx].water === 0) waterIdx--;
 
                 const dispEle = globalParsedData[eleIdx];
                 const dispWater = globalParsedData[waterIdx];
 
-                const eleRemark = (eleIdx !== lastIdx) ? `<div class="stat-sub" style="color: #b56a6a; font-weight: 600; margin-top: 6px;">*當月無帳單，顯示 ${dispEle.month} 費用</div>` : "";
-                const waterRemark = (waterIdx !== lastIdx) ? `<div class="stat-sub" style="color: #b56a6a; font-weight: 600; margin-top: 6px;">*當月無帳單，顯示 ${dispWater.month} 費用</div>` : "";
-
-                updateLoading("🖥️ 渲染儀表板版面...");
+                const eleRemark = (eleIdx !== lastIdx) ? `<div style="font-size: 11px; color: #b56a6a; margin-top: 8px; font-weight: 600;">* 當月無帳單，顯示 ${dispEle.month} 費用</div>` : "";
+                const waterRemark = (waterIdx !== lastIdx) ? `<div style="font-size: 11px; color: #b56a6a; margin-top: 8px; font-weight: 600;">* 當月無帳單，顯示 ${dispWater.month} 費用</div>` : "";
                 
                 document.getElementById('mainContent').innerHTML = `
-                    <div class="section-title">當月費用摘要 (目前結算至 ${latest.month})</div>
+                    <div class="section-title">近期費用摘要 (目前結算至 ${latest.month})</div>
                     <div class="stats-grid">
                         <div class="stat-card current-ele" onclick="openRoomDetails('currentEle')">
-                            <div class="stat-label">當月電費 (點擊看房間明細)</div>
+                            <div class="stat-label">近期電費 (點擊看房間明細)</div>
                             <div class="stat-value">NT$ ${dispEle.eleTotal.toLocaleString()}</div>
                             <div class="impute-green-badge">✓ 公基金挹注 NT$ ${dispEle.eleImpute}</div>
                             ${eleRemark}
                         </div>
                         <div class="stat-card current-water" onclick="openRoomDetails('currentWater')">
-                            <div class="stat-label">當月水費 (點擊看當月明細)</div>
+                            <div class="stat-label">近期水費 (點擊看當月明細)</div>
                             <div class="stat-value">NT$ ${dispWater.water.toLocaleString()}</div>
                             <div class="stat-sub">每房實付：NT$ ${dispWater.waterPerRoom}</div>
                             <div class="impute-green-badge">✓ 公基金挹注 NT$ ${dispWater.waterImpute}</div>
@@ -421,14 +416,7 @@
                     </div>
                 `;
 
-                updateLoading("📈 繪製圖表中...");
-
-                // 🚀 新增：圖表排除零值、隱藏橫軸
-                const labels = globalParsedData.map(d => d.month);
-                const eleChartData = globalParsedData.map(d => d.eleTotal > 0 ? d.eleTotal : null);
-                const waterChartData = globalParsedData.map(d => d.water > 0 ? d.water : null);
-                const meterDeltaTotal = globalParsedData.map(d => d.deltaMeters["總和"] > 0 ? d.deltaMeters["總和"] : null);
-
+                // 🌟 畫圖表，並且啟動 spanGaps 讓圖表越過零值，並隱藏 x 軸
                 const ctx = document.getElementById('trendChart').getContext('2d');
                 trendChartInstance = new Chart(ctx, {
                     type: 'line',
@@ -463,13 +451,12 @@
                     }
                 });
 
-                console.log("🎉 系統載入完成！");
-
             } catch (error) {
+                // 🌟 超級報錯畫面：如果出錯，一定會寫在這裡，不會再全黑或卡死
                 document.getElementById('mainContent').innerHTML = `
                     <div class="loading" style="color: #b54a4a; text-align: left; max-width: 600px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
                         ❌ 系統載入失敗。<br><br>
-                        <span style="font-size:13px; color:#828a95; line-height: 1.5;">${error.message}</span>
+                        <span style="font-size:13px; color:#828a95; line-height: 1.5;">${error.message}<br><br>請檢查試算表是否為公開狀態。</span>
                     </div>`;
             }
         }
@@ -479,10 +466,13 @@
             const title = document.getElementById('modalTitle');
             const body = document.getElementById('modalBody');
             let htmlContent = "";
+
+            if (globalParsedData.length === 0) return;
+
             const lastIdx = globalParsedData.length - 1;
             const latestItem = globalParsedData[lastIdx];
-
-            // 🚀 新增：明細視窗同步回溯邏輯
+            
+            // 🌟 彈出視窗同步使用跨月回溯邏輯
             let eleIdx = lastIdx;
             let waterIdx = lastIdx;
             while(eleIdx > 0 && globalParsedData[eleIdx].eleTotal === 0) eleIdx--;
@@ -516,10 +506,10 @@
                 title.innerText = `${latestItem.month} 水電加總摘要`;
                 htmlContent = `
                     <div class="modal-item-block">
-                        <div class="modal-month-title">${latestItem.month} 支出加總</div>
-                        <div class="modal-row"><span class="modal-row-label">總電費金額</span><span class="modal-row-value">NT$ ${latestItem.eleTotal.toLocaleString()}</span></div>
-                        <div class="modal-row"><span class="modal-row-label">總水費金額</span><span class="modal-row-value">NT$ ${latestItem.water.toLocaleString()}</span></div>
-                        <div class="modal-row total-line"><span class="modal-row-label">當月總計支出</span><span class="modal-row-value" style="color:#6e916e;">NT$ ${latestItem.total.toLocaleString()}</span></div>
+                        <div class="modal-month-title">${latestItem.month} 實際結算加總</div>
+                        <div class="modal-row"><span class="modal-row-label">總電費出帳金額</span><span class="modal-row-value">NT$ ${latestItem.eleTotal.toLocaleString()}</span></div>
+                        <div class="modal-row"><span class="modal-row-label">總水費出帳金額</span><span class="modal-row-value">NT$ ${latestItem.water.toLocaleString()}</span></div>
+                        <div class="modal-row total-line"><span class="modal-row-label">當月實際花費總計</span><span class="modal-row-value" style="color:#6e916e;">NT$ ${latestItem.total.toLocaleString()}</span></div>
                     </div>`;
             } else if (type === 'historyEle') {
                 title.innerText = "歷月電費總額紀錄";
