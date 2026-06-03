@@ -96,7 +96,7 @@
     <div class="header-banner">
         <div class="header-container">
             <h1>宿舍智慧管理系統</h1>
-            <p>新竹市東區建功一路47巷五樓（公基金金流管理）</p>
+            <p>新竹市東區建功一路47巷五樓（孟竹國宅）</p>
             <div class="update-time-tag" id="updateTimeDisplay">資料更新：同步中...</div>
         </div>
     </div>
@@ -111,11 +111,12 @@
         <div id="fundDisplayArea">
             <div class="loading">📡 公基金智能調度看板建構中，請稍候...</div>
         </div>
-        <div class="copyright">© 2026 GUO DANIEL. ALL RIGHTS RESERVED.</div>
+        <div class="copyright">© 2026 GUO DANIEL. ALL RIGHTS RESERVED. (公基金管理)</div>
     </div>
 
     <script>
-        const urlFund = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQkqhXCPp4XiHKCEpI3pz4pzcu3sQreQ_qNRLger00ULCHFr9cTbXHMQqAfk7dLa_gUBAIBSJ5sZM4F/pub?gid=1058170538&single=true&output=csv";
+        // 🎯 修正：精準綁定你的「公基金」工作表分頁專屬 gid
+        const urlFund = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQkqhXCPp4XiHKCEpI3pz4pzcu3sQreQ_qNRLger00ULCHFr9cTbXHMQqAfk7dLa_gUBAIBSJ5sZM4F/pub?gid=1043153411&single=true&output=csv";
 
         function updateTimestamp() {
             const now = new Date();
@@ -153,12 +154,15 @@
                 let totalExpense = 0;
                 let fundHistory = [];
 
+                // 從 Index 1 開始解析，因為 Index 0 是標題列
                 for(let i = 1; i < lines.length; i++) {
                     const cells = lines[i].split(",").map(c => c.replace(/["'\uFEFF]/g, '').trim());
-                    if(cells.length < 6 || !cells[dateIdx] || cells[dateIdx].includes("日期")) continue;
+                    
+                    // 放寬條件，只要有日期就解析
+                    if(!cells[dateIdx] || cells[dateIdx] === "") continue;
 
                     const dateVal = cells[dateIdx];
-                    const typeVal = cells[typeIdx]; 
+                    const typeVal = cells[typeIdx] || "未指定"; 
                     const rawAmt = parseFloat(cells[amountIdx]) || 0;
                     const balanceVal = parseFloat(cells[balanceIdx]) || 0;
                     const categoryVal = cells[categoryIdx] || "未分類";
@@ -222,7 +226,7 @@
                         </div>
                     </div>
 
-                    <div class="section-title">公公共基金金流明細歷史清單</div>
+                    <div class="section-title">公共基金金流明細歷史清單</div>
                     <div class="morandi-table-container">
                         <table class="morandi-table">
                             <thead>
