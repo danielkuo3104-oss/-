@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>宿舍智慧管理系統 - 首頁儀表板 (除錯模式)</title>
+    <title>宿舍智慧管理系統 - 首頁儀表板</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         /* 🎨 原版莫蘭迪（Morandi）高級色系調色盤 */
@@ -14,6 +14,7 @@
         .header-banner p { margin: 10px 0 0 0; opacity: 0.85; font-size: 13px; letter-spacing: 0.5px; }
         
         .update-time-tag { position: absolute; right: 0; bottom: -45px; font-size: 11px; color: rgba(255, 255, 255, 0.75); background: rgba(0, 0, 0, 0.12); padding: 4px 10px; border-radius: 20px; font-weight: 500; letter-spacing: 0.5px; backdrop-filter: blur(4px); }
+
         .nav-tabs { display: flex; justify-content: center; background: #ffffff; border-bottom: 1px solid #e1e4e8; gap: 30px; padding: 0 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.02); }
         .nav-link { padding: 16px 24px; font-size: 14px; font-weight: 600; color: #8a929a; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.25s ease; text-decoration: none; }
         .nav-link.active { color: #69779b; border-bottom-color: #69779b; }
@@ -24,7 +25,7 @@
         @keyframes marquee { 0% { left: 100%; transform: translate3d(0,0,0); } 100% { left: 0; transform: translate3d(-100%,0,0); } }
         .announcement-item { display: inline-flex; align-items: center; margin-right: 50px; font-size: 13px; font-weight: 500; }
         .badge { padding: 3px 9px; border-radius: 6px; font-size: 11px; font-weight: 700; margin-right: 8px; }
-        .badge.緊急 { background: #d96b6b; color: white; animation: pulse 1s infinite alternate; }
+        .badge.緊急 { background: #d96b6b; color: white; }
         .badge.重要 { background: #d9886b; color: white; }
         .badge.普通 { background: #cbd1d6; color: #5a6168; }
 
@@ -61,15 +62,15 @@
         
         .gray-section { background: #e6ebf0; border-radius: 24px; padding: 24px; margin-top: 45px; border: 1px solid #d2dae2; }
         .gray-title { color: #54606e; font-size: 15px; font-weight: 600; margin-bottom: 16px; letter-spacing: 0.5px; }
-        .gray-card { background: #f5f8fa; border-radius: 16px; padding: 20px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.01); border: 1px solid #dbe2e8; }
+        .gray-card { background: #f5f8fa; border-radius: 16px; padding: 20px; border: 1px solid #dbe2e8; }
         .meter-chart-spacer { margin-top: 25px; }
 
-        /* 🛠️ 除錯面板專屬樣式 */
+        /* 🛠️ 終端機除錯面板樣式 */
         #debugConsole {
             background-color: #1e1e1e; color: #4af626; padding: 15px;
             font-family: 'Courier New', Courier, monospace; font-size: 13px;
-            border-radius: 12px; height: 250px; overflow-y: auto; margin-top: 30px;
-            box-shadow: inset 0 2px 10px rgba(0,0,0,0.5); border: 1px solid #333;
+            border-radius: 12px; height: 250px; overflow-y: auto; margin-top: 20px;
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.5); border: 1px solid #333; line-height: 1.5;
         }
         .debug-msg { padding: 4px 0; border-bottom: 1px dashed #333; }
         .debug-error { color: #ff5252; font-weight: bold; }
@@ -80,6 +81,7 @@
         .rules-list li { margin-bottom: 10px; }
         .copyright { font-size: 11px; color: #9ba3ab; text-align: center; letter-spacing: 0.5px; }
 
+        /* 彈出視窗樣式 */
         .modal-overlay { position: fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.4); display:none; justify-content:center; align-items:center; z-index:1000; backdrop-filter: blur(4px); }
         .modal-overlay.active { display:flex; }
         .modal-box { background:#ffffff; width:90%; max-width:500px; border-radius:24px; padding:28px; box-shadow:0 12px 30px rgba(0,0,0,0.15); max-height:80vh; overflow-y:auto; }
@@ -100,7 +102,6 @@
             .stats-grid { gap: 28px; }
             .stat-card { padding: 20px; border-radius: 18px; }
             .stat-value { font-size: 22px; }
-            .chart-header-row { flex-direction: column; align-items: flex-start; gap: 12px; }
             .chart-card { padding: 16px; border-radius: 18px; margin-top: 16px; }
             .chart-container { height: 280px; }
             .gray-section { padding: 16px; border-radius: 20px; margin-top: 40px; }
@@ -127,10 +128,8 @@
         <div class="marquee-content" id="marqueeContent"></div>
     </div>
 
-    <div class="main-container" id="mainContainer">
-        <div id="mainContent">
-            <div class="loading">📡 智慧建構數據看板中，請稍候...</div>
-        </div>
+    <div class="main-container" id="mainContent">
+        <div class="loading">📡 智慧建構數據看板中，請稍候...</div>
     </div>
     
     <div class="main-container">
@@ -160,17 +159,17 @@
     </div>
 
     <script>
-        // 🚨 1. 第一步：註冊全域致命錯誤捕捉器
+        // 🚨 1. 註冊全域致命錯誤捕捉器
         window.onerror = function(message, source, lineno, colno, error) {
             const consoleBox = document.getElementById('debugConsole');
             if(consoleBox) {
-                consoleBox.innerHTML += `<div class="debug-msg debug-error">[致命錯誤] ${message} (位於第 ${lineno} 行)</div>`;
+                consoleBox.innerHTML += `<div class="debug-msg debug-error">[致命錯誤] ${message} (第 ${lineno} 行)</div>`;
                 consoleBox.scrollTop = consoleBox.scrollHeight;
             }
             return true; 
         };
 
-        // 🛠️ 2. 定義寫入除錯日誌的工具
+        // 🛠️ 2. 日誌寫入函數
         function logDebug(message, type = 'info') {
             const consoleBox = document.getElementById('debugConsole');
             if(!consoleBox) return;
@@ -190,14 +189,14 @@
         let globalParsedData = []; 
         let trendChartInstance = null; 
 
-        // 🚀 防彈解析數字
+        // 🚀 防彈解析數字 (自動清除千分位逗號)
         const parseNum = val => {
             if(!val) return 0;
             const cleaned = String(val).replace(/,/g, '').trim();
             return parseFloat(cleaned) || 0;
         };
 
-        // 🚀 專業 CSV 解析器
+        // 🚀 專業 CSV 解析器 (保護引號內的逗號，不會被切斷)
         function parseCSV(str) {
             const arr = []; let quote = false; let col = 0, row = 0;
             for (let c = 0; c < str.length; c++) {
@@ -226,22 +225,21 @@
             } catch(e) {}
         }
 
-        // 🚀 直接啟動，不再等待事件！
-        function startSystem() {
-            logDebug('🚀 系統啟動，開始執行腳本...');
+        async function startSystem() {
+            logDebug('🚀 系統啟動中...');
             updateTimestamp();
-            loadAnnouncements(); 
-            initDashboard();
+            await loadAnnouncements(); 
+            await initDashboard();
         }
 
         async function loadAnnouncements() {
             try {
-                logDebug('🌐 準備獲取公告資料...');
+                logDebug('🌐 獲取公告資料...');
                 const response = await fetch(urlAnnounce);
                 const text = await response.text();
                 
                 if (text.includes("<!doctype html")) {
-                    logDebug('⚠️ 公告資料被擋或權限未開，跳過公告', 'warn');
+                    logDebug('⚠️ 公告可能未公開，跳過處理', 'warn');
                     return;
                 }
 
@@ -258,34 +256,31 @@
                         html += `<div class="announcement-item text-${level}"><span class="badge ${level}">${level}</span> ${content}</div>`;
                     }
                 }
-                logDebug(`✅ 公告載入完成，共 ${validCount} 則`);
+                logDebug(`✅ 成功載入 ${validCount} 則公告`);
 
                 if (validCount > 0) {
                     document.getElementById('marqueeContent').innerHTML = html + html;
                     document.getElementById('marqueeContent').style.animationDuration = `${validCount * 12}s`;
                     document.getElementById('marqueeBar').style.display = "flex";
                 }
-            } catch (e) { logDebug(`❌ 公告欄加載失敗: ${e.message}`, 'error'); }
+            } catch (e) { logDebug(`❌ 公告錯誤: ${e.message}`, 'error'); }
         }
 
         async function initDashboard() {
             try {
-                logDebug('🌐 準備獲取主計費表 CSV (urlPrimary)...');
+                logDebug('🌐 準備獲取計費表 CSV...');
                 const response = await fetch(urlPrimary);
-                logDebug(`📥 HTTP 狀態碼: ${response.status}`);
-                
                 const csvText = await response.text();
-                logDebug(`📄 下載完成，字串長度: ${csvText.length} bytes`);
                 
                 if (csvText.toLowerCase().includes("<!doctype html")) {
-                    throw new Error("取得的內容為 HTML，請確認您的試算表已發布至網路且為 CSV 格式");
+                    throw new Error("取得內容為 HTML，請確認試算表已發布至網路");
                 }
 
-                logDebug('⚙️ 開始解析 CSV 資料...');
+                logDebug('⚙️ 解析 CSV 字串...');
                 const rows = parseCSV(csvText);
-                logDebug(`✅ 解析完成，陣列共 ${rows.length} 列`);
+                logDebug(`✅ 解析完成，共有 ${rows.length} 列資料`);
 
-                if(rows.length < 2) throw new Error("試算表內列數不足 (可能只有標題或全空)");
+                if(rows.length < 2) throw new Error("試算表內數據不足");
 
                 const monthIdx = 0; const waterIdx = 1; const eleTotalIdx = 11; 
                 const deltaIdx = { "內大": 7, "內小": 8, "中": 9, "外": 10, "總和": 6 }; 
@@ -294,13 +289,12 @@
                 let totalWater = 0; let totalElectricity = 0; let historyTotal = 0;
                 globalParsedData = [];
 
-                logDebug('🔎 開始過濾並逐列讀取資料...');
+                logDebug('🔎 逐月資料核對與計算...');
                 for(let i = 1; i < rows.length; i++) {
                     const cells = rows[i];
                     
-                    if(!cells[monthIdx]) continue;
-                    if(cells[monthIdx].includes("基準")) {
-                        logDebug(`⏭️ 略過基準行`);
+                    // 🚀 防彈判定：只要A欄有字，就大膽收編 (就算後面全空也會安全補 0)
+                    if(!cells[monthIdx] || cells[monthIdx].includes("基準")) {
                         continue;
                     }
 
@@ -309,7 +303,7 @@
                     const eleTotalVal = parseNum(cells[eleTotalIdx]); 
                     const combinedSum = waterVal + eleTotalVal;
 
-                    logDebug(`👉 讀取 [${monthVal}] | 水費: ${waterVal} | 總電費: ${eleTotalVal}`);
+                    logDebug(`👉 成功讀取 [${monthVal}] | 水費: NT$${waterVal} | 電費: NT$${eleTotalVal}`);
 
                     const deltaMeters = {
                         "內大": Number((parseNum(cells[deltaIdx["內大"]]) / 10).toFixed(1)),
@@ -340,14 +334,12 @@
                     });
                 }
 
-                logDebug(`✅ 資料處理完畢，共提取 ${globalParsedData.length} 個有效月份`);
-
-                if (globalParsedData.length === 0) throw new Error("過濾後無符合的有效月份紀錄");
+                if (globalParsedData.length === 0) throw new Error("無符合的月份紀錄");
 
                 const lastIdx = globalParsedData.length - 1;
                 const latest = globalParsedData[lastIdx];
 
-                logDebug(`🧠 執行智慧跨月回溯邏輯... (目前最新為 ${latest.month})`);
+                logDebug(`🧠 啟動智慧跨月判斷 (最新資料點為 ${latest.month})`);
                 
                 let eleIdx = lastIdx;
                 let waterIdx = lastIdx;
@@ -357,12 +349,12 @@
                 const dispEle = globalParsedData[eleIdx];
                 const dispWater = globalParsedData[waterIdx];
 
-                logDebug(`📌 顯示電費將抓取: ${dispEle.month} | 顯示水費將抓取: ${dispWater.month}`);
+                logDebug(`📌 主頁面板最終抓取 -> 電費: ${dispEle.month} | 水費: ${dispWater.month}`);
 
                 const eleRemark = eleIdx !== lastIdx ? `<br><div class="cross-month-badge">* 當月無帳單，自動顯示 ${dispEle.month} 費用</div>` : '';
                 const waterRemark = waterIdx !== lastIdx ? `<br><div class="cross-month-badge">* 當月無帳單，自動顯示 ${dispWater.month} 費用</div>` : '';
                 
-                logDebug('🖥️ 準備渲染 DOM 結構...');
+                logDebug('🖥️ 正在繪製 DOM 畫面元件...');
                 document.getElementById('mainContent').innerHTML = `
                     <div class="section-title">近期費用摘要 (目前結算至 ${latest.month})</div>
                     <div class="stats-grid">
@@ -422,12 +414,12 @@
                         <div class="chart-card meter-chart-spacer" style="background: #f4f6f8; border-color: #d2dae2;"><div class="chart-container" style="height: 220px;"><canvas id="meterChart"></canvas></div></div>
                     </div>
                 `;
-                logDebug('✅ DOM 渲染完成');
 
                 try {
-                    logDebug('📈 準備調用 Chart.js 繪製圖表...');
+                    logDebug('📈 呼叫 Chart.js 生成折線圖...');
                     
                     const labels = globalParsedData.map(d => d.month);
+                    // 🚀 關鍵：將 0 轉成 null，配合 spanGaps: true，讓折線圖自動忽略 0，也不會有直墜的線！
                     const eleChartData = globalParsedData.map(d => d.eleTotal > 0 ? d.eleTotal : null);
                     const waterChartData = globalParsedData.map(d => d.water > 0 ? d.water : null);
 
@@ -446,8 +438,6 @@
                         options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true } }, scales: { x: { display: false }, y: { ticks: { callback: val => 'NT$ ' + val.toLocaleString() } } } }
                     });
 
-                    logDebug('📈 主趨勢圖繪製完成');
-
                     const meterDeltaTotal = globalParsedData.map(d => d.deltaMeters["總和"] > 0 ? d.deltaMeters["總和"] : null);
                     new Chart(document.getElementById('meterChart').getContext('2d'), {
                         type: 'line',
@@ -455,11 +445,9 @@
                         options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { ticks: { callback: val => val + ' 度' } } } }
                     });
                     
-                    logDebug('🎉 圖表全數繪製完成，系統正常運行！');
+                    logDebug('🎉 系統初始化大功告成！');
 
-                } catch(e) { 
-                    logDebug(`❌ 圖表繪製崩潰: ${e.message}`, 'error'); 
-                }
+                } catch(e) { logDebug(`❌ 圖表繪製崩潰: ${e.message}`, 'error'); }
 
             } catch (error) {
                 logDebug(`🚨 主程式捕捉到錯誤: ${error.message}`, 'error');
@@ -483,6 +471,7 @@
                 const lastIdx = globalParsedData.length - 1;
                 const latestItem = globalParsedData[lastIdx];
                 
+                // 🚀 彈出視窗同步使用跨月回溯邏輯
                 let eleIdx = lastIdx;
                 while(eleIdx > 0 && globalParsedData[eleIdx].eleTotal === 0) eleIdx--;
                 const eleItem = globalParsedData[eleIdx];
@@ -576,15 +565,13 @@
 
                 body.innerHTML = htmlContent;
                 overlay.classList.add('active');
-            } catch(e) {
-                logDebug(`❌ 彈窗生成錯誤: ${e.message}`, 'error');
-            }
+            } catch(e) { logDebug(`❌ 彈窗生成錯誤: ${e.message}`, 'error'); }
         }
 
         function closeModal() { document.getElementById('detailModal').classList.remove('active'); }
 
-        // 🚀 直接觸發執行，不等待事件
-        startSystem();
+        // 🚀 執行腳本！
+        window.addEventListener('DOMContentLoaded', startSystem);
     </script>
 </body>
 </html>
