@@ -111,7 +111,7 @@
         .stat-card.history-card { background: #ffffff; border: 1px solid #e1e4e8; }
         .stat-card.history-card .stat-value { color: #4a515a; }
         
-       .stat-card.history-purple { background: #ffffff; border: 1px solid #e1e4e8; }
+        .stat-card.history-purple { background: #ffffff; border: 1px solid #e1e4e8; }
         .stat-card.history-purple .stat-label { font-weight: 600; } 
         .stat-card.history-purple .stat-value { color: #7b2cbf; }
 
@@ -128,17 +128,22 @@
         .rules-list li { margin-bottom: 10px; }
         .copyright { font-size: 11px; color: #9ba3ab; text-align: center; letter-spacing: 0.5px; }
 
-        /* 彈出視窗樣式 */
+        /* 彈出視窗細緻表格樣式 */
         .modal-overlay { position: fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.4); display:none; justify-content:center; align-items:center; z-index:1000; backdrop-filter: blur(4px); }
         .modal-overlay.active { display:flex; }
-        .modal-box { background:#ffffff; width:90%; max-width:500px; border-radius:24px; padding:28px; box-shadow:0 12px 30px rgba(0,0,0,0.15); max-height:80vh; overflow-y:auto; }
+        .modal-box { background:#ffffff; width:90%; max-width:520px; border-radius:24px; padding:28px; box-shadow:0 12px 30px rgba(0,0,0,0.15); max-height:80vh; overflow-y:auto; }
         .modal-title { font-size:18px; font-weight:700; color:#4a515a; margin-bottom:20px; border-bottom:1px solid #eaecef; padding-bottom:12px; text-align:center; }
         .modal-item-block { margin-bottom:20px; }
-        .modal-month-title { font-size:14px; font-weight:600; color:#69779b; margin-bottom:10px; }
-        .modal-row { display:flex; justify-content:space-between; padding:8px 0; font-size:13px; color:#5a6168; }
-        .modal-row.total-line { border-top:1px dashed #d2dae2; margin-top:8px; padding-top:12px; font-weight:700; font-size:14px; }
-        .close-btn { width:100%; background:#69779b; color:white; border:none; padding:12px; border-radius:12px; font-size:14px; font-weight:600; cursor:pointer; margin-top:10px; transition:background 0.2s; }
+        .modal-month-title { font-size:14px; font-weight:600; color:#69779b; margin-bottom:12px; border-left: 3px solid #69779b; padding-left: 8px; }
+        .modal-row { display:flex; justify-content:space-between; padding:10px 4px; font-size:13px; color:#5a6168; border-bottom: 1px solid #f0f2f5; }
+        .modal-row.total-line { border-top:1px dashed #d2dae2; border-bottom: none; margin-top:8px; padding-top:12px; font-weight:700; font-size:14px; }
+        .close-btn { width:100%; background:#69779b; color:white; border:none; padding:13px; border-radius:12px; font-size:14px; font-weight:600; cursor:pointer; margin-top:15px; transition:background 0.2s; }
         .close-btn:hover { background:#586585; }
+
+        /* 彈出視窗精緻表格 */
+        .detail-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 8px; color: #5a6168; }
+        .detail-table th, .detail-table td { padding: 10px 12px; border-bottom: 1px solid #f0f2f5; text-align: left; }
+        .detail-table th { background: #f8fafc; color: #8a929a; font-weight: 600; }
 
         @media (max-width: 768px) {
             .header-banner { padding: 35px 20px 45px 20px; }
@@ -204,8 +209,9 @@
     </div>
 
     <script>
-        const urlPrimary = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQkqhXCPp4XiHKCEpI3pz4pzcu3sQreQ_qNRLger00ULCHFr9cTbXHMQqAfk7dLa_gUBAIBSJ5sZM4F/pub?output=csv&gid=0";
-        const urlAnnounce = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQkqhXCPp4XiHKCEpI3pz4pzcu3sQreQ_qNRLger00ULCHFr9cTbXHMQqAfk7dLa_gUBAIBSJ5sZM4F/pub?output=csv&gid=1058170538"; 
+        // 🎯 採用指定單一工作表的精準 CSV 匯出連結
+        const urlPrimary = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQkqhXCPp4XiHKCEpI3pz4pzcu3sQreQ_qNRLger00ULCHFr9cTbXHMQqAfk7dLa_gUBAIBSJ5sZM4F/pub?gid=0&single=true&output=csv";
+        const urlAnnounce = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQkqhXCPp4XiHKCEpI3pz4pzcu3sQreQ_qNRLger00ULCHFr9cTbXHMQqAfk7dLa_gUBAIBSJ5sZM4F/pub?gid=1058170538&single=true&output=csv"; 
 
         const tenantNames = { "內大": "洪健棋", "內小": "郭丹騏", "中": "尹奕竤", "外": "林易諒" };
 
@@ -222,9 +228,19 @@
             document.getElementById('updateTimeDisplay').innerText = `資料更新：${yyyy}/${mm}/${dd} ${hh}:${min}`;
         }
 
+        // 加上 Fetch 安全超時阻斷，防堵異常 HTML 掛載卡死
+        async function fetchWithTimeout(resource, options = {}) {
+            const { timeout = 6000 } = options;
+            const controller = new AbortController();
+            const id = setTimeout(() => controller.abort(), timeout);
+            const response = await fetch(resource, { ...options, signal: controller.signal });
+            clearTimeout(id);
+            return response;
+        }
+
         async function loadAnnouncements() {
             try {
-                const response = await fetch(urlAnnounce);
+                const response = await fetchWithTimeout(urlAnnounce, { timeout: 4000 });
                 const text = await response.text();
                 if (text.includes("<!doctype html") || text.includes("<script") || text.includes("login")) return;
 
@@ -254,43 +270,43 @@
                     document.getElementById('marqueeBar').style.display = "flex";
                 }
             } catch (e) {
-                console.error("公告欄加載失敗:", e);
+                console.error("公告欄加載失敗或超時:", e);
             }
         }
 
         async function initDashboard() {
             try {
-                const response = await fetch(urlPrimary);
+                const response = await fetchWithTimeout(urlPrimary, { timeout: 6000 });
                 const csvText = await response.text();
                 
                 if (csvText.includes("<!doctype html") || csvText.includes("<script") || csvText.includes("login")) {
-                    throw new Error("試算表載入失敗 (權限可能未公開)。");
+                    throw new Error("試算表載入驗證失敗 (請確認發布設定)。");
                 }
 
                 let cleanText = csvText.replace(/\r/g, "");
                 const lines = cleanText.split("\n").map(line => line.trim()).filter(line => line);
-                if(lines.length < 2) throw new Error("試算表內無數據");
+                if(lines.length < 2) throw new Error("試算表內無有效花費數據");
 
-                // 🎯 依據截圖完美對齊 Index：
+                // 🎯 完美對齊費用總表 Index 結構
                 const monthIdx = 0;       // A欄：月份
                 const waterIdx = 1;       // B欄：水費
                 const eleTotalIdx = 11;   // L欄：總電費 (Index 11)
                 
-                // 電表差值精準對位
+                // 電表度數增加差值 (G欄開始為 6)
                 const deltaIdx = { "總和": 6, "內大": 7, "內小": 8, "中": 9, "外": 10 }; 
                 
-                // 各房電費實付金額精準對位 (M ~ P 欄)
+                // 各房電費實付金額分攤 (M ~ P 欄)
                 const roomCostIdx = { "內大": 12, "內小": 13, "中": 14, "外": 15 }; 
 
                 let totalWater = 0; let totalElectricity = 0; let historyTotal = 0;
                 const labels = []; const waterChartData = []; const eleChartData = [];
-                const meterLabels = []; const meterDeltaTotal = [];
+                const meterDeltaTotal = [];
                 globalParsedData = [];
 
                 for(let i = 1; i < lines.length; i++) {
                     const cells = lines[i].split(",").map(c => c.replace(/["'\uFEFF]/g, '').trim());
                     
-                    // 🌟 安全檢查門檻：至少要填到各房實付電費區間 (Index 15)，並過濾基準與空值
+                    // 🌟 嚴格安全防線：欄位長度低於 16 欄、空白行、或基準列直接安全過濾
                     if(cells.length < 16 || !cells[monthIdx] || cells[monthIdx].includes("基準") || cells[monthIdx].includes("<script")) {
                         continue;
                     }
@@ -300,7 +316,6 @@
                     const eleTotalVal = parseFloat(cells[eleTotalIdx]) || 0; 
                     const combinedSum = waterVal + eleTotalVal;
 
-                    // 讀取電表抄錄差值
                     const deltaMeters = {
                         "總和": parseFloat(cells[deltaIdx["總和"]]) || 0,
                         "內大": parseFloat(cells[deltaIdx["內大"]]) || 0,
@@ -314,8 +329,6 @@
                     labels.push(monthVal); 
                     waterChartData.push(waterVal > 0 ? waterVal : null); 
                     eleChartData.push(eleTotalVal > 0 ? eleTotalVal : null);
-                    
-                    meterLabels.push(monthVal); 
                     meterDeltaTotal.push(deltaMeters["總和"] > 0 ? deltaMeters["總和"] : null);
 
                     const waterPerRoom = Math.floor(waterVal / 4);
@@ -326,7 +339,6 @@
                                     (parseFloat(cells[roomCostIdx["中"]]) || 0) + 
                                     (parseFloat(cells[roomCostIdx["外"]]) || 0);
                                     
-                    // 經公基金補助差值額度
                     const eleImpute = Math.max(0, Math.floor(eleTotalVal - roomSum));
 
                     globalParsedData.push({
@@ -342,7 +354,7 @@
                     });
                 }
                 
-                if (globalParsedData.length === 0) throw new Error("無符合月份紀錄");
+                if (globalParsedData.length === 0) throw new Error("過濾後無可用月份紀錄");
 
                 const lastIdx = globalParsedData.length - 1;
                 const latest = globalParsedData[lastIdx];
@@ -456,7 +468,7 @@
                 document.getElementById('mainContent').innerHTML = `
                     <div class="loading" style="color: #b54a4a; text-align: left; max-width: 600px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
                         ❌ 系統載入失敗。<br><br>
-                        <span style="font-size:13px; color:#828a95; line-height: 1.5;">${error.message}<br><br>請檢查試算表是否為公開狀態。</span>
+                        <span style="font-size:13px; color:#828a95; line-height: 1.5;">${error.message}<br><br>請確認發布網址正確，或按 F12 檢視主控台錯誤。</span>
                     </div>`;
             }
         }
@@ -485,11 +497,16 @@
                 htmlContent = `
                     <div class="modal-item-block">
                         <div class="modal-month-title">${eleItem.month} 實付分攤</div>
-                        <div class="modal-row"><span class="modal-row-label">${tenantNames["內大"]}</span><span class="modal-row-value">NT$ ${eleItem.rooms["內大"].toLocaleString()}</span></div>
-                        <div class="modal-row"><span class="modal-row-label">${tenantNames["內小"]}</span><span class="modal-row-value">NT$ ${eleItem.rooms["內小"].toLocaleString()}</span></div>
-                        <div class="modal-row"><span class="modal-row-label">${tenantNames["中"]}</span><span class="modal-row-value">NT$ ${eleItem.rooms["中"].toLocaleString()}</span></div>
-                        <div class="modal-row"><span class="modal-row-label">${tenantNames["外"]}</span><span class="modal-row-value">NT$ ${eleItem.rooms["外"].toLocaleString()}</span></div>
-                        <div style="font-size: 11px; color: #437353; background: #ebf5ee; padding: 6px 10px; border-radius: 6px; margin-top: 10px; font-weight: 600;">* 經電表精算後，公基金已自動挹注分攤 NT$ ${eleItem.eleImpute} 元</div>
+                        <table class="detail-table">
+                            <thead><tr><th>房客</th><th>實付金額</th></tr></thead>
+                            <tbody>
+                                <tr><td>${tenantNames["內大"]} (內大)</td><td>NT$ ${eleItem.rooms["內大"].toLocaleString()}</td></tr>
+                                <tr><td>${tenantNames["內小"]} (內小)</td><td>NT$ ${eleItem.rooms["內小"].toLocaleString()}</td></tr>
+                                <tr><td>${tenantNames["中"]} (中房)</td><td>NT$ ${eleItem.rooms["中"].toLocaleString()}</td></tr>
+                                <tr><td>${tenantNames["外"]} (外房)</td><td>NT$ ${eleItem.rooms["外"].toLocaleString()}</td></tr>
+                            </tbody>
+                        </table>
+                        <div style="font-size: 11px; color: #437353; background: #ebf5ee; padding: 8px 10px; border-radius: 6px; margin-top: 12px; font-weight: 600;">* 經電表精算後，公基金已自動挹注分攤 NT$ ${eleItem.eleImpute} 元</div>
                         <div class="modal-row total-line"><span class="modal-row-label">當月電費總額</span><span class="modal-row-value" style="color:#d97736;">NT$ ${eleItem.eleTotal.toLocaleString()}</span></div>
                     </div>`;
             } else if (type === 'currentWater') {
@@ -499,7 +516,7 @@
                         <div class="modal-month-title">${waterItem.month} 自來水費明細</div>
                         <div class="modal-row"><span class="modal-row-label">全戶總水費</span><span class="modal-row-value">NT$ ${waterItem.water.toLocaleString()}</span></div>
                         <div class="modal-row"><span class="modal-row-label">每房實付 (4房均分)</span><span class="modal-row-value">NT$ ${waterItem.waterPerRoom.toLocaleString()}</span></div>
-                        <div style="font-size: 11px; color: #437353; background: #ebf5ee; padding: 6px 10px; border-radius: 6px; margin-top: 10px; font-weight: 600;">* 餘數 NT$ ${waterItem.waterImpute} 已由公共基金自動挹注分攤</div>
+                        <div style="font-size: 11px; color: #437353; background: #ebf5ee; padding: 8px 10px; border-radius: 6px; margin-top: 12px; font-weight: 600;">* 餘數 NT$ ${waterItem.waterImpute} 已由公共基金自動挹注分攤</div>
                     </div>`;
             } else if (type === 'currentSummary') {
                 title.innerText = `${latestItem.month} 水電加總摘要`;
@@ -513,33 +530,36 @@
             } else if (type === 'historyEle') {
                 title.innerText = "歷月電費總額紀錄";
                 globalParsedData.forEach(item => {
-                    htmlContent += `
-                        <div class="modal-item-block">
-                            <div class="modal-month-title">${item.month}</div>
-                            <div class="modal-row"><span class="modal-row-label">電費帳單總額</span><span class="modal-row-value">NT$ ${item.eleTotal.toLocaleString()}</span></div>
-                            <div style="font-size: 11px; color: #437353; background: #ebf5ee; padding: 4px 8px; border-radius: 4px; display: inline-block; margin-top: 4px;">公基金挹注：NT$ ${item.eleImpute}</div>
-                        </div>`;
+                    if(item.eleTotal > 0) {
+                        htmlContent += `
+                            <div class="modal-item-block" style="border-bottom: 1px dashed #eaecef; padding-bottom: 10px;">
+                                <div class="modal-month-title">${item.month}</div>
+                                <div class="modal-row"><span class="modal-row-label">電費帳單總額</span><span class="modal-row-value">NT$ ${item.eleTotal.toLocaleString()}</span></div>
+                                <div style="font-size: 11px; color: #437353; background: #ebf5ee; padding: 4px 8px; border-radius: 4px; display: inline-block; margin-top: 4px;">公基金挹注：NT$ ${item.eleImpute}</div>
+                            </div>`;
+                    }
                 });
             } else if (type === 'historyWater') {
                 title.innerText = "歷月水費明細紀錄";
                 globalParsedData.forEach(item => {
-                    htmlContent += `
-                        <div class="modal-item-block">
-                            <div class="modal-month-title">${item.month}</div>
-                            <div class="modal-row"><span class="modal-row-label">全戶總水費</span><span class="modal-row-value">NT$ ${item.water.toLocaleString()}</span></div>
-                            <div class="modal-row"><span class="modal-row-label">每房實付 (均分)</span><span class="modal-row-value">NT$ ${item.waterPerRoom}</span></div>
-                            <div style="font-size: 11px; color: #437353; background: #ebf5ee; padding: 4px 8px; border-radius: 4px; display: inline-block; margin-top: 4px;">* 公基金自動挹注：NT$ ${item.waterImpute}</div>
-                        </div>`;
+                    if(item.water > 0) {
+                        htmlContent += `
+                            <div class="modal-item-block" style="border-bottom: 1px dashed #eaecef; padding-bottom: 10px;">
+                                <div class="modal-month-title">${item.month}</div>
+                                <div class="modal-row"><span class="modal-row-label">全戶總水費</span><span class="modal-row-value">NT$ ${item.water.toLocaleString()}</span></div>
+                                <div class="modal-row"><span class="modal-row-label">每房實付 (均分)</span><span class="modal-row-value">NT$ ${item.waterPerRoom}</span></div>
+                            </div>`;
+                    }
                 });
             } else if (type === 'historySummary') {
                 title.innerText = "歷史水電帳單紀錄明細";
                 globalParsedData.forEach(item => {
                     htmlContent += `
-                        <div class="modal-item-block">
+                        <div class="modal-item-block" style="border-bottom: 1px dashed #eaecef; padding-bottom: 10px;">
                             <div class="modal-month-title">${item.month}</div>
                             <div class="modal-row"><span class="modal-row-label">水費金額</span><span class="modal-row-value">NT$ ${item.water.toLocaleString()}</span></div>
                             <div class="modal-row"><span class="modal-row-label">電費金額</span><span class="modal-row-value">NT$ ${item.eleTotal.toLocaleString()}</span></div>
-                            <div class="modal-row total-line"><span class="modal-row-label">當月支出小計</span><span class="modal-row-value">NT$ ${item.total.toLocaleString()}</span></div>
+                            <div class="modal-row total-line"><span class="modal-row-label">當月支出小計</span><span class="modal-row-value" style="color: #7b2cbf;">NT$ ${item.total.toLocaleString()}</span></div>
                         </div>`;
                 });
             } else if (type === 'meter') {
@@ -552,11 +572,11 @@
                 globalParsedData.forEach(item => {
                     htmlContent += `
                         <div class="modal-item-block" style="background:#f8fafc; padding:12px; border-radius:12px; margin-bottom:10px; border: 1px solid #eef2f5;">
-                            <div class="modal-month-title" style="color:#54606e;">${item.month} 實際用電</div>
-                            <div class="modal-row"><span class="modal-row-label">${tenantNames["內大"]}</span><span class="modal-row-value">${item.deltaMeters["內大"]} 度</span></div>
-                            <div class="modal-row"><span class="modal-row-label">${tenantNames["內小"]}</span><span class="modal-row-value">${item.deltaMeters["內小"]} 度</span></div>
-                            <div class="modal-row"><span class="modal-row-label">${tenantNames["中"]}</span><span class="modal-row-value">${item.deltaMeters["中"]} 度</span></div>
-                            <div class="modal-row"><span class="modal-row-label">${tenantNames["外"]}</span><span class="modal-row-value">${item.deltaMeters["外"]} 度</span></div>
+                            <div class="modal-month-title" style="color:#54606e; border-left-color:#7e8794;">${item.month} 實際用電</div>
+                            <div class="modal-row"><span class="modal-row-label">${tenantNames["內大"]} (內大)</span><span class="modal-row-value">${item.deltaMeters["內大"]} 度</span></div>
+                            <div class="modal-row"><span class="modal-row-label">${tenantNames["內小"]} (內小)</span><span class="modal-row-value">${item.deltaMeters["內小"]} 度</span></div>
+                            <div class="modal-row"><span class="modal-row-label">${tenantNames["中"]} (中房)</span><span class="modal-row-value">${item.deltaMeters["中"]} 度</span></div>
+                            <div class="modal-row"><span class="modal-row-label">${tenantNames["外"]} (外房)</span><span class="modal-row-value">${item.deltaMeters["外"]} 度</span></div>
                             <div class="modal-row total-line" style="border-color:#d2dae2;"><span class="modal-row-label" style="color:#4a515a;">全戶用電淨增加</span><span class="modal-row-value" style="color:#527996;">${item.deltaMeters["總和"]} 度</span></div>
                         </div>`;
                 });
@@ -568,7 +588,7 @@
 
         function closeModal() { document.getElementById('detailModal').classList.remove('active'); }
 
-        // 🚀 執行端：平行載入，秒刷時間！
+        // 🚀 平行渲染觸發：確保時間第一時間輸出，兩支 fetch 互不干擾
         updateTimestamp();
         loadAnnouncements();
         initDashboard();
