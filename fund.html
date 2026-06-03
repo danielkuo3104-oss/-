@@ -78,11 +78,14 @@
         /* 🟠 總支出專屬卡片：淺莫蘭迪橘紅 */
         .stat-card.total-expense { background: linear-gradient(135deg, #ffffff 0%, #fdf5f2 100%); }
         .stat-card.total-expense .stat-label { color: #bc6c3a; font-weight: 600; }
-        .stat-card.total-expense .stat-value { color: #b54a4a; }
+        .stat-card.total-expense .stat-value { color: #bc6c3a; } /* 🎯 修正為橘色調 */
         .stat-card.total-expense .stat-sub { color: #c98a73; }
 
-        /* 🔘 最新動態卡片：莫蘭迪灰 */
+        /* 🔘 最新動態卡片：全灰階莫蘭迪灰 */
         .stat-card.latest-record { background: linear-gradient(135deg, #ffffff 0%, #f4f5f4 100%); }
+        .stat-card.latest-record .stat-label { color: #8fa095; }
+        .stat-card.latest-record .stat-value { color: #626973; } /* 🎯 數字強制灰色 */
+        .stat-card.latest-record .stat-sub { color: #8fa095; }
 
         /* 👁️ 憑證按鈕與文字省略 */
         .receipt-btn {
@@ -255,13 +258,11 @@
 
                 if(fundHistory.length === 0) throw new Error("無符合的帳務明細紀錄");
 
-                // 將歷史紀錄反轉存入全域，讓最新的在 index 0，方便前端渲染與點擊對應
                 window.currentFundData = [...fundHistory].reverse();
 
                 const latestRecord = window.currentFundData[0];
                 const currentBalance = latestRecord.balance; 
 
-                const latestAmtClass = latestRecord.type === "收入" ? "amt-income" : "amt-expense";
                 const latestAmtSign = latestRecord.type === "收入" ? "+" : "-";
 
                 const displayArea = document.getElementById('fundDisplayArea');
@@ -285,7 +286,7 @@
                         </div>
                         <div class="stat-card latest-record">
                             <div class="stat-label">最新一筆動態變動</div>
-                            <div class="stat-value ${latestAmtClass}" style="font-size: 26px;">
+                            <div class="stat-value" style="font-size: 26px;">
                                 ${latestAmtSign}NT$ ${Math.abs(latestRecord.amount).toLocaleString()}
                             </div>
                             <div class="stat-sub" style="font-weight:500; margin-top:10px;">
@@ -297,7 +298,7 @@
                     <div class="section-title" style="margin-top: 45px; display: flex; justify-content: space-between; align-items:flex-end;">
                         <span>公共基金金流明細歷史清單</span>
                     </div>
-                    <div class="mobile-hint">💡 點擊列可查看完整明細與相片憑證</div>
+                    <div class="mobile-hint">點擊該列可查看完整明細與相片憑證</div>
                     
                     <div class="morandi-table-container">
                         <table class="morandi-table">
@@ -347,7 +348,6 @@
             }
         }
 
-        // 🎯 彈出完整明細的互動視窗函式
         function openFundModal(idx) {
             const f = window.currentFundData[idx];
             if(!f) return;
