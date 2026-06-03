@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>宿舍智慧管理系統 - 首頁儀表板</title>
+    <title>宿舍智慧管理系統 - 首頁儀表板 (除錯模式)</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         /* 🎨 原版莫蘭迪（Morandi）高級色系調色盤 */
@@ -24,7 +24,7 @@
         @keyframes marquee { 0% { left: 100%; transform: translate3d(0,0,0); } 100% { left: 0; transform: translate3d(-100%,0,0); } }
         .announcement-item { display: inline-flex; align-items: center; margin-right: 50px; font-size: 13px; font-weight: 500; }
         .badge { padding: 3px 9px; border-radius: 6px; font-size: 11px; font-weight: 700; margin-right: 8px; }
-        .badge.緊急 { background: #d96b6b; color: white; }
+        .badge.緊急 { background: #d96b6b; color: white; animation: pulse 1s infinite alternate; }
         .badge.重要 { background: #d9886b; color: white; }
         .badge.普通 { background: #cbd1d6; color: #5a6168; }
 
@@ -100,6 +100,7 @@
             .stats-grid { gap: 28px; }
             .stat-card { padding: 20px; border-radius: 18px; }
             .stat-value { font-size: 22px; }
+            .chart-header-row { flex-direction: column; align-items: flex-start; gap: 12px; }
             .chart-card { padding: 16px; border-radius: 18px; margin-top: 16px; }
             .chart-container { height: 280px; }
             .gray-section { padding: 16px; border-radius: 20px; margin-top: 40px; }
@@ -159,14 +160,14 @@
     </div>
 
     <script>
-        // 🚨 1. 第一步：註冊全域致命錯誤捕捉器 (放在最上面防崩潰)
+        // 🚨 1. 第一步：註冊全域致命錯誤捕捉器
         window.onerror = function(message, source, lineno, colno, error) {
             const consoleBox = document.getElementById('debugConsole');
             if(consoleBox) {
                 consoleBox.innerHTML += `<div class="debug-msg debug-error">[致命錯誤] ${message} (位於第 ${lineno} 行)</div>`;
                 consoleBox.scrollTop = consoleBox.scrollHeight;
             }
-            return true; // 防止瀏覽器預設報錯干擾
+            return true; 
         };
 
         // 🛠️ 2. 定義寫入除錯日誌的工具
@@ -180,7 +181,6 @@
             
             consoleBox.innerHTML += `<div class="${styleClass}">[${time}] ${message}</div>`;
             consoleBox.scrollTop = consoleBox.scrollHeight;
-            console.log(`[Debug] ${message}`);
         }
 
         const urlPrimary = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQkqhXCPp4XiHKCEpI3pz4pzcu3sQreQ_qNRLger00ULCHFr9cTbXHMQqAfk7dLa_gUBAIBSJ5sZM4F/pub?output=csv&gid=0";
@@ -226,9 +226,9 @@
             } catch(e) {}
         }
 
-        // 🚀 將啟動函數包裝，確保完全準備好再執行
+        // 🚀 直接啟動，不再等待事件！
         function startSystem() {
-            logDebug('🚀 系統準備啟動...');
+            logDebug('🚀 系統啟動，開始執行腳本...');
             updateTimestamp();
             loadAnnouncements(); 
             initDashboard();
@@ -236,12 +236,12 @@
 
         async function loadAnnouncements() {
             try {
-                logDebug('🌐 獲取公告資料中...');
+                logDebug('🌐 準備獲取公告資料...');
                 const response = await fetch(urlAnnounce);
                 const text = await response.text();
                 
                 if (text.includes("<!doctype html")) {
-                    logDebug('⚠️ 警告：公告權限可能未開放', 'warn');
+                    logDebug('⚠️ 公告資料被擋或權限未開，跳過公告', 'warn');
                     return;
                 }
 
@@ -258,7 +258,7 @@
                         html += `<div class="announcement-item text-${level}"><span class="badge ${level}">${level}</span> ${content}</div>`;
                     }
                 }
-                logDebug(`✅ 公告載入完成 (共 ${validCount} 筆)`);
+                logDebug(`✅ 公告載入完成，共 ${validCount} 則`);
 
                 if (validCount > 0) {
                     document.getElementById('marqueeContent').innerHTML = html + html;
@@ -270,19 +270,22 @@
 
         async function initDashboard() {
             try {
-                logDebug('🌐 準備獲取主計費表 CSV...');
+                logDebug('🌐 準備獲取主計費表 CSV (urlPrimary)...');
                 const response = await fetch(urlPrimary);
+                logDebug(`📥 HTTP 狀態碼: ${response.status}`);
+                
                 const csvText = await response.text();
+                logDebug(`📄 下載完成，字串長度: ${csvText.length} bytes`);
                 
                 if (csvText.toLowerCase().includes("<!doctype html")) {
-                    throw new Error("取得的內容為 HTML，請確認您的試算表已發布至網路且格式為 CSV");
+                    throw new Error("取得的內容為 HTML，請確認您的試算表已發布至網路且為 CSV 格式");
                 }
 
-                logDebug('⚙️ 使用 CSV 解析器處理數據...');
+                logDebug('⚙️ 開始解析 CSV 資料...');
                 const rows = parseCSV(csvText);
-                logDebug(`✅ 成功解析 CSV (共 ${rows.length} 列)`);
+                logDebug(`✅ 解析完成，陣列共 ${rows.length} 列`);
 
-                if(rows.length < 2) throw new Error("試算表內列數不足");
+                if(rows.length < 2) throw new Error("試算表內列數不足 (可能只有標題或全空)");
 
                 const monthIdx = 0; const waterIdx = 1; const eleTotalIdx = 11; 
                 const deltaIdx = { "內大": 7, "內小": 8, "中": 9, "外": 10, "總和": 6 }; 
@@ -291,12 +294,14 @@
                 let totalWater = 0; let totalElectricity = 0; let historyTotal = 0;
                 globalParsedData = [];
 
-                logDebug('🔎 開始過濾月份並計算資料...');
+                logDebug('🔎 開始過濾並逐列讀取資料...');
                 for(let i = 1; i < rows.length; i++) {
                     const cells = rows[i];
                     
-                    if(!cells[monthIdx] || cells[monthIdx].includes("基準")) {
-                        continue; // 空白行或基準行跳過
+                    if(!cells[monthIdx]) continue;
+                    if(cells[monthIdx].includes("基準")) {
+                        logDebug(`⏭️ 略過基準行`);
+                        continue;
                     }
 
                     const monthVal = cells[monthIdx];
@@ -304,7 +309,7 @@
                     const eleTotalVal = parseNum(cells[eleTotalIdx]); 
                     const combinedSum = waterVal + eleTotalVal;
 
-                    logDebug(`👉 成功抓取: [${monthVal}] | 水費: ${waterVal} | 總電費: ${eleTotalVal}`);
+                    logDebug(`👉 讀取 [${monthVal}] | 水費: ${waterVal} | 總電費: ${eleTotalVal}`);
 
                     const deltaMeters = {
                         "內大": Number((parseNum(cells[deltaIdx["內大"]]) / 10).toFixed(1)),
@@ -335,31 +340,29 @@
                     });
                 }
 
-                logDebug(`✅ 陣列整理完畢，共包含 ${globalParsedData.length} 個有效月份`);
-                if (globalParsedData.length === 0) throw new Error("無符合的月份紀錄");
+                logDebug(`✅ 資料處理完畢，共提取 ${globalParsedData.length} 個有效月份`);
+
+                if (globalParsedData.length === 0) throw new Error("過濾後無符合的有效月份紀錄");
 
                 const lastIdx = globalParsedData.length - 1;
                 const latest = globalParsedData[lastIdx];
 
-                logDebug(`🧠 啟動智慧跨月判斷 (最新為 ${latest.month})...`);
+                logDebug(`🧠 執行智慧跨月回溯邏輯... (目前最新為 ${latest.month})`);
+                
                 let eleIdx = lastIdx;
                 let waterIdx = lastIdx;
-                
-                while(eleIdx > 0 && globalParsedData[eleIdx].eleTotal === 0) {
-                    eleIdx--;
-                }
-                while(waterIdx > 0 && globalParsedData[waterIdx].water === 0) {
-                    waterIdx--;
-                }
+                while(eleIdx > 0 && globalParsedData[eleIdx].eleTotal === 0) eleIdx--;
+                while(waterIdx > 0 && globalParsedData[waterIdx].water === 0) waterIdx--;
 
                 const dispEle = globalParsedData[eleIdx];
                 const dispWater = globalParsedData[waterIdx];
-                logDebug(`📌 顯示電費: ${dispEle.month} | 顯示水費: ${dispWater.month}`);
+
+                logDebug(`📌 顯示電費將抓取: ${dispEle.month} | 顯示水費將抓取: ${dispWater.month}`);
 
                 const eleRemark = eleIdx !== lastIdx ? `<br><div class="cross-month-badge">* 當月無帳單，自動顯示 ${dispEle.month} 費用</div>` : '';
                 const waterRemark = waterIdx !== lastIdx ? `<br><div class="cross-month-badge">* 當月無帳單，自動顯示 ${dispWater.month} 費用</div>` : '';
                 
-                logDebug('🖥️ 開始渲染 DOM 畫面...');
+                logDebug('🖥️ 準備渲染 DOM 結構...');
                 document.getElementById('mainContent').innerHTML = `
                     <div class="section-title">近期費用摘要 (目前結算至 ${latest.month})</div>
                     <div class="stats-grid">
@@ -419,14 +422,19 @@
                         <div class="chart-card meter-chart-spacer" style="background: #f4f6f8; border-color: #d2dae2;"><div class="chart-container" style="height: 220px;"><canvas id="meterChart"></canvas></div></div>
                     </div>
                 `;
+                logDebug('✅ DOM 渲染完成');
 
                 try {
-                    logDebug('📈 準備渲染 Chart.js 趨勢圖...');
+                    logDebug('📈 準備調用 Chart.js 繪製圖表...');
+                    
                     const labels = globalParsedData.map(d => d.month);
                     const eleChartData = globalParsedData.map(d => d.eleTotal > 0 ? d.eleTotal : null);
                     const waterChartData = globalParsedData.map(d => d.water > 0 ? d.water : null);
 
-                    new Chart(document.getElementById('trendChart').getContext('2d'), {
+                    const ctx = document.getElementById('trendChart');
+                    if(!ctx) throw new Error("找不到 trendChart Canvas 元素");
+
+                    new Chart(ctx.getContext('2d'), {
                         type: 'line',
                         data: {
                             labels: labels,
@@ -438,15 +446,16 @@
                         options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true } }, scales: { x: { display: false }, y: { ticks: { callback: val => 'NT$ ' + val.toLocaleString() } } } }
                     });
 
-                    logDebug('📈 準備渲染 電表抄錄圖...');
+                    logDebug('📈 主趨勢圖繪製完成');
+
                     const meterDeltaTotal = globalParsedData.map(d => d.deltaMeters["總和"] > 0 ? d.deltaMeters["總和"] : null);
                     new Chart(document.getElementById('meterChart').getContext('2d'), {
                         type: 'line',
                         data: { labels: labels, datasets: [{ label: '全戶用電淨增加 (度)', data: meterDeltaTotal, borderColor: '#7e8794', backgroundColor: 'rgba(126, 135, 148, 0.04)', borderWidth: 2, pointBackgroundColor: '#626973', fill: true, tension: 0.2, spanGaps: true }]},
                         options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { ticks: { callback: val => val + ' 度' } } } }
                     });
-
-                    logDebug('🎉 系統完全載入成功！');
+                    
+                    logDebug('🎉 圖表全數繪製完成，系統正常運行！');
 
                 } catch(e) { 
                     logDebug(`❌ 圖表繪製崩潰: ${e.message}`, 'error'); 
@@ -457,7 +466,7 @@
                 document.getElementById('mainContent').innerHTML = `
                 <div class="loading" style="color: #b54a4a; text-align: left; max-width: 600px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
                     ❌ <b>系統載入失敗</b><br><br>
-                    <span style="font-size:13px; color:#828a95; line-height: 1.6;">錯誤原因：${error.message}</span>
+                    <span style="font-size:13px; color:#828a95; line-height: 1.6;">系統偵測到異常：${error.message}<br><br>請向下捲動查看「系統執行日誌」抓出錯誤位置！</span>
                 </div>`;
             }
         }
@@ -516,35 +525,66 @@
                 } else if (type === 'historyEle') {
                     title.innerText = "歷月電費總額紀錄";
                     globalParsedData.forEach(item => {
-                        htmlContent += `<div class="modal-item-block"><div class="modal-month-title">${item.month}</div><div class="modal-row"><span class="modal-row-label">電費帳單總額</span><span class="modal-row-value">NT$ ${item.eleTotal.toLocaleString()}</span></div><div style="font-size: 11px; color: #437353; background: #ebf5ee; padding: 4px 8px; border-radius: 4px; display: inline-block; margin-top: 4px;">公基金挹注：NT$ ${item.eleImpute}</div></div>`;
+                        htmlContent += `
+                            <div class="modal-item-block">
+                                <div class="modal-month-title">${item.month}</div>
+                                <div class="modal-row"><span class="modal-row-label">電費帳單總額</span><span class="modal-row-value">NT$ ${item.eleTotal.toLocaleString()}</span></div>
+                                <div style="font-size: 11px; color: #437353; background: #ebf5ee; padding: 4px 8px; border-radius: 4px; display: inline-block; margin-top: 4px;">公基金挹注：NT$ ${item.eleImpute}</div>
+                            </div>`;
                     });
                 } else if (type === 'historyWater') {
                     title.innerText = "歷月水費明細紀錄";
                     globalParsedData.forEach(item => {
-                        htmlContent += `<div class="modal-item-block"><div class="modal-month-title">${item.month}</div><div class="modal-row"><span class="modal-row-label">全戶總水費</span><span class="modal-row-value">NT$ ${item.water.toLocaleString()}</span></div><div class="modal-row"><span class="modal-row-label">每房實付 (均分)</span><span class="modal-row-value">NT$ ${item.waterPerRoom}</span></div><div style="font-size: 11px; color: #437353; background: #ebf5ee; padding: 4px 8px; border-radius: 4px; display: inline-block; margin-top: 4px;">* 公基金自動挹注：NT$ ${item.waterImpute}</div></div>`;
+                        htmlContent += `
+                            <div class="modal-item-block">
+                                <div class="modal-month-title">${item.month}</div>
+                                <div class="modal-row"><span class="modal-row-label">全戶總水費</span><span class="modal-row-value">NT$ ${item.water.toLocaleString()}</span></div>
+                                <div class="modal-row"><span class="modal-row-label">每房實付 (均分)</span><span class="modal-row-value">NT$ ${item.waterPerRoom}</span></div>
+                                <div style="font-size: 11px; color: #437353; background: #ebf5ee; padding: 4px 8px; border-radius: 4px; display: inline-block; margin-top: 4px;">* 公基金自動挹注：NT$ ${item.waterImpute}</div>
+                            </div>`;
                     });
                 } else if (type === 'historySummary') {
                     title.innerText = "歷史水電帳單紀錄明細";
                     globalParsedData.forEach(item => {
-                        htmlContent += `<div class="modal-item-block"><div class="modal-month-title">${item.month}</div><div class="modal-row"><span class="modal-row-label">水費金額</span><span class="modal-row-value">NT$ ${item.water.toLocaleString()}</span></div><div class="modal-row"><span class="modal-row-label">電費金額</span><span class="modal-row-value">NT$ ${item.eleTotal.toLocaleString()}</span></div><div class="modal-row total-line"><span class="modal-row-label">當月支出小計</span><span class="modal-row-value">NT$ ${item.total.toLocaleString()}</span></div></div>`;
+                        htmlContent += `
+                            <div class="modal-item-block">
+                                <div class="modal-month-title">${item.month}</div>
+                                <div class="modal-row"><span class="modal-row-label">水費金額</span><span class="modal-row-value">NT$ ${item.water.toLocaleString()}</span></div>
+                                <div class="modal-row"><span class="modal-row-label">電費金額</span><span class="modal-row-value">NT$ ${item.eleTotal.toLocaleString()}</span></div>
+                                <div class="modal-row total-line"><span class="modal-row-label">當月支出小計</span><span class="modal-row-value">NT$ ${item.total.toLocaleString()}</span></div>
+                            </div>`;
                     });
                 } else if (type === 'meter') {
                     title.innerText = "歷月實際用電差值 (度)";
-                    htmlContent = `<div style="background:#eef2f5; padding:12px; border-radius:12px; font-size:12px; color:#54606e; margin-bottom:15px; line-height:1.5; border: 1px solid #dbe2e8;">📌 <b>初始入住電表基準值：</b><br>內大: 6337.0 | 內小: 4010.4 | 中: 3664.6 | 外: 7479.9</div>`;
+                    htmlContent = `
+                        <div style="background:#eef2f5; padding:12px; border-radius:12px; font-size:12px; color:#54606e; margin-bottom:15px; line-height:1.5; border: 1px solid #dbe2e8;">
+                            📌 <b>初始入住電表基準值：</b><br>
+                            內大: 6337.0 | 內小: 4010.4 | 中: 3664.6 | 外: 7479.9
+                        </div>`;
                     globalParsedData.forEach(item => {
-                        htmlContent += `<div class="modal-item-block" style="background:#f8fafc; padding:12px; border-radius:12px; margin-bottom:10px; border: 1px solid #eef2f5;"><div class="modal-month-title" style="color:#54606e;">${item.month} 實際用電</div><div class="modal-row"><span class="modal-row-label">${tenantNames["內大"]}</span><span class="modal-row-value">${item.deltaMeters["內大"]} 度</span></div><div class="modal-row"><span class="modal-row-label">${tenantNames["內小"]}</span><span class="modal-row-value">${item.deltaMeters["內小"]} 度</span></div><div class="modal-row"><span class="modal-row-label">${tenantNames["中"]}</span><span class="modal-row-value">${item.deltaMeters["中"]} 度</span></div><div class="modal-row"><span class="modal-row-label">${tenantNames["外"]}</span><span class="modal-row-value">${item.deltaMeters["外"]} 度</span></div><div class="modal-row total-line" style="border-color:#d2dae2;"><span class="modal-row-label" style="color:#4a515a;">全戶用電淨增加</span><span class="modal-row-value" style="color:#527996;">${item.deltaMeters["總和"]} 度</span></div></div>`;
+                        htmlContent += `
+                            <div class="modal-item-block" style="background:#f8fafc; padding:12px; border-radius:12px; margin-bottom:10px; border: 1px solid #eef2f5;">
+                                <div class="modal-month-title" style="color:#54606e;">${item.month} 實際用電</div>
+                                <div class="modal-row"><span class="modal-row-label">${tenantNames["內大"]}</span><span class="modal-row-value">${item.deltaMeters["內大"]} 度</span></div>
+                                <div class="modal-row"><span class="modal-row-label">${tenantNames["內小"]}</span><span class="modal-row-value">${item.deltaMeters["內小"]} 度</span></div>
+                                <div class="modal-row"><span class="modal-row-label">${tenantNames["中"]}</span><span class="modal-row-value">${item.deltaMeters["中"]} 度</span></div>
+                                <div class="modal-row"><span class="modal-row-label">${tenantNames["外"]}</span><span class="modal-row-value">${item.deltaMeters["外"]} 度</span></div>
+                                <div class="modal-row total-line" style="border-color:#d2dae2;"><span class="modal-row-label" style="color:#4a515a;">全戶用電淨增加</span><span class="modal-row-value" style="color:#527996;">${item.deltaMeters["總和"]} 度</span></div>
+                            </div>`;
                     });
                 }
 
                 body.innerHTML = htmlContent;
                 overlay.classList.add('active');
-            } catch(e) { logDebug(`❌ 彈窗生成崩潰: ${e.message}`, 'error'); }
+            } catch(e) {
+                logDebug(`❌ 彈窗生成錯誤: ${e.message}`, 'error');
+            }
         }
 
         function closeModal() { document.getElementById('detailModal').classList.remove('active'); }
 
-        // 🚨 3. 最後一步：保證在所有架構長好後，才啟動系統，避免抓不到元素
-        window.addEventListener('DOMContentLoaded', startSystem);
+        // 🚀 直接觸發執行，不等待事件
+        startSystem();
     </script>
 </body>
 </html>
