@@ -55,6 +55,7 @@
         .profile-violation-clean { background: #ebf5ee; color: #437353; padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; box-shadow: inset 0 1px 2px rgba(0,0,0,0.02); }
         .profile-violation-warn { background: #fdf5f2; color: #bc6c3a; padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; box-shadow: inset 0 1px 2px rgba(0,0,0,0.02); }
         
+        /* 🚀 調整為自動適應，在水電區塊有 3 張卡片時在電腦版會自動排成三欄 */
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; margin-bottom: 0; }
         
         /* 🚀 強制讓房租卡片在電腦版與水電卡片寬度對齊（兩欄網格，只放一張卡） */
@@ -82,6 +83,10 @@
         .stat-card.current-ele { background: linear-gradient(135deg, #ffffff 0%, #fdf6f0 100%); border: 1px solid rgba(217, 119, 54, 0.15); }
         .stat-card.current-ele .stat-value { color: #d97736; }
 
+        /* 🪙 新增：平均用電度數專用莫蘭迪高級灰色系卡片樣式 */
+        .stat-card.current-meter { background: linear-gradient(135deg, #ffffff 0%, #f2f4f7 100%); border: 1px solid rgba(138, 146, 154, 0.25); }
+        .stat-card.current-meter .stat-value { color: #5a616a; }
+
         .chart-card { background: #ffffff; border-radius: 20px; padding: 24px; box-shadow: 0 8px 20px rgba(140, 149, 159, 0.08); border: 1px solid #e1e4e8; margin-bottom: 0; }
         .chart-container { position: relative; height: 350px; width: 100%; }
 
@@ -107,7 +112,7 @@
         /* 🎨 彙整清單數字獨立色彩指定 */
         .td-rent { color: #b56a6a; font-weight: 600; }   /* 紅 */
         .td-water { color: #42637a; font-weight: 600; }  /* 藍 */
-        .td-ele { color: #bc6c3a; font-weight: 600; }    /* 橘 */
+        .td-ele { color: #bc6c3a; font-weight: 600; }     /* 橘 */
         .table-total-bold { font-weight: 700; color: #6e916e; }
 
         /* 🚀 修正排版：使用 Grid 系統打造電腦一排4個、手機完美2x2 */
@@ -386,6 +391,12 @@
             const currentEle = latest.rooms[roomKey] || 0;
             const currentWater = latest.waterPerRoom;
 
+            // 計算平均用電度數（排除小於等於 0 的無效月份數據）
+            const validMeterEntries = globalParsedData.filter(d => (d.deltaMeters[roomKey] || 0) > 0);
+            const avgMeterVal = validMeterEntries.length > 0 
+                ? (validMeterEntries.reduce((sum, d) => sum + d.deltaMeters[roomKey], 0) / validMeterEntries.length).toFixed(1)
+                : 0;
+
             const totalRentSum = globalParsedData.reduce((sum, d) => sum + (d.rents[roomKey] || 0), 0);
             const totalWaterSum = globalParsedData.reduce((sum, d) => sum + d.waterPerRoom, 0);
             const totalEleSum = globalParsedData.reduce((sum, d) => sum + (d.rooms[roomKey] || 0), 0);
@@ -424,6 +435,10 @@
                     <div class="stat-card current-ele" onclick="openPersonalHistoryPop('ele', '${roomKey}')">
                         <div class="stat-label">本月電費 (點擊看歷史)</div>
                         <div class="stat-value">NT$ ${currentEle.toLocaleString()}</div>
+                    </div>
+                    <div class="stat-card current-meter" onclick="openPersonalHistoryPop('meter', '${roomKey}')">
+                        <div class="stat-label">平均用電度數 (點擊看抄錄值)</div>
+                        <div class="stat-value">${avgMeterVal} <span style="font-size: 14px; font-weight: 500;">度</span></div>
                     </div>
                 </div>
 
@@ -484,17 +499,36 @@
             const body = document.getElementById('modalBody');
             const name = tenantNames[roomKey];
 
-            title.innerText = `${name} - 歷史紀錄`;
+            // 根據點選的卡片類型，設定彈出視窗的標題
+            if (type === 'meter') {
+                title.innerText = `${name} - 歷月電表抄錄值`;
+            } else {
+                title.innerText = `${name} - 歷史紀錄`;
+            }
+            
             let html = "";
 
             globalParsedData.forEach(item => {
                 let val = 0;
-                if(type === 'rent') val = item.rents[roomKey] || 0;
-                else if(type === 'water') val = item.waterPerRoom;
-                else if(type === 'ele') val = item.rooms[roomKey] || 0;
+                let displayStr = "";
+                
+                if(type === 'rent') {
+                    val = item.rents[roomKey] || 0;
+                    displayStr = `NT$ ${val.toLocaleString()}`;
+                } else if(type === 'water') {
+                    val = item.waterPerRoom;
+                    displayStr = `NT$ ${val.toLocaleString()}`;
+                } else if(type === 'ele') {
+                    val = item.rooms[roomKey] || 0;
+                    displayStr = `NT$ ${val.toLocaleString()}`;
+                } else if(type === 'meter') {
+                    val = item.deltaMeters[roomKey] || 0;
+                    displayStr = `${val} 度`;
+                }
 
-                html += `<div class="modal-row"><span class="modal-row-label">${item.month}</span><span class="modal-row-value">NT$ ${val.toLocaleString()}</span></div>`;
+                html += `<div class="modal-row"><span class="modal-row-label">${item.month}</span><span class="modal-row-value">${displayStr}</span></div>`;
             });
+            
             body.innerHTML = html;
             document.getElementById('detailModal').classList.add('active');
         }
