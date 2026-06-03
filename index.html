@@ -358,15 +358,16 @@
 
                 const lastIdx = globalParsedData.length - 1;
                 const latest = globalParsedData[lastIdx];
-
-                let eleIdx = lastIdx;
-                let waterIdx = lastIdx;
                 
+                let eleIdx = lastIdx;
+                let currentWaterIdx = lastIdx; // 🎯 改成這個名字，避開衝突！
+                                
+                // 如果當月是0，就往前抓有紀錄的上個月
                 while(eleIdx > 0 && globalParsedData[eleIdx].eleTotal === 0) eleIdx--;
-                while(waterIdx > 0 && globalParsedData[waterIdx].water === 0) waterIdx--;
-
+                while(currentWaterIdx > 0 && globalParsedData[currentWaterIdx].water === 0) currentWaterIdx--;
+                
                 const dispEle = globalParsedData[eleIdx];
-                const dispWater = globalParsedData[waterIdx];
+                const dispWater = globalParsedData[currentWaterIdx]; // 🎯 這裡同步改成新名字
 
                 const eleRemark = (eleIdx !== lastIdx) ? `<div style="font-size: 11px; color: #b56a6a; margin-top: 8px; font-weight: 600;">* 當月無帳單，顯示 ${dispEle.month} 費用</div>` : "";
                 const waterRemark = (waterIdx !== lastIdx) ? `<div style="font-size: 11px; color: #b56a6a; margin-top: 8px; font-weight: 600;">* 當月無帳單，顯示 ${dispWater.month} 費用</div>` : "";
