@@ -350,7 +350,7 @@
                 yCallback = val => val + ' 度';
                 datasets = [
                     { 
-                        label: '冷氣/房間用電 (度)', 
+                        label: '房間用電 (度)', 
                         data: globalParsedData.map(d => d.deltaMeters[roomKey] > 0 ? d.deltaMeters[roomKey] : null), 
                         borderColor: '#9ba3ab', 
                         backgroundColor: 'rgba(155, 163, 171, 0.08)', 
@@ -434,8 +434,8 @@
 
                 <div class="section-title">| 個人用量趨勢折線圖</div>
                 <div class="chart-toggle-container">
-                    <button id="btn-chart-cost" class="chart-toggle-btn active" onclick="toggleChartMode('cost')">💰 水電費用走勢 (NT$)</button>
-                    <button id="btn-chart-meter" class="chart-toggle-btn" onclick="toggleChartMode('meter')">⚡ 獨立用電度數 (度)</button>
+                    <button id="btn-chart-cost" class="chart-toggle-btn active" onclick="toggleChartMode('cost')">水電費用走勢 (NT$)</button>
+                    <button id="btn-chart-meter" class="chart-toggle-btn" onclick="toggleChartMode('meter')">獨立用電度數 (度)</button>
                 </div>
                 <div class="chart-card"><div class="chart-container"><canvas id="personalTrendChart"></canvas></div></div>
 
