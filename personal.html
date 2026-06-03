@@ -167,6 +167,7 @@
     <div class="nav-tabs">
         <a href="index.html" class="nav-link">首頁儀表板</a>
         <a href="personal.html" class="nav-link active">房客個人資訊區</a>
+        <a href="fund.html" class="nav-link">公基金資訊</a>
     </div>
 
     <div class="main-container">
@@ -195,7 +196,7 @@
         let tenantViolations = { "內大": "0", "內小": "0", "中": "0", "外": "0" };
         let globalParsedData = []; 
         let personalChartInstance = null;
-        let currentChartMode = 'cost'; // 'cost' 費用模式 或 'meter' 電表度數模式
+        let currentChartMode = 'cost'; 
 
         function updateTimestamp() {
             const now = new Date();
@@ -274,7 +275,6 @@
                         month: monthVal,
                         waterPerRoom: waterPerRoom,
                         deltaMeters: {
-                            // 🎯 所有抄錄度數差值在讀取端就直接全面除以 10 計算
                             "內大": Number(((parseFloat(cells[deltaIdx["內大"]]) || 0) / 10).toFixed(1)),
                             "內小": Number(((parseFloat(cells[deltaIdx["內小"]]) || 0) / 10).toFixed(1)),
                             "中": Number(((parseFloat(cells[deltaIdx["中"]]) || 0) / 10).toFixed(1)),
@@ -304,10 +304,8 @@
 
         function toggleChartMode(mode) {
             currentChartMode = mode;
-            // 重新切換按鈕的 Active 樣式
             document.querySelectorAll('.chart-toggle-btn').forEach(btn => btn.classList.remove('active'));
             document.getElementById(`btn-chart-${mode}`).classList.add('active');
-            // 單獨更新圖表
             updatePersonalChart();
         }
 
@@ -323,7 +321,6 @@
             let yCallback = val => val;
 
             if (currentChartMode === 'cost') {
-                // 💰 費用走勢數據
                 yCallback = val => 'NT$ ' + val.toLocaleString();
                 datasets = [
                     { 
@@ -346,7 +343,6 @@
                     }
                 ];
             } else {
-                // ⚡ 電表度數數據
                 yCallback = val => val + ' 度';
                 datasets = [
                     { 
@@ -480,7 +476,6 @@
                 </div>
             `;
 
-            // 初始化繪製預設圖表
             updatePersonalChart();
         }
 
@@ -506,7 +501,6 @@
 
         function closeModal() { document.getElementById('detailModal').classList.remove('active'); }
 
-        // 🚀 解耦平行加載順序
         updateTimestamp();
         buildPersonalSelector();
         loadDataAndRender();
