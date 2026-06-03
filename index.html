@@ -222,12 +222,6 @@
             document.getElementById('updateTimeDisplay').innerText = `資料更新：${yyyy}/${mm}/${dd} ${hh}:${min}`;
         }
 
-        async function startSystem() {
-            updateTimestamp();
-            await loadAnnouncements();
-            await initDashboard();
-        }
-
         async function loadAnnouncements() {
             try {
                 const response = await fetch(urlAnnounce);
@@ -273,13 +267,19 @@
                     throw new Error("試算表載入失敗 (權限可能未公開)。");
                 }
 
-                // 🌟 使用最原始的切分方式，一模一樣！
                 let cleanText = csvText.replace(/\r/g, "");
                 const lines = cleanText.split("\n").map(line => line.trim()).filter(line => line);
                 if(lines.length < 2) throw new Error("試算表內無數據");
 
-                const monthIdx = 0; const waterIdx = 1; const eleTotalIdx = 11; 
-                const deltaIdx = { "內大": 7, "內小": 8, "中": 9, "外": 10, "總和": 6 }; 
+                // 🎯 依據截圖完美對齊 Index：
+                const monthIdx = 0;       // A欄：月份
+                const waterIdx = 1;       // B欄：水費
+                const eleTotalIdx = 11;   // L欄：總電費 (Index 11)
+                
+                // 電表差值精準對位
+                const deltaIdx = { "總和": 6, "內大": 7, "內小": 8, "中": 9, "外": 10 }; 
+                
+                // 各房電費實付金額精準對位 (M ~ P 欄)
                 const roomCostIdx = { "內大": 12, "內小": 13, "中": 14, "外": 15 }; 
 
                 let totalWater = 0; let totalElectricity = 0; let historyTotal = 0;
@@ -290,29 +290,28 @@
                 for(let i = 1; i < lines.length; i++) {
                     const cells = lines[i].split(",").map(c => c.replace(/["'\uFEFF]/g, '').trim());
                     
-                    // 🌟 修正點：移除 cells.length < 26，防止因後方未填寫導致卡死！
-                    if(!cells[monthIdx] || cells[monthIdx].includes("基準") || cells[monthIdx].includes("<script")) {
+                    // 🌟 安全檢查門檻：至少要填到各房實付電費區間 (Index 15)，並過濾基準與空值
+                    if(cells.length < 16 || !cells[monthIdx] || cells[monthIdx].includes("基準") || cells[monthIdx].includes("<script")) {
                         continue;
                     }
 
                     const monthVal = cells[monthIdx];
-                    // 🌟 修正點：加上 || 0 確保沒填資料時自動補 0，不變 NaN
                     const waterVal = parseFloat(cells[waterIdx]) || 0;
                     const eleTotalVal = parseFloat(cells[eleTotalIdx]) || 0; 
                     const combinedSum = waterVal + eleTotalVal;
 
+                    // 讀取電表抄錄差值
                     const deltaMeters = {
-                        "內大": Number(((parseFloat(cells[deltaIdx["內大"]]) || 0) / 10).toFixed(1)),
-                        "內小": Number(((parseFloat(cells[deltaIdx["內小"]]) || 0) / 10).toFixed(1)),
-                        "中": Number(((parseFloat(cells[deltaIdx["中"]]) || parseFloat(cells[deltaIdx["長各"]]) || 0) / 10).toFixed(1)),
-                        "外": Number(((parseFloat(cells[deltaIdx["外"]]) || 0) / 10).toFixed(1)),
-                        "總和": Number(((parseFloat(cells[deltaIdx["總和"]]) || 0) / 10).toFixed(1))
+                        "總和": parseFloat(cells[deltaIdx["總和"]]) || 0,
+                        "內大": parseFloat(cells[deltaIdx["內大"]]) || 0,
+                        "內小": parseFloat(cells[deltaIdx["內小"]]) || 0,
+                        "中": parseFloat(cells[deltaIdx["中"]]) || 0,
+                        "外": parseFloat(cells[deltaIdx["外"]]) || 0
                     };
 
                     totalWater += waterVal; totalElectricity += eleTotalVal; historyTotal += combinedSum;
                     
                     labels.push(monthVal); 
-                    // 🌟 圖表修正：如果是 0，就塞入 null 讓圖表自動跳過不畫線
                     waterChartData.push(waterVal > 0 ? waterVal : null); 
                     eleChartData.push(eleTotalVal > 0 ? eleTotalVal : null);
                     
@@ -322,7 +321,12 @@
                     const waterPerRoom = Math.floor(waterVal / 4);
                     const waterImpute = waterVal - (waterPerRoom * 4);
 
-                    const roomSum = (parseFloat(cells[roomCostIdx["內大"]]) || 0) + (parseFloat(cells[roomCostIdx["內小"]]) || 0) + (parseFloat(cells[roomCostIdx["中"]]) || 0) + (parseFloat(cells[roomCostIdx["外"]]) || 0);
+                    const roomSum = (parseFloat(cells[roomCostIdx["內大"]]) || 0) + 
+                                    (parseFloat(cells[roomCostIdx["內小"]]) || 0) + 
+                                    (parseFloat(cells[roomCostIdx["中"]]) || 0) + 
+                                    (parseFloat(cells[roomCostIdx["外"]]) || 0);
+                                    
+                    // 經公基金補助差值額度
                     const eleImpute = Math.max(0, Math.floor(eleTotalVal - roomSum));
 
                     globalParsedData.push({
@@ -340,14 +344,12 @@
                 
                 if (globalParsedData.length === 0) throw new Error("無符合月份紀錄");
 
-                // 🌟 後處理資料：智慧跨月零值判斷
                 const lastIdx = globalParsedData.length - 1;
                 const latest = globalParsedData[lastIdx];
 
                 let eleIdx = lastIdx;
                 let waterIdx = lastIdx;
                 
-                // 如果當月是0，就往前抓有紀錄的上個月
                 while(eleIdx > 0 && globalParsedData[eleIdx].eleTotal === 0) eleIdx--;
                 while(waterIdx > 0 && globalParsedData[waterIdx].water === 0) waterIdx--;
 
@@ -416,7 +418,6 @@
                     </div>
                 `;
 
-                // 🌟 畫圖表，並且啟動 spanGaps 讓圖表越過零值，並隱藏 x 軸
                 const ctx = document.getElementById('trendChart').getContext('2d');
                 trendChartInstance = new Chart(ctx, {
                     type: 'line',
@@ -452,7 +453,6 @@
                 });
 
             } catch (error) {
-                // 🌟 超級報錯畫面：如果出錯，一定會寫在這裡，不會再全黑或卡死
                 document.getElementById('mainContent').innerHTML = `
                     <div class="loading" style="color: #b54a4a; text-align: left; max-width: 600px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
                         ❌ 系統載入失敗。<br><br>
@@ -472,7 +472,6 @@
             const lastIdx = globalParsedData.length - 1;
             const latestItem = globalParsedData[lastIdx];
             
-            // 🌟 彈出視窗同步使用跨月回溯邏輯
             let eleIdx = lastIdx;
             let waterIdx = lastIdx;
             while(eleIdx > 0 && globalParsedData[eleIdx].eleTotal === 0) eleIdx--;
@@ -569,7 +568,10 @@
 
         function closeModal() { document.getElementById('detailModal').classList.remove('active'); }
 
-        startSystem();
+        // 🚀 執行端：平行載入，秒刷時間！
+        updateTimestamp();
+        loadAnnouncements();
+        initDashboard();
     </script>
 </body>
 </html>
