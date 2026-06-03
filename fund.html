@@ -47,6 +47,7 @@
             padding-left: 8px;
         }
 
+        /* 置頂網格卡片 */
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-bottom: 0; }
         .stat-card {
             background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(12px); border-radius: 20px; padding: 24px;
@@ -68,9 +69,8 @@
         .stat-card.fund-balance .stat-value { color: #ffffff; font-size: 32px; }
         .stat-card.fund-balance .stat-sub { color: rgba(255, 255, 255, 0.6); }
 
-        /* 動態變動卡片顏色 */
-        .latest-income { border-left: 4px solid #556b5c !important; background: linear-gradient(135deg, #ffffff 0%, #edf4f0 100%) !important; }
-        .latest-expense { border-left: 4px solid #bc6c3a !important; background: linear-gradient(135deg, #ffffff 0%, #fdf5f2 100%) !important; }
+        /* 🔘 最新動態卡片專屬灰色調 */
+        .stat-card.latest-record { background: linear-gradient(135deg, #ffffff 0%, #f4f5f4 100%); }
 
         /* 👁️ 憑證按鈕與文字省略 */
         .receipt-btn {
@@ -221,7 +221,6 @@
                     const descVal = cells[descIdx] || "";
                     const handlerVal = cells[handlerIdx] || "無";
                     
-                    // 強化讀取憑證防錯機制
                     const receiptVal = cells.length > receiptIdx ? cells[receiptIdx] : ""; 
 
                     if (typeVal === "收入") {
@@ -244,15 +243,11 @@
 
                 if(fundHistory.length === 0) throw new Error("無符合的帳務明細紀錄");
 
-                // 將歷史紀錄反轉存入全域，讓最新的在 index 0，方便前端渲染與點擊對應
                 window.currentFundData = [...fundHistory].reverse();
 
                 const latestRecord = window.currentFundData[0];
                 const currentBalance = latestRecord.balance; 
 
-                // 隨收支自動切換最新卡片的風格顏色
-                const latestCardStyle = latestRecord.type === "收入" ? "latest-income" : "latest-expense";
-                const latestAmtClass = latestRecord.type === "收入" ? "amt-income" : "amt-expense";
                 const latestAmtSign = latestRecord.type === "收入" ? "+" : "-";
 
                 const displayArea = document.getElementById('fundDisplayArea');
@@ -274,12 +269,12 @@
                             <div class="stat-value" style="color:#bc6c3a;">NT$ ${totalExpense.toLocaleString()}</div>
                             <div class="stat-sub">包含各項花費及修繕補貼</div>
                         </div>
-                        <div class="stat-card ${latestCardStyle}">
+                        <div class="stat-card latest-record">
                             <div class="stat-label">最新一筆動態變動</div>
-                            <div class="stat-value ${latestAmtClass}" style="font-size: 26px;">
-                                ${latestAmtSign}NT$ ${Math.abs(latestRecord.amount).toLocaleString()}
+                            <div class="stat-value" style="font-size: 26px; color:#626973;">
+                                ${latestAmtSign}${Math.abs(latestRecord.amount).toLocaleString()} 元
                             </div>
-                            <div class="stat-sub" style="font-weight:500; margin-top:10px;">
+                            <div class="stat-sub" style="color:#8fa095; font-weight:500; margin-top:10px;">
                                 <span class="truncate-text" style="max-width:200px;">明細：${latestRecord.desc || '無'} (${latestRecord.category})</span>
                             </div>
                         </div>
@@ -317,7 +312,7 @@
                                         <tr class="fund-row" onclick="openFundModal(${index})">
                                             <td class="td-date">${f.date}</td>
                                             <td class="hide-mobile"><span class="badge" style="background-color: ${f.type === '收入' ? '#edf2ee' : '#fff5f0'}; color: ${f.type === '收入' ? '#437353' : '#bc6c3a'}; padding: 4px 10px; border-radius: 6px; font-weight:600; font-size:12px;">${f.type}</span></td>
-                                            <td class="${amtClass}" style="font-size:15px;">${amtSign}NT$ ${Math.abs(f.amount).toLocaleString()}</td>
+                                            <td class="${amtClass}" style="font-size:15px;">${amtSign}${Math.abs(f.amount).toLocaleString()}</td>
                                             <td style="font-weight: 600; color: #404742;">NT$ ${f.balance.toLocaleString()}</td>
                                             <td class="td-category">${f.category}</td>
                                             <td class="hide-mobile"><span class="truncate-text" title="點擊查看完整內容">${f.desc || '無'}</span></td>
@@ -338,7 +333,6 @@
             }
         }
 
-        // 🎯 彈出完整明細的互動視窗函式
         function openFundModal(idx) {
             const f = window.currentFundData[idx];
             if(!f) return;
@@ -362,7 +356,7 @@
                     </div>
                     <div class="modal-row">
                         <span style="color:#8fa095; font-weight:500;">金額變動</span>
-                        <span class="${amtClass}" style="font-size: 18px; font-weight: 700;">${amtSign}NT$ ${Math.abs(f.amount).toLocaleString()}</span>
+                        <span class="${amtClass}" style="font-size: 18px; font-weight: 700;">${amtSign}${Math.abs(f.amount).toLocaleString()}</span>
                     </div>
                     <div class="modal-row">
                         <span style="color:#8fa095; font-weight:500;">當期結餘</span>
