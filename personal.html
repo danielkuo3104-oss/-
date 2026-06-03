@@ -177,17 +177,13 @@
     </div>
 
     <script>
-        // 核心費用總表資料來源 (預設 gid=0)
-        const urlPrimary = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQkqhXCPp4XiHKCEpI3pz4pzcu3sQreQ_qNRLger00ULCHFr9cTbXHMQqAfk7dLa_gUBAIBSJ5sZM4F/pub?output=csv&gid=0";
-        
-        // 房客資訊專屬的 gid=1423212010
-        const urlTenantInfo = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQkqhXCPp4XiHKCEpI3pz4pzcu3sQreQ_qNRLger00ULCHFr9cTbXHMQqAfk7dLa_gUBAIBSJ5sZM4F/pub?output=csv&gid=1423212010";
+        // 🎯 採用指定單一分頁、防串位、防卡死的專屬 GID 連結
+        const urlPrimary = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQkqhXCPp4XiHKCEpI3pz4pzcu3sQreQ_qNRLger00ULCHFr9cTbXHMQqAfk7dLa_gUBAIBSJ5sZM4F/pub?gid=0&single=true&output=csv";
+        const urlTenantInfo = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQkqhXCPp4XiHKCEpI3pz4pzcu3sQreQ_qNRLger00ULCHFr9cTbXHMQqAfk7dLa_gUBAIBSJ5sZM4F/pub?gid=1423212010&single=true&output=csv";
 
         const tenantNames = { "內大": "洪健棋", "內小": "郭丹騏", "中": "尹奕竤", "外": "林易諒" };
         
-        // 預設為 0，稍後會透過 urlTenantInfo 動態覆蓋
         let tenantViolations = { "內大": "0", "內小": "0", "中": "0", "外": "0" };
-
         let globalParsedData = []; 
         let personalChartInstance = null;
 
@@ -212,7 +208,6 @@
             });
         }
 
-        // 動態抓取房客資訊分頁的 F 欄
         async function fetchTenantViolations() {
             try {
                 const response = await fetch(urlTenantInfo);
@@ -221,39 +216,35 @@
 
                 const lines = csvText.replace(/\r/g, "").split("\n").map(line => line.trim()).filter(line => line);
                 
-                // 從第二行（index 1）開始解析
                 for (let i = 1; i < lines.length; i++) {
                     const cells = lines[i].split(",").map(c => c.replace(/["']/g, '').trim());
-                    const roomKey = cells[0]; // A欄：房間 (內大、內小、中、外)
+                    const roomKey = cells[0]; 
                     
-                    // 確保讀到的房間名稱在字典內，且 F 欄 (index 5) 有資料
                     if (tenantViolations[roomKey] !== undefined && cells[5] !== undefined) {
                         tenantViolations[roomKey] = cells[5] || "0";
                     }
                 }
             } catch (e) {
-                console.error("動態違規次數抓取失敗，將採用預設值 0：", e);
+                console.error("動態違規次數抓取失敗：", e);
             }
         }
 
         async function loadDataAndRender() {
             try {
-                // 先同步抓取違規次數分頁
                 await fetchTenantViolations();
 
-                // 接著抓取核心費用總表
                 const response = await fetch(urlPrimary);
                 const csvText = await response.text();
                 
                 if (csvText.includes("<!doctype html") || csvText.includes("<script") || csvText.includes("login")) {
-                    throw new Error("試算表載入失敗。");
+                    throw new Error("試算表核心數據載入失敗。");
                 }
 
                 let cleanText = csvText.replace(/\r/g, "");
                 const lines = cleanText.split("\n").map(line => line.trim()).filter(line => line);
-                if(lines.length < 2) throw Error("無數據");
+                if(lines.length < 2) throw Error("試算表內無花費歷史數據");
 
-                const monthIdx = 0; const waterIdx = 1; const eleTotalIdx = 11;
+                const monthIdx = 0; const waterIdx = 1; 
                 const roomCostIdx = { "內大": 12, "內小": 13, "中": 14, "外": 15 };
                 const rentCostIdx = { "內大": 23, "內小": 24, "中": 25, "外": 26 };
 
@@ -261,7 +252,9 @@
 
                 for(let i = 1; i < lines.length; i++) {
                     const cells = lines[i].split(",").map(c => c.replace(/["'\uFEFF]/g, '').trim());
-                    if(cells.length < 26 || !cells[monthIdx] || cells[monthIdx].includes("基準")) continue;
+                    
+                    // 🌟 嚴格安全過濾：確保房租最高索引區塊 (Index 26) 存在，並排除基準列
+                    if(cells.length < 27 || !cells[monthIdx] || cells[monthIdx].includes("基準")) continue;
 
                     const monthVal = cells[monthIdx];
                     const waterVal = parseFloat(cells[waterIdx]) || 0;
@@ -346,7 +339,7 @@
                     </div>
                 </div>
 
-                <div class="section-title">| 個人水電用量趨勢折線圖</div>
+                <div class="section-title">| 個人水電用量趨勢折線圖 (已過濾未出帳零值)</div>
                 <div class="chart-card"><div class="chart-container"><canvas id="personalTrendChart"></canvas></div></div>
 
                 <div class="section-title">| 彙整費用清單 (月租 + 水電)</div>
@@ -397,11 +390,34 @@
                 data: {
                     labels: globalParsedData.map(d => d.month),
                     datasets: [
-                        { label: '水費', data: globalParsedData.map(d => d.waterPerRoom), borderColor: '#a5c0d1', backgroundColor: 'transparent', borderWidth: 2, tension: 0.2 },
-                        { label: '電費', data: globalParsedData.map(d => d.rooms[roomKey]||0), borderColor: '#d97736', backgroundColor: 'transparent', borderWidth: 2, tension: 0.2 }
+                        // 🎯 核心更動：圖表數據如果是 0 則塞入 null，讓 Chart.js 自動越過、不斷線、不掉到 0
+                        { 
+                            label: '水費', 
+                            data: globalParsedData.map(d => d.waterPerRoom > 0 ? d.waterPerRoom : null), 
+                            borderColor: '#a5c0d1', 
+                            backgroundColor: 'transparent', 
+                            borderWidth: 2.5, 
+                            tension: 0.2,
+                            spanGaps: true 
+                        },
+                        { 
+                            label: '電費', 
+                            data: globalParsedData.map(d => (d.rooms[roomKey] || 0) > 0 ? d.rooms[roomKey] : null), 
+                            borderColor: '#d97736', 
+                            backgroundColor: 'transparent', 
+                            borderWidth: 2.5, 
+                            tension: 0.2,
+                            spanGaps: true 
+                        }
                     ]
                 },
-                options: { responsive: true, maintainAspectRatio: false }
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { ticks: { callback: val => 'NT$ ' + val.toLocaleString() } }
+                    }
+                }
             });
         }
 
@@ -427,6 +443,7 @@
 
         function closeModal() { document.getElementById('detailModal').classList.remove('active'); }
 
+        // 🚀 解耦平行加載順序
         updateTimestamp();
         buildPersonalSelector();
         loadDataAndRender();
