@@ -48,7 +48,7 @@
             padding-left: 8px;
         }
 
-        /* 置頂網格卡片 */
+        /* 置頂網格卡片：移除左側色條，回歸乾淨極簡 */
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-bottom: 0; }
         .stat-card {
             background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(12px); border-radius: 20px; padding: 24px;
@@ -60,10 +60,15 @@
         .stat-value { font-size: 24px; font-weight: 700; color: #404742; }
         .stat-sub { font-size: 12px; color: #8fa095; margin-top: 8px; line-height: 1.5; }
 
-        /* 🟢 公基金可用結餘強烈綠調卡片 */
-        .stat-card.fund-balance { background: linear-gradient(135deg, #ffffff 0%, #ebf2ed 100%); border: 1px solid rgba(85, 107, 92, 0.2); }
-        .stat-card.fund-balance .stat-value { color: #3b5243; font-size: 28px; }
-        .stat-card.fund-balance .stat-label { color: #556b5c; font-weight: 600; }
+        /* 🟢 結餘專屬：反白實心莫蘭迪綠，極致醒目 */
+        .stat-card.fund-balance { 
+            background: linear-gradient(135deg, #647d6c 0%, #4a5d51 100%); 
+            border: none; 
+            box-shadow: 0 8px 20px rgba(85, 107, 92, 0.3);
+        }
+        .stat-card.fund-balance .stat-label { color: rgba(255, 255, 255, 0.8); }
+        .stat-card.fund-balance .stat-value { color: #ffffff; font-size: 32px; }
+        .stat-card.fund-balance .stat-sub { color: rgba(255, 255, 255, 0.6); }
 
         /* 👁️ 憑證按鈕優化 */
         .receipt-btn {
@@ -115,7 +120,7 @@
     </div>
 
     <script>
-        // 🎯 修正：精準綁定你的「公基金」工作表分頁專屬 gid
+        // 🎯 綁定公基金工作表專屬 gid
         const urlFund = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQkqhXCPp4XiHKCEpI3pz4pzcu3sQreQ_qNRLger00ULCHFr9cTbXHMQqAfk7dLa_gUBAIBSJ5sZM4F/pub?gid=1043153411&single=true&output=csv";
 
         function updateTimestamp() {
@@ -134,7 +139,7 @@
                 const csvText = await response.text();
                 
                 if (csvText.includes("<!doctype html") || csvText.includes("<script") || csvText.includes("login")) {
-                    throw new Error("公基金試算表載入失敗，請確認該分頁發布網址。");
+                    throw new Error("公基金試算表載入失敗，請確認發布設定。");
                 }
 
                 let cleanText = csvText.replace(/\r/g, "");
@@ -148,17 +153,18 @@
                 const categoryIdx = 4;   
                 const descIdx = 5;       
                 const handlerIdx = 6;    
-                const receiptIdx = 7;    
+                const receiptIdx = 7;    // H欄：憑證
 
                 let totalIncome = 0;
                 let totalExpense = 0;
                 let fundHistory = [];
 
-                // 從 Index 1 開始解析，因為 Index 0 是標題列
+                // 從 Index 1 開始解析
                 for(let i = 1; i < lines.length; i++) {
+                    // 分割陣列，即使後方憑證欄位空白，陣列長度也可能不穩定，需防錯
                     const cells = lines[i].split(",").map(c => c.replace(/["'\uFEFF]/g, '').trim());
                     
-                    // 放寬條件，只要有日期就解析
+                    // 只檢查日期是否存在，放寬陣列長度限制以防漏抓
                     if(!cells[dateIdx] || cells[dateIdx] === "") continue;
 
                     const dateVal = cells[dateIdx];
@@ -168,7 +174,9 @@
                     const categoryVal = cells[categoryIdx] || "未分類";
                     const descVal = cells[descIdx] || "";
                     const handlerVal = cells[handlerIdx] || "未指定";
-                    const receiptVal = cells[receiptIdx] || ""; 
+                    
+                    // 🎯 確保憑證欄位即使超出陣列長度也不會報錯
+                    const receiptVal = cells.length > receiptIdx ? cells[receiptIdx] : ""; 
 
                     if (typeVal === "收入") {
                         totalIncome += Math.abs(rawAmt);
@@ -205,17 +213,17 @@
                             <div class="stat-value">NT$ ${currentBalance.toLocaleString()}</div>
                             <div class="stat-sub">即時帳戶可用總存額</div>
                         </div>
-                        <div class="stat-card" style="border-left: 4px solid #556b5c;">
+                        <div class="stat-card">
                             <div class="stat-label">歷年累計總收入</div>
                             <div class="stat-value" style="color:#556b5c;">NT$ ${totalIncome.toLocaleString()}</div>
                             <div class="stat-sub">包含室友繳納與定期會費</div>
                         </div>
-                        <div class="stat-card" style="border-left: 4px solid #bc6c3a;">
+                        <div class="stat-card">
                             <div class="stat-label">歷年累計總支出</div>
                             <div class="stat-value" style="color:#bc6c3a;">NT$ ${totalExpense.toLocaleString()}</div>
-                            <div class="stat-sub">包含水電自動補貼與日常修繕</div>
+                            <div class="stat-sub">包含各項花費及修繕補貼</div>
                         </div>
-                        <div class="stat-card" style="border-left: 4px solid #768a7d;">
+                        <div class="stat-card">
                             <div class="stat-label">最新一筆動態變動</div>
                             <div class="stat-value ${latestAmtClass}" style="font-size: 20px;">
                                 ${latestAmtSign}${latestRecord.amount.toLocaleString()} 元
@@ -245,7 +253,9 @@
                                 ${fundHistory.map(f => {
                                     const amtClass = f.type === "收入" ? "amt-income" : "amt-expense";
                                     const amtSign = f.type === "收入" ? "+" : "";
-                                    const receiptHtml = (f.receipt && f.receipt.startsWith("http"))
+                                    
+                                    // 🎯 智慧辨識憑證網址，只要包含 http 就顯示按鈕
+                                    const receiptHtml = (f.receipt && f.receipt.includes("http"))
                                         ? `<a href="${f.receipt}" target="_blank" class="receipt-btn">👁️ 查看憑證</a>`
                                         : `<span class="no-receipt">無憑證</span>`;
 
@@ -253,7 +263,7 @@
                                         <tr>
                                             <td class="td-date">${f.date}</td>
                                             <td><span class="badge" style="background-color: ${f.type === '收入' ? '#edf2ee' : '#fff5f0'}; color: ${f.type === '收入' ? '#437353' : '#bc6c3a'}; padding: 4px 10px; border-radius: 6px; font-weight:600; font-size:12px;">${f.type}</span></td>
-                                            <td class="${amtClass}">${amtSign}${f.amount.toLocaleString()}</td>
+                                            <td class="${amtClass}">${amtSign}${Math.abs(f.amount).toLocaleString()}</td>
                                             <td style="font-weight: 600; color: #404742;">NT$ ${f.balance.toLocaleString()}</td>
                                             <td class="td-category">${f.category}</td>
                                             <td style="color:#556b5c;">${f.desc}</td>
