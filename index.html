@@ -86,7 +86,7 @@
         .stat-value { font-size: 24px; font-weight: 700; color: #3a414a; }
         .stat-sub { font-size: 12px; color: #9ba3ab; margin-top: 8px; line-height: 1.5; }
         
-        /* 🌿 專屬於公基金補貼的淡綠色標籤風格 */
+        /* 公基金補貼標籤風格 */
         .impute-green-badge {
             display: inline-block;
             font-size: 11px;
@@ -145,14 +145,13 @@
         .detail-table th, .detail-table td { padding: 10px 12px; border-bottom: 1px solid #f0f2f5; text-align: left; }
         .detail-table th { background: #f8fafc; color: #8a929a; font-weight: 600; }
 
-        /* 🌿 新增：首頁開場值日生草綠色彈出視窗樣式 */
+        /* 🌿 開場值日生草綠色與白底通知風格（無任何表符） */
         .duty-modal { max-width: 420px; text-align: center; border: 1px solid rgba(110, 145, 110, 0.2); }
         .duty-title { color: #4a515a; font-size: 18px; font-weight: 700; margin-bottom: 6px; }
         .duty-timer-sub { font-size: 11px; color: #9ba3ab; margin-bottom: 22px; font-weight: 500; }
-        .duty-main-box { background: #f4f7f4; border-radius: 18px; padding: 20px; margin-bottom: 16px; border: 1px solid #e3eae3; }
+        .duty-main-box { background: #f4f7f4; border-radius: 18px; padding: 24px 20px; margin-bottom: 16px; border: 1px solid #e3eae3; }
         .duty-current-label { font-size: 12px; color: #738273; font-weight: 600; letter-spacing: 0.5px; }
-        .duty-current-value { font-size: 26px; font-weight: 700; color: #6e916e; margin: 8px 0; }
-        .duty-current-room { font-size: 12px; color: #8a929a; font-weight: 500; }
+        .duty-current-value { font-size: 26px; font-weight: 700; color: #6e916e; margin-top: 10px; }
         .duty-next-box { display: flex; justify-content: space-between; align-items: center; background: #ffffff; padding: 14px 20px; border-radius: 14px; border: 1px solid #eaecef; font-size: 13px; }
         .duty-next-label { color: #8a929a; font-weight: 500; }
         .duty-next-value { color: #5a616a; font-weight: 700; }
@@ -198,7 +197,7 @@
 
     <div class="main-container">
         <div id="mainContent">
-            <div class="loading">📡 智慧建構數據看板中，請稍候...</div>
+            <div class="loading">智慧建構數據看板中，請稍候...</div>
         </div>
     </div>
     
@@ -229,13 +228,12 @@
             <div class="duty-timer-sub" id="dutyTimerText">視窗將於 5 秒後自動關閉</div>
             
             <div class="duty-main-box">
-                <div class="duty-current-label">✨ 當前值日生</div>
+                <div class="duty-current-label">當前值日生</div>
                 <div class="duty-current-value" id="currentDutyName">載入中...</div>
-                <div class="duty-current-room" id="currentDutyRoom">-</div>
             </div>
 
             <div class="duty-next-box">
-                <span class="duty-next-label">倫替下一位</span>
+                <span class="duty-next-label">下一位</span>
                 <span class="duty-next-value" id="nextDutyName">載入中...</span>
             </div>
 
@@ -273,52 +271,52 @@
             return response;
         }
 
-        // 🌿 新增：非同步串接房客資訊並解析值日生標記 (V與N)
         async function loadDutyStatus() {
             try {
+                // 檢查 Session 中是否已經開啟過該視窗
+                if (sessionStorage.getItem('dutyModalShown') === 'true') {
+                    return; // 如果本分頁已經看過，直接中斷不再彈出
+                }
+
                 const response = await fetchWithTimeout(urlTenantInfo, { timeout: 4000 });
                 const csvText = await response.text();
                 if (csvText.includes("<!doctype html")) return;
 
                 const lines = csvText.replace(/\r/g, "").split("\n").map(line => line.trim()).filter(line => line);
                 
-                let currentDuty = { name: "未設定", room: "" };
-                let nextDuty = { name: "未設定", room: "" };
+                let currentDutyName = "未設定";
+                let nextDutyName = "未設定";
 
                 for (let i = 1; i < lines.length; i++) {
                     const cells = lines[i].split(",").map(c => c.replace(/["']/g, '').trim());
                     const roomKey = cells[0];
                     const nameVal = cells[1];
-                    const dutyMarker = cells[6]; // 第七欄：值日生註記
+                    const dutyMarker = cells[6]; 
 
                     if (dutyMarker === "V" || dutyMarker === "v") {
-                        currentDuty.name = nameVal || tenantNames[roomKey];
-                        currentDuty.room = roomKey;
+                        currentDutyName = nameVal || tenantNames[roomKey];
                     } else if (dutyMarker === "N" || dutyMarker === "n") {
-                        nextDuty.name = nameVal || tenantNames[roomKey];
-                        nextDuty.room = roomKey;
+                        nextDutyName = nameVal || tenantNames[roomKey];
                     }
                 }
 
-                // 將抓取到的資料渲染進彈出視窗
-                document.getElementById('currentDutyName').innerText = currentDuty.name;
-                document.getElementById('currentDutyRoom').innerText = currentDuty.room ? `${currentDuty.room}房間` : "-";
-                document.getElementById('nextDutyName').innerText = nextDuty.room ? `${nextDuty.name} (${nextDuty.room})` : nextDuty.name;
+                document.getElementById('currentDutyName').innerText = currentDutyName;
+                document.getElementById('nextDutyName').innerText = nextDutyName;
 
-                // 喚醒視窗並開始 5 秒倒數
                 triggerDutyModal();
 
             } catch (e) {
                 console.error("值日生資料抓取失敗:", e);
-                // 發生錯誤時預設不阻擋使用者，不跳出視窗
             }
         }
 
-        // 🌿 新增：控制值日生視窗的觸發與計時器
         function triggerDutyModal() {
             const dutyModal = document.getElementById('dutyModal');
             const timerText = document.getElementById('dutyTimerText');
             dutyModal.classList.add('active');
+
+            // 標記本次 Session 已載入過
+            sessionStorage.setItem('dutyModalShown', 'true');
 
             let secondsLeft = 5;
             dutyCountdownTimer = setInterval(() => {
@@ -331,7 +329,6 @@
             }, 1000);
         }
 
-        // 🌿 新增：關閉值日生視窗並清除計時器
         function closeDutyModal() {
             document.getElementById('dutyModal').classList.remove('active');
             if (dutyCountdownTimer) {
@@ -557,7 +554,7 @@
                     }
                 });
 
-                // 核心數據看板載入成功後，接著非同步加載值日生彈出視窗
+                // 首頁資訊載入完畢後，發動值日生檢查機制
                 loadDutyStatus();
 
             } catch (error) {
@@ -596,10 +593,10 @@
                         <table class="detail-table">
                             <thead><tr><th>房客</th><th>實付金額</th></tr></thead>
                             <tbody>
-                                <tr><td>${tenantNames["內大"]} (內大)</td><td>NT$ ${eleItem.rooms["內大"].toLocaleString()}</td></tr>
-                                <tr><td>${tenantNames["內小"]} (內小)</td><td>NT$ ${eleItem.rooms["內小"].toLocaleString()}</td></tr>
-                                <tr><td>${tenantNames["中"]} (中房)</td><td>NT$ ${eleItem.rooms["中"].toLocaleString()}</td></tr>
-                                <tr><td>${tenantNames["外"]} (外房)</td><td>NT$ ${eleItem.rooms["外"].toLocaleString()}</td></tr>
+                                <tr><td>${tenantNames["內大"]}</td><td>NT$ ${eleItem.rooms["內大"].toLocaleString()}</td></tr>
+                                <tr><td>${tenantNames["內小"]}</td><td>NT$ ${eleItem.rooms["內小"].toLocaleString()}</td></tr>
+                                <tr><td>${tenantNames["中"]}</td><td>NT$ ${eleItem.rooms["中"].toLocaleString()}</td></tr>
+                                <tr><td>${tenantNames["外"]}</td><td>NT$ ${eleItem.rooms["外"].toLocaleString()}</td></tr>
                             </tbody>
                         </table>
                         <div style="font-size: 11px; color: #437353; background: #ebf5ee; padding: 8px 10px; border-radius: 6px; margin-top: 12px; font-weight: 600;">* 經電表精算後，公基金已自動補貼分攤 NT$ ${eleItem.eleImpute} 元</div>
@@ -669,10 +666,10 @@
                     htmlContent += `
                         <div class="modal-item-block" style="background:#f8fafc; padding:12px; border-radius:12px; margin-bottom:10px; border: 1px solid #eef2f5;">
                             <div class="modal-month-title" style="color:#54606e; border-left-color:#7e8794;">${item.month} 實際用電</div>
-                            <div class="modal-row"><span class="modal-row-label">${tenantNames["內大"]} (內大)</span><span class="modal-row-value">${item.deltaMeters["內大"]} 度</span></div>
-                            <div class="modal-row"><span class="modal-row-label">${tenantNames["內小"]} (內小)</span><span class="modal-row-value">${item.deltaMeters["內小"]} 度</span></div>
-                            <div class="modal-row"><span class="modal-row-label">${tenantNames["中"]} (中房)</span><span class="modal-row-value">${item.deltaMeters["中"]} 度</span></div>
-                            <div class="modal-row"><span class="modal-row-label">${tenantNames["外"]} (外房)</span><span class="modal-row-value">${item.deltaMeters["外"]} 度</span></div>
+                            <div class="modal-row"><span class="modal-row-label">${tenantNames["內大"]}</span><span class="modal-row-value">${item.deltaMeters["內大"]} 度</span></div>
+                            <div class="modal-row"><span class="modal-row-label">${tenantNames["內小"]}</span><span class="modal-row-value">${item.deltaMeters["內小"]} 度</span></div>
+                            <div class="modal-row"><span class="modal-row-label">${tenantNames["中"]}</span><span class="modal-row-value">${item.deltaMeters["中"]} 度</span></div>
+                            <div class="modal-row"><span class="modal-row-label">${tenantNames["外"]}</span><span class="modal-row-value">${item.deltaMeters["外"]} 度</span></div>
                             <div class="modal-row total-line" style="border-color:#d2dae2;"><span class="modal-row-label" style="color:#4a515a;">全戶用電淨增加</span><span class="modal-row-value" style="color:#527996;">${item.deltaMeters["總和"]} 度</span></div>
                         </div>`;
                 });
