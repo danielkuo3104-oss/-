@@ -135,7 +135,7 @@
         .modal-title { font-size:18px; font-weight:700; color:#4a515a; margin-bottom:20px; border-bottom:1px solid #eaecef; padding-bottom:12px; text-align:center; }
         .modal-item-block { margin-bottom:20px; position: relative; }
         .modal-month-title { font-size:14px; font-weight:600; color:#69779b; margin-bottom:12px; border-left: 3px solid #69779b; padding-left: 8px; display: flex; justify-content: space-between; align-items: center; }
-        .modal-row { display:flex; justify-content:space-between; padding:10px 4px; font-size:13px; color:#5a6168; border-bottom: 1px solid #f0f2f5; }
+        .modal-row { display:flex; justify-content:space-between; padding:10px 4px; font-size:13px; color:#5a6168; border-bottom: 1px solid #f0f2f5; align-items: center; }
         .modal-row.total-line { border-top:1px dashed #d2dae2; border-bottom: none; margin-top:8px; padding-top:12px; font-weight:700; font-size:14px; }
         .close-btn { width:100%; background:#69779b; color:white; border:none; padding:13px; border-radius:12px; font-size:14px; font-weight:600; cursor:pointer; margin-top:15px; transition:background 0.2s; }
         .close-btn:hover { background:#586585; }
@@ -201,6 +201,10 @@
         .detail-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 8px; color: #5a6168; }
         .detail-table th, .detail-table td { padding: 10px 12px; border-bottom: 1px solid #f0f2f5; text-align: left; }
         .detail-table th { background: #f8fafc; color: #8a929a; font-weight: 600; }
+
+        /* 電表專用高亮醒目樣式 */
+        .val-record { color: #8a929a; font-size: 12px; font-weight: 500; margin-right: 4px; }
+        .val-delta { color: #527996; font-size: 14px; font-weight: 700; }
 
         /* 禮拜值日生風格 */
         .duty-modal { max-width: 420px; text-align: center; border: 1px solid rgba(110, 145, 110, 0.2); }
@@ -455,6 +459,9 @@
                 const deltaIdx = { "總和": 6, "內大": 7, "內小": 8, "中": 9, "外": 10 }; 
                 const roomCostIdx = { "內大": 12, "內小": 13, "中": 14, "外": 15 }; 
                 
+                // 💡 新增分房當期抄錄值索引 (對應原始獨立抄表數值欄位)
+                const recordIdx = { "內大": 2, "內小": 3, "中": 4, "外": 5 };
+
                 // 憑證連結與日期欄位索引配置
                 const meterPhotoIdx = 28;  // AC 欄
                 const meterDateIdx = 29;   // AD 欄
@@ -488,6 +495,14 @@
                         "外": Number(((parseFloat(cells[deltaIdx["外"]]) || 0) / 10).toFixed(1))
                     };
 
+                    // 💡 同步讀取當月抄表絕對值
+                    const recordMeters = {
+                        "內大": cells[recordIdx["內大"]] ? parseFloat(cells[recordIdx["內大"]]).toFixed(1) : "--",
+                        "內小": cells[recordIdx["內小"]] ? parseFloat(cells[recordIdx["內小"]]).toFixed(1) : "--",
+                        "中": cells[recordIdx["中"]] ? parseFloat(cells[recordIdx["中"]]).toFixed(1) : "--",
+                        "外": cells[recordIdx["外"]] ? parseFloat(cells[recordIdx["外"]]).toFixed(1) : "--"
+                    };
+
                     totalWater += waterVal; totalElectricity += eleTotalVal; historyTotal += combinedSum;
                     
                     labels.push(monthVal); 
@@ -509,6 +524,7 @@
                         month: monthVal, water: waterVal, waterPerRoom: waterPerRoom, waterImpute: waterImpute,
                         eleTotal: eleTotalVal, eleImpute: eleImpute, total: combinedSum,
                         deltaMeters: deltaMeters,
+                        recordMeters: recordMeters, // 💡 注入抄錄值物件
                         meterPhoto: cells[meterPhotoIdx] || "",
                         meterDate: cells[meterDateIdx] || "",
                         waterReceipt: cells[waterReceiptIdx] || "",
@@ -593,7 +609,7 @@
                             <div class="stat-card gray-card" onclick="openRoomDetails('meter')">
                                 <div class="stat-label" style="color: #7e8794;">當月消耗用電總值 (${latest.month})</div>
                                 <div class="stat-value">${latest.deltaMeters["總和"]} 度</div>
-                                <div class="stat-sub" style="color: #9ba4b0;">點擊展開各房當月實際用電「差值度數」</div>
+                                <div class="stat-sub" style="color: #9ba4b0;">點擊展開各房當月實際「抄錄數值」與「使用度數」</div>
                             </div>
                         </div>
                         <div class="chart-card meter-chart-spacer" style="background: #f4f6f8; border-color: #d2dae2;"><div class="chart-container" style="height: 220px;"><canvas id="meterChart"></canvas></div></div>
@@ -666,7 +682,6 @@
 
             if (type === 'currentEle') {
                 title.innerText = `${eleItem.month} 電費分房明細`;
-                // 按鈕統一採用標準莫蘭迪藍色調外觀 (移除 orange-btn)
                 const receiptBtn = eleItem.eleReceipt ? `<div class="receipt-link-btn" onclick="openImageModal('${eleItem.eleReceipt}', '${eleItem.eleDate}', '${eleItem.month} 電費憑證')">查看憑證</div>` : "";
                 
                 htmlContent = `
@@ -762,26 +777,54 @@
                         </div>`;
                 });
             } else if (type === 'meter') {
-                title.innerText = "歷月實際用電差值 (度)";
+                title.innerText = "歷月電表抄錄與實用度數";
                 htmlContent = `
                     <div style="background:#eef2f5; padding:12px; border-radius:12px; font-size:12px; color:#54606e; margin-bottom:15px; line-height:1.5; border: 1px solid #dbe2e8;">
                         📌 <b>初始入住電表基準值：</b><br>
                         內大: 633.7 | 內小: 401.0 | 中: 366.5 | 外: 748.0
                     </div>`;
                 globalParsedData.forEach(item => {
-                    // 電表照片按鈕：樣式完全切換為標準莫蘭迪藍色調 (receipt-link-btn)
                     const photoBtn = item.meterPhoto ? `<div class="receipt-link-btn" onclick="openImageModal('${item.meterPhoto}', '${item.meterDate}', '${item.month} 電表照片憑證')">電表照片</div>` : "";
+                    
+                    // 💡 重點修正：在右側數值區同時顯示 抄錄絕對值 (實用度數)
                     htmlContent += `
                         <div class="modal-item-block" style="background:#f8fafc; padding:12px; border-radius:12px; margin-bottom:10px; border: 1px solid #eef2f5;">
                             <div class="modal-month-title" style="color:#54606e; border-left-color:#7e8794;">
-                                <span>${item.month} 實際用電</span>
+                                <span>${item.month} 電表抄錄</span>
                                 ${photoBtn}
                             </div>
-                            <div class="modal-row"><span class="modal-row-label">${tenantNames["內大"]}</span><span class="modal-row-value">${item.deltaMeters["內大"]} 度</span></div>
-                            <div class="modal-row"><span class="modal-row-label">${tenantNames["內小"]}</span><span class="modal-row-value">${item.deltaMeters["內小"]} 度</span></div>
-                            <div class="modal-row"><span class="modal-row-label">${tenantNames["中"]}</span><span class="modal-row-value">${item.deltaMeters["中"]} 度</span></div>
-                            <div class="modal-row"><span class="modal-row-label">${tenantNames["外"]}</span><span class="modal-row-value">${item.deltaMeters["外"]} 度</span></div>
-                            <div class="modal-row total-line" style="border-color:#d2dae2;"><span class="modal-row-label" style="color:#4a515a;">全戶用電淨增加</span><span class="modal-row-value" style="color:#527996;">${item.deltaMeters["總和"]} 度</span></div>
+                            <div class="modal-row">
+                                <span class="modal-row-label">${tenantNames["內大"]}</span>
+                                <div class="modal-row-value">
+                                    <span class="val-record">${item.recordMeters["內大"]}</span>
+                                    <span class="val-delta">(使用 ${item.deltaMeters["內大"]} 度)</span>
+                                </div>
+                            </div>
+                            <div class="modal-row">
+                                <span class="modal-row-label">${tenantNames["內小"]}</span>
+                                <div class="modal-row-value">
+                                    <span class="val-record">${item.recordMeters["內小"]}</span>
+                                    <span class="val-delta">(使用 ${item.deltaMeters["內小"]} 度)</span>
+                                </div>
+                            </div>
+                            <div class="modal-row">
+                                <span class="modal-row-label">${tenantNames["中"]}</span>
+                                <div class="modal-row-value">
+                                    <span class="val-record">${item.recordMeters["中"]}</span>
+                                    <span class="val-delta">(使用 ${item.deltaMeters["中"]} 度)</span>
+                                </div>
+                            </div>
+                            <div class="modal-row">
+                                <span class="modal-row-label">${tenantNames["外"]}</span>
+                                <div class="modal-row-value">
+                                    <span class="val-record">${item.recordMeters["外"]}</span>
+                                    <span class="val-delta">(使用 ${item.deltaMeters["外"]} 度)</span>
+                                </div>
+                            </div>
+                            <div class="modal-row total-line" style="border-color:#d2dae2;">
+                                <span class="modal-row-label" style="color:#4a515a;">全戶用電總計增加</span>
+                                <span class="modal-row-value" style="color:#527996; font-size: 15px;">${item.deltaMeters["總和"]} 度</span>
+                            </div>
                         </div>`;
                 });
             }
@@ -803,7 +846,7 @@
             if (driveUrl.includes("drive.google.com")) {
                 const match = driveUrl.match(/\/file\/d\/([^\/]+)/) || driveUrl.match(/id=([^&]+)/);
                 if (match && match[1]) {
-                    directImageUrl = `https://lh3.googleusercontent.com/d/${match[1]}=w1000`;
+                    directImageUrl = `https://drive.google.com/uc?export=view&id=${match[1]}`;
                 }
             }
             
