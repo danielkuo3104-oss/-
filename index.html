@@ -778,11 +778,18 @@
                 });
             } else if (type === 'meter') {
                 title.innerText = "歷月電表抄錄與實用度數";
+                
+                // 💡 基準照片按鈕配置：直接綁定基準值照片的連結（此處已為你預留好，點擊會開啟大圖彈窗）
+                const basePhotoUrl = "https://drive.google.com/file/d/1vQkqhXCPp4XiHKCEpI3pz4pzcu3sQreQ/view"; // 這裡可自行替換成基準照片的實際 Drive 連結
+                const basePhotoBtn = `<div class="receipt-link-btn" style="float: right; margin-top: -2px;" onclick="openImageModal('${basePhotoUrl}', '入住當日', '初始入住電表基準照片')">查看基準照片</div>`;
+
                 htmlContent = `
-                    <div style="background:#eef2f5; padding:12px; border-radius:12px; font-size:12px; color:#54606e; margin-bottom:15px; line-height:1.5; border: 1px solid #dbe2e8;">
+                    <div style="background:#eef2f5; padding:14px; border-radius:12px; font-size:12px; color:#54606e; margin-bottom:15px; line-height:1.6; border: 1px solid #dbe2e8;">
+                        ${basePhotoBtn}
                         📌 <b>初始入住電表基準值：</b><br>
                         內大: 633.7 | 內小: 401.0 | 中: 366.5 | 外: 748.0
                     </div>`;
+                    
                 globalParsedData.forEach(item => {
                     const photoBtn = item.meterPhoto ? `<div class="receipt-link-btn" onclick="openImageModal('${item.meterPhoto}', '${item.meterDate}', '${item.month} 電表照片憑證')">電表照片</div>` : "";
                     
