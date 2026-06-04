@@ -776,7 +776,7 @@
                             <div class="modal-row total-line"><span class="modal-row-label">當月支出小計</span><span class="modal-row-value" style="color: #7b2cbf;">NT$ ${item.total.toLocaleString()}</span></div>
                         </div>`;
                 });
-            }  else if (type === 'meter') {
+            } else if (type === 'meter') {
                 title.innerText = "歷月電表抄錄與實用度數";
                 htmlContent = `
                     <div style="background:#eef2f5; padding:12px; border-radius:12px; font-size:12px; color:#54606e; margin-bottom:15px; line-height:1.5; border: 1px solid #dbe2e8;">
@@ -799,47 +799,47 @@
                                 ${photoBtn}
                             </div>
                             
-                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #f0f2f5;">
-                                <div style="display: flex; flex-direction: column; gap: 2px;">
-                                    <span style="font-size: 14px; font-weight: 500; color: #4a515a;">${tenantNames["內大"]}</span>
-                                    <span style="font-size: 12px; color: #8a929a; font-family: monospace;">目前抄錄: ${recInBig}</span>
+                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #f0f2f5;">
+                                <div style="display: flex; align-items: center; gap: 16px; flex: 1;">
+                                    <span style="font-size: 14px; font-weight: 500; color: #4a515a; min-width: 60px;">${tenantNames["內大"]}</span>
+                                    <span style="font-size: 13px; color: #8a929a; font-family: monospace;">${recInBig}</span>
                                 </div>
                                 <div style="display: flex; align-items: center; gap: 12px;">
-                                    <div style="width: 1px; height: 24px; background: #cbd1d6;"></div>
-                                    <span style="font-size: 15px; font-weight: 700; color: #527996; min-width: 80px; text-align: right;">${item.deltaMeters["內大"]} 度</span>
+                                    <div style="width: 1px; height: 16px; background: #cbd1d6;"></div>
+                                    <span style="font-size: 14px; font-weight: 700; color: #527996; min-width: 75px; text-align: right;">${item.deltaMeters["內大"]} 度</span>
                                 </div>
                             </div>
 
-                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #f0f2f5;">
-                                <div style="display: flex; flex-direction: column; gap: 2px;">
-                                    <span style="font-size: 14px; font-weight: 500; color: #4a515a;">${tenantNames["內小"]}</span>
-                                    <span style="font-size: 12px; color: #8a929a; font-family: monospace;">目前抄錄: ${recInSmall}</span>
+                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #f0f2f5;">
+                                <div style="display: flex; align-items: center; gap: 16px; flex: 1;">
+                                    <span style="font-size: 14px; font-weight: 500; color: #4a515a; min-width: 60px;">${tenantNames["內小"]}</span>
+                                    <span style="font-size: 13px; color: #8a929a; font-family: monospace;">${recInSmall}</span>
                                 </div>
                                 <div style="display: flex; align-items: center; gap: 12px;">
-                                    <div style="width: 1px; height: 24px; background: #cbd1d6;"></div>
-                                    <span style="font-size: 15px; font-weight: 700; color: #527996; min-width: 80px; text-align: right;">${item.deltaMeters["內小"]} 度</span>
+                                    <div style="width: 1px; height: 16px; background: #cbd1d6;"></div>
+                                    <span style="font-size: 14px; font-weight: 700; color: #527996; min-width: 75px; text-align: right;">${item.deltaMeters["內小"]} 度</span>
                                 </div>
                             </div>
 
-                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #f0f2f5;">
-                                <div style="display: flex; flex-direction: column; gap: 2px;">
-                                    <span style="font-size: 14px; font-weight: 500; color: #4a515a;">${tenantNames["中"]}</span>
-                                    <span style="font-size: 12px; color: #8a929a; font-family: monospace;">目前抄錄: ${recMid}</span>
+                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #f0f2f5;">
+                                <div style="display: flex; align-items: center; gap: 16px; flex: 1;">
+                                    <span style="font-size: 14px; font-weight: 500; color: #4a515a; min-width: 60px;">${tenantNames["中"]}</span>
+                                    <span style="font-size: 13px; color: #8a929a; font-family: monospace;">${recMid}</span>
                                 </div>
                                 <div style="display: flex; align-items: center; gap: 12px;">
-                                    <div style="width: 1px; height: 24px; background: #cbd1d6;"></div>
-                                    <span style="font-size: 15px; font-weight: 700; color: #527996; min-width: 80px; text-align: right;">${item.deltaMeters["中"]} 度</span>
+                                    <div style="width: 1px; height: 16px; background: #cbd1d6;"></div>
+                                    <span style="font-size: 14px; font-weight: 700; color: #527996; min-width: 75px; text-align: right;">${item.deltaMeters["中"]} 度</span>
                                 </div>
                             </div>
 
-                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #f0f2f5;">
-                                <div style="display: flex; flex-direction: column; gap: 2px;">
-                                    <span style="font-size: 14px; font-weight: 500; color: #4a515a;">${tenantNames["外"]}</span>
-                                    <span style="font-size: 12px; color: #8a929a; font-family: monospace;">目前抄錄: ${recOut}</span>
+                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #f0f2f5;">
+                                <div style="display: flex; align-items: center; gap: 16px; flex: 1;">
+                                    <span style="font-size: 14px; font-weight: 500; color: #4a515a; min-width: 60px;">${tenantNames["外"]}</span>
+                                    <span style="font-size: 13px; color: #8a929a; font-family: monospace;">${recOut}</span>
                                 </div>
                                 <div style="display: flex; align-items: center; gap: 12px;">
-                                    <div style="width: 1px; height: 24px; background: #cbd1d6;"></div>
-                                    <span style="font-size: 15px; font-weight: 700; color: #527996; min-width: 80px; text-align: right;">${item.deltaMeters["外"]} 度</span>
+                                    <div style="width: 1px; height: 16px; background: #cbd1d6;"></div>
+                                    <span style="font-size: 14px; font-weight: 700; color: #527996; min-width: 75px; text-align: right;">${item.deltaMeters["外"]} 度</span>
                                 </div>
                             </div>
 
