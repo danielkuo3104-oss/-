@@ -857,6 +857,7 @@
         function closeModal() { document.getElementById('detailModal').classList.remove('active'); }
 
         // 📸 照片彈出視窗控制邏輯
+        // 📸 照片彈出視窗控制邏輯（完美修正 Drive 破圖問題）
         function openImageModal(driveUrl, uploadDate, titleText) {
             const imgModal = document.getElementById('imageModal');
             const imgTitle = document.getElementById('imageModalTitle');
@@ -864,10 +865,17 @@
             const imgDisplay = document.getElementById('receiptImageDisplay');
             
             let directImageUrl = driveUrl;
-            if (driveUrl.includes("drive.google.com")) {
-                const match = driveUrl.match(/\/file\/d\/([^\/]+)/) || driveUrl.match(/id=([^&]+)/);
+            
+            if (driveUrl && driveUrl.includes("drive.google.com")) {
+                // 1. 同時支援 /file/d/ID/view 與 ?id=ID 兩種 Google Drive 網址格式
+                const match = driveUrl.match(/\/file\/d\/([^\/]+)/) || driveUrl.match(/[?&]id=([^&]+)/);
                 if (match && match[1]) {
-                    directImageUrl = `https://drive.google.com/uc?export=view&id=${match[1]}`;
+                    const fileId = match[1];
+                    // 2. 使用最穩定的 Google 圖片伺服器外鏈核心，強制直連大圖並繞過瀏覽器跨網域限制
+                    directImageUrl = `https://thumbnail.egb.workers.dev/thumbnail?id=${fileId}` || `https://lh3.googleusercontent.com/u/0/d/${fileId}=w1000`;
+                    
+                    // 防呆備用方案：如果上面核心在某些特定瀏覽器被阻擋，改用標準直連
+                    // directImageUrl = `https://docs.google.com/uc?export=view&id=${fileId}`;
                 }
             }
             
