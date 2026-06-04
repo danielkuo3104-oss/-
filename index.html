@@ -202,10 +202,6 @@
         .detail-table th, .detail-table td { padding: 10px 12px; border-bottom: 1px solid #f0f2f5; text-align: left; }
         .detail-table th { background: #f8fafc; color: #8a929a; font-weight: 600; }
 
-        /* 電表專用高亮醒目樣式 */
-        .val-record { color: #8a929a; font-size: 12px; font-weight: 500; margin-right: 4px; }
-        .val-delta { color: #527996; font-size: 14px; font-weight: 700; }
-
         /* 禮拜值日生風格 */
         .duty-modal { max-width: 420px; text-align: center; border: 1px solid rgba(110, 145, 110, 0.2); }
         .duty-title { color: #4a515a; font-size: 18px; font-weight: 700; margin-bottom: 6px; }
@@ -323,6 +319,7 @@
         let globalParsedData = []; 
         let trendChartInstance = null; 
         let dutyCountdownTimer = null;
+        let globalBasePhotoUrl = ""; // 💡 新增：儲存試算表抓取的基準照片網址
 
         function updateTimestamp() {
             const now = new Date();
@@ -459,7 +456,6 @@
                 const deltaIdx = { "總和": 6, "內大": 7, "內小": 8, "中": 9, "外": 10 }; 
                 const roomCostIdx = { "內大": 12, "內小": 13, "中": 14, "外": 15 }; 
                 
-                // 新增分房當期抄錄值索引 (對應原始獨立抄表數值欄位)
                 const recordIdx = { "內大": 2, "內小": 3, "中": 4, "外": 5 };
 
                 // 憑證連結與日期欄位索引配置
@@ -473,12 +469,20 @@
                 let totalWater = 0; let totalElectricity = 0; let historyTotal = 0;
                 const labels = []; const waterChartData = []; const eleChartData = [];
                 const meterDeltaTotal = [];
+                
                 globalParsedData = [];
+                globalBasePhotoUrl = ""; // 初始化基準照片
 
                 for(let i = 1; i < lines.length; i++) {
                     const cells = lines[i].split(",").map(c => c.replace(/["'\uFEFF]/g, '').trim());
                     
-                    if(cells.length < 16 || !cells[monthIdx] || cells[monthIdx].includes("基準") || cells[monthIdx].includes("<script")) {
+                    // 💡 動態讀取：如果遇到「基準值」這列，就把 AC 欄的照片網址存起來
+                    if (cells[monthIdx] && cells[monthIdx].includes("基準")) {
+                        globalBasePhotoUrl = cells[meterPhotoIdx] || "";
+                        continue;
+                    }
+
+                    if(cells.length < 16 || !cells[monthIdx] || cells[monthIdx].includes("<script")) {
                         continue;
                     }
 
@@ -495,7 +499,6 @@
                         "外": Number(((parseFloat(cells[deltaIdx["外"]]) || 0) / 10).toFixed(1))
                     };
 
-                    // 同步讀取當月抄表絕對值
                     const recordMeters = {
                         "內大": cells[recordIdx["內大"]] ? parseFloat(cells[recordIdx["內大"]]).toFixed(1) : "--",
                         "內小": cells[recordIdx["內小"]] ? parseFloat(cells[recordIdx["內小"]]).toFixed(1) : "--",
@@ -524,7 +527,7 @@
                         month: monthVal, water: waterVal, waterPerRoom: waterPerRoom, waterImpute: waterImpute,
                         eleTotal: eleTotalVal, eleImpute: eleImpute, total: combinedSum,
                         deltaMeters: deltaMeters,
-                        recordMeters: recordMeters, // 注入抄錄值物件
+                        recordMeters: recordMeters,
                         meterPhoto: cells[meterPhotoIdx] || "",
                         meterDate: cells[meterDateIdx] || "",
                         waterReceipt: cells[waterReceiptIdx] || "",
@@ -779,9 +782,8 @@
             } else if (type === 'meter') {
                 title.innerText = "歷月電表抄錄與實用度數";
                 
-                // 基準照片按鈕配置：綁定基準值照片的連結（已套用專屬獨立彈窗）
-                const basePhotoUrl = "https://drive.google.com/file/d/1vQkqhXCPp4XiHKCEpI3pz4pzcu3sQreQ_qN/view";
-                const basePhotoBtn = `<div class="receipt-link-btn" style="float: right; margin-top: -2px;" onclick="openImageModal('${basePhotoUrl}', '入住當日', '初始入住電表基準照片')">查看基準照片</div>`;
+                // 💡 改為動態讀取：如果全域變數有抓到基準照片網址，才渲染按鈕
+                const basePhotoBtn = globalBasePhotoUrl ? `<div class="receipt-link-btn" style="float: right; margin-top: -2px;" onclick="openImageModal('${globalBasePhotoUrl}', '入住當日', '初始入住電表基準照片')">查看基準照片</div>` : "";
 
                 htmlContent = `
                     <div style="background:#eef2f5; padding:14px; border-radius:12px; font-size:12px; color:#54606e; margin-bottom:15px; line-height:1.6; border: 1px solid #dbe2e8;">
@@ -793,7 +795,6 @@
                 globalParsedData.forEach(item => {
                     const photoBtn = item.meterPhoto ? `<div class="receipt-link-btn" onclick="openImageModal('${item.meterPhoto}', '${item.meterDate}', '${item.month} 電表照片憑證')">電表照片</div>` : "";
                     
-                    // 修正電表抄錄值（除以 10 修正小數點）
                     const recInBig   = item.recordMeters["內大"] !== "--" ? (parseFloat(item.recordMeters["內大"]) / 10).toFixed(1) : "--";
                     const recInSmall = item.recordMeters["內小"] !== "--" ? (parseFloat(item.recordMeters["內小"]) / 10).toFixed(1) : "--";
                     const recMid     = item.recordMeters["中"]   !== "--" ? (parseFloat(item.recordMeters["中"]) / 10).toFixed(1) : "--";
@@ -856,7 +857,6 @@
 
         function closeModal() { document.getElementById('detailModal').classList.remove('active'); }
 
-        // 📸 照片彈出視窗控制邏輯（破解 Google Drive 圖片限制版）
         function openImageModal(driveUrl, uploadDate, titleText) {
             const imgModal = document.getElementById('imageModal');
             const imgTitle = document.getElementById('imageModalTitle');
@@ -866,7 +866,6 @@
             let directImageUrl = driveUrl;
             
             if (driveUrl && driveUrl.includes("drive.google.com")) {
-                // 抓取網址中的檔案 ID
                 const match = driveUrl.match(/\/file\/d\/([^\/]+)/) || driveUrl.match(/[?&]id=([^&]+)/);
                 if (match && match[1]) {
                     const fileId = match[1];
@@ -878,11 +877,9 @@
             imgTitle.innerText = titleText;
             dateDisplay.innerText = `上傳/抄錄日期：${uploadDate || "未記錄"}`;
             
-            // 💡 加入圖片載入失敗的防呆提示
             imgDisplay.onerror = function() {
-                this.onerror = null; // 防止無限迴圈
+                this.onerror = null;
                 console.error("圖片載入失敗，網址為:", directImageUrl);
-                // 換成一張帶有錯誤提示的預設圖
                 this.src = "https://placehold.co/600x400/f4f5f7/b54a4a?text=載入失敗\\n請確認雲端資料夾權限";
                 alert("【圖片無法顯示】\n請確認儲存照片的 Google Drive 資料夾權限，是否已設為「知道連結的任何人均可查看」。");
             };
@@ -894,8 +891,7 @@
         function closeImageModal() {
             document.getElementById('imageModal').classList.remove('active');
             const imgDisplay = document.getElementById('receiptImageDisplay');
-            
-            imgDisplay.onerror = null; // 💡 關鍵修正：關閉時先移除錯誤偵測，防止瀏覽器誤判
+            imgDisplay.onerror = null; // 關閉時移除錯誤偵測，防止瀏覽器誤判
             imgDisplay.src = ""; 
         }
 
