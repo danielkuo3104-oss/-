@@ -776,7 +776,7 @@
                             <div class="modal-row total-line"><span class="modal-row-label">當月支出小計</span><span class="modal-row-value" style="color: #7b2cbf;">NT$ ${item.total.toLocaleString()}</span></div>
                         </div>`;
                 });
-            } else if (type === 'meter') {
+            } } else if (type === 'meter') {
                 title.innerText = "歷月電表抄錄與實用度數";
                 htmlContent = `
                     <div style="background:#eef2f5; padding:12px; border-radius:12px; font-size:12px; color:#54606e; margin-bottom:15px; line-height:1.5; border: 1px solid #dbe2e8;">
@@ -786,44 +786,66 @@
                 globalParsedData.forEach(item => {
                     const photoBtn = item.meterPhoto ? `<div class="receipt-link-btn" onclick="openImageModal('${item.meterPhoto}', '${item.meterDate}', '${item.month} 電表照片憑證')">電表照片</div>` : "";
                     
-                    // 💡 重點修正：在右側數值區同時顯示 抄錄絕對值 (實用度數)
+                    // 修正電表抄錄值（除以 10 修正小數點）
+                    const recInBig   = item.recordMeters["內大"] !== "--" ? (parseFloat(item.recordMeters["內大"]) / 10).toFixed(1) : "--";
+                    const recInSmall = item.recordMeters["內小"] !== "--" ? (parseFloat(item.recordMeters["內小"]) / 10).toFixed(1) : "--";
+                    const recMid     = item.recordMeters["中"]   !== "--" ? (parseFloat(item.recordMeters["中"]) / 10).toFixed(1) : "--";
+                    const recOut     = item.recordMeters["外"]   !== "--" ? (parseFloat(item.recordMeters["外"]) / 10).toFixed(1) : "--";
+
                     htmlContent += `
-                        <div class="modal-item-block" style="background:#f8fafc; padding:12px; border-radius:12px; margin-bottom:10px; border: 1px solid #eef2f5;">
-                            <div class="modal-month-title" style="color:#54606e; border-left-color:#7e8794;">
+                        <div class="modal-item-block" style="background:#f8fafc; padding:16px; border-radius:12px; margin-bottom:12px; border: 1px solid #eef2f5;">
+                            <div class="modal-month-title" style="color:#54606e; border-left-color:#7e8794; margin-bottom: 14px;">
                                 <span>${item.month} 電表抄錄</span>
                                 ${photoBtn}
                             </div>
-                            <div class="modal-row">
-                                <span class="modal-row-label">${tenantNames["內大"]}</span>
-                                <div class="modal-row-value">
-                                    <span class="val-record">${item.recordMeters["內大"]}</span>
-                                    <span class="val-delta">(使用 ${item.deltaMeters["內大"]} 度)</span>
+                            
+                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #f0f2f5;">
+                                <div style="display: flex; flex-direction: column; gap: 2px;">
+                                    <span style="font-size: 14px; font-weight: 500; color: #4a515a;">${tenantNames["內大"]}</span>
+                                    <span style="font-size: 12px; color: #8a929a; font-family: monospace;">目前抄錄: ${recInBig}</span>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <div style="width: 1px; height: 24px; background: #cbd1d6;"></div>
+                                    <span style="font-size: 15px; font-weight: 700; color: #527996; min-width: 80px; text-align: right;">${item.deltaMeters["內大"]} 度</span>
                                 </div>
                             </div>
-                            <div class="modal-row">
-                                <span class="modal-row-label">${tenantNames["內小"]}</span>
-                                <div class="modal-row-value">
-                                    <span class="val-record">${item.recordMeters["內小"]}</span>
-                                    <span class="val-delta">(使用 ${item.deltaMeters["內小"]} 度)</span>
+
+                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #f0f2f5;">
+                                <div style="display: flex; flex-direction: column; gap: 2px;">
+                                    <span style="font-size: 14px; font-weight: 500; color: #4a515a;">${tenantNames["內小"]}</span>
+                                    <span style="font-size: 12px; color: #8a929a; font-family: monospace;">目前抄錄: ${recInSmall}</span>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <div style="width: 1px; height: 24px; background: #cbd1d6;"></div>
+                                    <span style="font-size: 15px; font-weight: 700; color: #527996; min-width: 80px; text-align: right;">${item.deltaMeters["內小"]} 度</span>
                                 </div>
                             </div>
-                            <div class="modal-row">
-                                <span class="modal-row-label">${tenantNames["中"]}</span>
-                                <div class="modal-row-value">
-                                    <span class="val-record">${item.recordMeters["中"]}</span>
-                                    <span class="val-delta">(使用 ${item.deltaMeters["中"]} 度)</span>
+
+                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #f0f2f5;">
+                                <div style="display: flex; flex-direction: column; gap: 2px;">
+                                    <span style="font-size: 14px; font-weight: 500; color: #4a515a;">${tenantNames["中"]}</span>
+                                    <span style="font-size: 12px; color: #8a929a; font-family: monospace;">目前抄錄: ${recMid}</span>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <div style="width: 1px; height: 24px; background: #cbd1d6;"></div>
+                                    <span style="font-size: 15px; font-weight: 700; color: #527996; min-width: 80px; text-align: right;">${item.deltaMeters["中"]} 度</span>
                                 </div>
                             </div>
-                            <div class="modal-row">
-                                <span class="modal-row-label">${tenantNames["外"]}</span>
-                                <div class="modal-row-value">
-                                    <span class="val-record">${item.recordMeters["外"]}</span>
-                                    <span class="val-delta">(使用 ${item.deltaMeters["外"]} 度)</span>
+
+                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #f0f2f5;">
+                                <div style="display: flex; flex-direction: column; gap: 2px;">
+                                    <span style="font-size: 14px; font-weight: 500; color: #4a515a;">${tenantNames["外"]}</span>
+                                    <span style="font-size: 12px; color: #8a929a; font-family: monospace;">目前抄錄: ${recOut}</span>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <div style="width: 1px; height: 24px; background: #cbd1d6;"></div>
+                                    <span style="font-size: 15px; font-weight: 700; color: #527996; min-width: 80px; text-align: right;">${item.deltaMeters["外"]} 度</span>
                                 </div>
                             </div>
-                            <div class="modal-row total-line" style="border-color:#d2dae2;">
-                                <span class="modal-row-label" style="color:#4a515a;">全戶用電總計增加</span>
-                                <span class="modal-row-value" style="color:#527996; font-size: 15px;">${item.deltaMeters["總和"]} 度</span>
+
+                            <div class="modal-row total-line" style="border-color:#d2dae2; padding-top: 14px;">
+                                <span class="modal-row-label" style="color:#4a515a; font-weight: 600;">全戶用電總計增加</span>
+                                <span class="modal-row-value" style="color:#527996; font-size: 16px; font-weight: 700;">${item.deltaMeters["總和"]} 度</span>
                             </div>
                         </div>`;
                 });
