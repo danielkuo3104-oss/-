@@ -856,8 +856,7 @@
 
         function closeModal() { document.getElementById('detailModal').classList.remove('active'); }
 
-        // 📸 照片彈出視窗控制邏輯（完美修復破圖與對接髒字串問題）
-        // 📸 照片彈出視窗控制邏輯（完美修復版）
+        // 📸 照片彈出視窗控制邏輯（破解 Google Drive 圖片限制版）
         function openImageModal(driveUrl, uploadDate, titleText) {
             const imgModal = document.getElementById('imageModal');
             const imgTitle = document.getElementById('imageModalTitle');
@@ -867,18 +866,28 @@
             let directImageUrl = driveUrl;
             
             if (driveUrl && driveUrl.includes("drive.google.com")) {
+                // 抓取網址中的檔案 ID
                 const match = driveUrl.match(/\/file\/d\/([^\/]+)/) || driveUrl.match(/[?&]id=([^&]+)/);
                 if (match && match[1]) {
                     const fileId = match[1];
-                    // 🎯 使用最純淨、無第三方流量限制的 Google 官方直連網址
-                    directImageUrl = `https://docs.google.com/uc?export=view&id=${fileId}`;
+                    // 🎯 使用 Google 官方 Thumbnail API (sz=w1000 代表寬度 1000px 的高畫質)
+                    directImageUrl = `https://drive.google.com/thumbnail?id=${fileId}&sz=w1000`;
                 }
             }
             
             imgTitle.innerText = titleText;
             dateDisplay.innerText = `上傳/抄錄日期：${uploadDate || "未記錄"}`;
-            imgDisplay.src = directImageUrl;
             
+            // 💡 加入圖片載入失敗的防呆提示
+            imgDisplay.onerror = function() {
+                this.onerror = null; // 防止無限迴圈
+                console.error("圖片載入失敗，網址為:", directImageUrl);
+                // 換成一張帶有錯誤提示的預設圖
+                this.src = "https://placehold.co/600x400/f4f5f7/b54a4a?text=載入失敗\\n請確認雲端資料夾權限";
+                alert("【圖片無法顯示】\n請確認儲存照片的 Google Drive 資料夾權限，是否已設為「知道連結的任何人均可查看」。");
+            };
+            
+            imgDisplay.src = directImageUrl;
             imgModal.classList.add('active');
         }
 
