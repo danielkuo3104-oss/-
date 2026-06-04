@@ -785,7 +785,7 @@
                 // 基準照片按鈕配置
                 const basePhotoBtn = globalBasePhotoUrl ? `<div class="receipt-link-btn" onclick="openImageModal('${globalBasePhotoUrl}', '入住當日', '初始入住電表基準照片')">查看基準照片</div>` : "";
 
-                // 修正：文字基準值精確對接試算表與照片數值，順序為：外、中、內大、內小，拔除所有表符
+                // 基準值精確對齊（7479.9, 3664.6, 6337.0, 4010.4），順序：外、中、內大、內小
                 htmlContent = `
                     <div style="background:#eef2f5; padding:14px; border-radius:12px; font-size:12px; color:#54606e; margin-bottom:15px; line-height:1.6; border: 1px solid #dbe2e8;">
                         <div style="float: right; margin-top: -2px;">${basePhotoBtn}</div>
@@ -796,11 +796,11 @@
                 globalParsedData.forEach(item => {
                     const photoBtn = item.meterPhoto ? `<div class="receipt-link-btn" onclick="openImageModal('${item.meterPhoto}', '${item.meterDate}', '${item.month} 電表照片憑證')">電表照片</div>` : "";
                     
-                    // 每月抄錄值（直接讀取並設定小數點後一位，絕不再除以 10）
-                    const recInBig   = item.recordMeters["內大"] !== "--" ? parseFloat(item.recordMeters["內大"]).toFixed(1) : "--";
-                    const recInSmall = item.recordMeters["內小"] !== "--" ? parseFloat(item.recordMeters["內小"]).toFixed(1) : "--";
-                    const recMid     = item.recordMeters["中"]   !== "--" ? parseFloat(item.recordMeters["長"] || item.recordMeters["中"]).toFixed(1) : "--";
-                    const recOut     = item.recordMeters["外"]   !== "--" ? parseFloat(item.recordMeters["外"]).toFixed(1) : "--";
+                    // 🎯 正確換算：每月所有成員抄錄值全部「除以 10」來符合機械電表小數點，並強制留下一位小數
+                    const recInBig   = item.recordMeters["內大"] !== "--" ? (parseFloat(item.recordMeters["內大"]) / 10).toFixed(1) : "--";
+                    const recInSmall = item.recordMeters["內小"] !== "--" ? (parseFloat(item.recordMeters["內小"]) / 10).toFixed(1) : "--";
+                    const recMid     = item.recordMeters["中"]   !== "--" ? (parseFloat(item.recordMeters["中"]) / 10).toFixed(1) : "--";
+                    const recOut     = item.recordMeters["外"]   !== "--" ? (parseFloat(item.recordMeters["外"]) / 10).toFixed(1) : "--";
 
                     // 排列順序完全與電表照片一致：外 -> 中 -> 內大 -> 內小
                     htmlContent += `
@@ -824,7 +824,7 @@
                                 <div style="display: flex; align-items: center; gap: 12px;">
                                     <span style="font-size: 13px; color: #8a929a; font-family: monospace; text-align: right; min-width: 60px;">${recMid}</span>
                                     <div style="width: 1px; height: 14px; background: #cbd1d6;"></div>
-                                    <span style="font-size: 14px; font-weight: 700; color: #527996; min-width: 75px; text-align: right;">${item.deltaMeters["中"]} 度</span>
+                                    <span style="font-size: 14px; font-weight: 700; color: #527996; min-width: 75px; text-align: right;">${item.deltaMeters["長"] || item.deltaMeters["中"]} 度</span>
                                 </div>
                             </div>
 
