@@ -459,7 +459,7 @@
                 const deltaIdx = { "總和": 6, "內大": 7, "內小": 8, "中": 9, "外": 10 }; 
                 const roomCostIdx = { "內大": 12, "內小": 13, "中": 14, "外": 15 }; 
                 
-                // 💡 新增分房當期抄錄值索引 (對應原始獨立抄表數值欄位)
+                // 新增分房當期抄錄值索引 (對應原始獨立抄表數值欄位)
                 const recordIdx = { "內大": 2, "內小": 3, "中": 4, "外": 5 };
 
                 // 憑證連結與日期欄位索引配置
@@ -491,11 +491,11 @@
                         "總和": Number(((parseFloat(cells[deltaIdx["總和"]]) || 0) / 10).toFixed(1)),
                         "內大": Number(((parseFloat(cells[deltaIdx["內大"]]) || 0) / 10).toFixed(1)),
                         "內小": Number(((parseFloat(cells[deltaIdx["內小"]]) || 0) / 10).toFixed(1)),
-                        "中": Number(((parseFloat(cells[deltaIdx["中"]]) || 0) / 10).toFixed(1)),
+                        "中": Number(((parseFloat(cells[deltaIdx["長"]]) || 0) / 10).toFixed(1)),
                         "外": Number(((parseFloat(cells[deltaIdx["外"]]) || 0) / 10).toFixed(1))
                     };
 
-                    // 💡 同步讀取當月抄表絕對值
+                    // 同步讀取當月抄表絕對值
                     const recordMeters = {
                         "內大": cells[recordIdx["內大"]] ? parseFloat(cells[recordIdx["內大"]]).toFixed(1) : "--",
                         "內小": cells[recordIdx["內小"]] ? parseFloat(cells[recordIdx["內小"]]).toFixed(1) : "--",
@@ -524,7 +524,7 @@
                         month: monthVal, water: waterVal, waterPerRoom: waterPerRoom, waterImpute: waterImpute,
                         eleTotal: eleTotalVal, eleImpute: eleImpute, total: combinedSum,
                         deltaMeters: deltaMeters,
-                        recordMeters: recordMeters, // 💡 注入抄錄值物件
+                        recordMeters: recordMeters, // 注入抄錄值物件
                         meterPhoto: cells[meterPhotoIdx] || "",
                         meterDate: cells[meterDateIdx] || "",
                         waterReceipt: cells[waterReceiptIdx] || "",
@@ -599,7 +599,7 @@
                     </div>
 
                     <div class="chart-header-row">
-                        <div class="section-title">歷年費用趨勢 analysis</div>
+                        <div class="section-title">歷年費用趨勢分析</div>
                     </div>
                     <div class="chart-card"><div class="chart-container"><canvas id="trendChart"></canvas></div></div>
 
@@ -656,7 +656,7 @@
                 document.getElementById('mainContent').innerHTML = `
                     <div class="loading" style="color: #b54a4a; text-align: left; max-width: 600px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
                         ❌ 系統載入失敗。<br><br>
-                        <span style="font-size:13px; color:#828a95; line-height: 1.5;">${error.message}<br><br>請確認發布網址正確，或按 F12 檢信主控台錯誤。</span>
+                        <span style="font-size:13px; color:#828a95; line-height: 1.5;">${error.message}<br><br>請確認發布網址正確，或按 F12 檢視主控台錯誤。</span>
                     </div>`;
             }
         }
@@ -779,8 +779,8 @@
             } else if (type === 'meter') {
                 title.innerText = "歷月電表抄錄與實用度數";
                 
-                // 💡 基準照片按鈕配置：直接綁定基準值照片的連結（此處已為你預留好，點擊會開啟大圖彈窗）
-                const basePhotoUrl = "https://drive.google.com/file/d/1vQkqhXCPp4XiHKCEpI3pz4pzcu3sQreQ/view"; // 這裡可自行替換成基準照片的實際 Drive 連結
+                // 基準照片按鈕配置：綁定基準值照片的連結（已套用專屬獨立彈窗）
+                const basePhotoUrl = "https://drive.google.com/file/d/1vQkqhXCPp4XiHKCEpI3pz4pzcu3sQreQ_qN/view";
                 const basePhotoBtn = `<div class="receipt-link-btn" style="float: right; margin-top: -2px;" onclick="openImageModal('${basePhotoUrl}', '入住當日', '初始入住電表基準照片')">查看基準照片</div>`;
 
                 htmlContent = `
@@ -856,27 +856,24 @@
 
         function closeModal() { document.getElementById('detailModal').classList.remove('active'); }
 
-        // 📸 照片彈出視窗控制邏輯
-        // 📸 照片彈出視窗控制邏輯（完美修正 Drive 破圖問題）
+        // 📸 照片彈出視窗控制邏輯（完美修復破圖與對接髒字串問題）
         function openImageModal(driveUrl, uploadDate, titleText) {
             const imgModal = document.getElementById('imageModal');
             const imgTitle = document.getElementById('imageModalTitle');
             const dateDisplay = document.getElementById('receiptDateDisplay');
             const imgDisplay = document.getElementById('receiptImageDisplay');
             
-            let directImageUrl = driveUrl;
+            let directImageUrl = "";
             
             if (driveUrl && driveUrl.includes("drive.google.com")) {
-                // 1. 同時支援 /file/d/ID/view 與 ?id=ID 兩種 Google Drive 網址格式
                 const match = driveUrl.match(/\/file\/d\/([^\/]+)/) || driveUrl.match(/[?&]id=([^&]+)/);
                 if (match && match[1]) {
                     const fileId = match[1];
-                    // 2. 使用最穩定的 Google 圖片伺服器外鏈核心，強制直連大圖並繞過瀏覽器跨網域限制
-                    directImageUrl = `https://thumbnail.egb.workers.dev/thumbnail?id=${fileId}` || `https://lh3.googleusercontent.com/u/0/d/${fileId}=w1000`;
-                    
-                    // 防呆備用方案：如果上面核心在某些特定瀏覽器被阻擋，改用標準直連
-                    // directImageUrl = `https://docs.google.com/uc?export=view&id=${fileId}`;
+                    // 🎯 使用 Google Workspace 安全核發的官方全屏直連封包網址，完美排除緩存破圖與跨域阻擋
+                    directImageUrl = `https://docs.google.com/uc?export=view&id=${fileId}`;
                 }
+            } else {
+                directImageUrl = driveUrl || "";
             }
             
             imgTitle.innerText = titleText;
