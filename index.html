@@ -893,7 +893,10 @@
 
         function closeImageModal() {
             document.getElementById('imageModal').classList.remove('active');
-            document.getElementById('receiptImageDisplay').src = ""; 
+            const imgDisplay = document.getElementById('receiptImageDisplay');
+            
+            imgDisplay.onerror = null; // 💡 關鍵修正：關閉時先移除錯誤偵測，防止瀏覽器誤判
+            imgDisplay.src = ""; 
         }
 
         updateTimestamp();
