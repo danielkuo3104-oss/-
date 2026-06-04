@@ -783,23 +783,23 @@
                 title.innerText = "歷月電表抄錄與實用度數";
                 
                 // 基準照片按鈕配置
-                const basePhotoBtn = globalBasePhotoUrl ? `<div class="receipt-link-btn" style="float: right; margin-top: -2px;" onclick="openImageModal('${globalBasePhotoUrl}', '入住當日', '初始入住電表基準照片')">查看基準照片</div>` : "";
+                const basePhotoBtn = globalBasePhotoUrl ? `<div class="receipt-link-btn" onclick="openImageModal('${globalBasePhotoUrl}', '入住當日', '初始入住電表基準照片')">查看基準照片</div>` : "";
 
-                // 基準值與資料庫內的一致（748.0, 366.5, 633.7, 401.0），順序調整為：外、中、內大、內小
+                // 修正：文字基準值精確對接試算表與照片數值，順序為：外、中、內大、內小，拔除所有表符
                 htmlContent = `
                     <div style="background:#eef2f5; padding:14px; border-radius:12px; font-size:12px; color:#54606e; margin-bottom:15px; line-height:1.6; border: 1px solid #dbe2e8;">
-                        ${basePhotoBtn}
+                        <div style="float: right; margin-top: -2px;">${basePhotoBtn}</div>
                         初始入住電表基準值：<br>
-                        外: 748.0 | 中: 366.5 | 內大: 633.7 | 內小: 401.0
+                        外: 7479.9 | 中: 3664.6 | 內大: 6337.0 | 內小: 4010.4
                     </div>`;
                     
                 globalParsedData.forEach(item => {
                     const photoBtn = item.meterPhoto ? `<div class="receipt-link-btn" onclick="openImageModal('${item.meterPhoto}', '${item.meterDate}', '${item.month} 電表照片憑證')">電表照片</div>` : "";
                     
-                    // 修正：資料架構中數值已是正確小數，直接讀取並設定小數點後一位，絕不再除以 10
+                    // 每月抄錄值（直接讀取並設定小數點後一位，絕不再除以 10）
                     const recInBig   = item.recordMeters["內大"] !== "--" ? parseFloat(item.recordMeters["內大"]).toFixed(1) : "--";
                     const recInSmall = item.recordMeters["內小"] !== "--" ? parseFloat(item.recordMeters["內小"]).toFixed(1) : "--";
-                    const recMid     = item.recordMeters["中"]   !== "--" ? parseFloat(item.recordMeters["中"]).toFixed(1) : "--";
+                    const recMid     = item.recordMeters["中"]   !== "--" ? parseFloat(item.recordMeters["長"] || item.recordMeters["中"]).toFixed(1) : "--";
                     const recOut     = item.recordMeters["外"]   !== "--" ? parseFloat(item.recordMeters["外"]).toFixed(1) : "--";
 
                     // 排列順序完全與電表照片一致：外 -> 中 -> 內大 -> 內小
