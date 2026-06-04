@@ -140,7 +140,7 @@
         .close-btn { width:100%; background:#69779b; color:white; border:none; padding:13px; border-radius:12px; font-size:14px; font-weight:600; cursor:pointer; margin-top:15px; transition:background 0.2s; }
         .close-btn:hover { background:#586585; }
 
-        /* 彈出視窗精緻憑證按鈕風格 */
+        /* 🎨 統一查看憑證與照片按鈕：全體維持原版藍色調 */
         .receipt-link-btn {
             display: inline-block;
             font-size: 11px;
@@ -156,15 +156,6 @@
         .receipt-link-btn:hover {
             background: #dbecf7;
             color: #3b5a70;
-        }
-        .receipt-link-btn.orange-btn {
-            color: #d97736;
-            background: #fdf6f0;
-            border: 1px solid #f7e4d7;
-        }
-        .receipt-link-btn.orange-btn:hover {
-            background: #fcece0;
-            color: #b55a21;
         }
         .receipt-group-box {
             display: flex; gap: 6px;
@@ -291,7 +282,7 @@
     <div class="modal-overlay" id="imageModal" onclick="closeImageModal()" style="z-index: 1100;">
         <div class="modal-box image-modal-box" onclick="event.stopPropagation()">
             <div class="modal-title" id="imageModalTitle">檢視憑證照片</div>
-            <div class="receipt-date-tag" id="receiptDateDisplay">加入日期：--/--</div>
+            <div class="receipt-date-tag" id="receiptDateDisplay">上傳日期：--/--</div>
             <div class="receipt-img-container">
                 <img id="receiptImageDisplay" src="" alt="憑證照片載入中...">
             </div>
@@ -464,7 +455,7 @@
                 const deltaIdx = { "總和": 6, "內大": 7, "內小": 8, "中": 9, "外": 10 }; 
                 const roomCostIdx = { "內大": 12, "內小": 13, "中": 14, "外": 15 }; 
                 
-                // 憑證連結與日期索引配置
+                // 憑證連結與日期欄位索引配置
                 const meterPhotoIdx = 28;  // AC 欄
                 const meterDateIdx = 29;   // AD 欄
                 const waterReceiptIdx = 30;// AE 欄
@@ -592,7 +583,7 @@
                     </div>
 
                     <div class="chart-header-row">
-                        <div class="section-title">歷年費用趨勢分析</div>
+                        <div class="section-title">歷年費用趨勢 analysis</div>
                     </div>
                     <div class="chart-card"><div class="chart-container"><canvas id="trendChart"></canvas></div></div>
 
@@ -649,7 +640,7 @@
                 document.getElementById('mainContent').innerHTML = `
                     <div class="loading" style="color: #b54a4a; text-align: left; max-width: 600px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
                         ❌ 系統載入失敗。<br><br>
-                        <span style="font-size:13px; color:#828a95; line-height: 1.5;">${error.message}<br><br>請確認發布網址正確，或按 F12 檢視主控台錯誤。</span>
+                        <span style="font-size:13px; color:#828a95; line-height: 1.5;">${error.message}<br><br>請確認發布網址正確，或按 F12 檢信主控台錯誤。</span>
                     </div>`;
             }
         }
@@ -675,7 +666,8 @@
 
             if (type === 'currentEle') {
                 title.innerText = `${eleItem.month} 電費分房明細`;
-                const receiptBtn = eleItem.eleReceipt ? `<div class="receipt-link-btn orange-btn" onclick="openImageModal('${eleItem.eleReceipt}', '${eleItem.eleDate}', '${eleItem.month} 電費憑證')">查看憑證</div>` : "";
+                // 按鈕統一採用標準莫蘭迪藍色調外觀 (移除 orange-btn)
+                const receiptBtn = eleItem.eleReceipt ? `<div class="receipt-link-btn" onclick="openImageModal('${eleItem.eleReceipt}', '${eleItem.eleDate}', '${eleItem.month} 電費憑證')">查看憑證</div>` : "";
                 
                 htmlContent = `
                     <div class="modal-item-block">
@@ -722,7 +714,7 @@
                 title.innerText = "歷月電費總額紀錄";
                 globalParsedData.forEach(item => {
                     if(item.eleTotal > 0) {
-                        const receiptBtn = item.eleReceipt ? `<div class="receipt-link-btn orange-btn" onclick="openImageModal('${item.eleReceipt}', '${item.eleDate}', '${item.month} 電費憑證')">查看憑證</div>` : "";
+                        const receiptBtn = item.eleReceipt ? `<div class="receipt-link-btn" onclick="openImageModal('${item.eleReceipt}', '${item.eleDate}', '${item.month} 電費憑證')">查看憑證</div>` : "";
                         htmlContent += `
                             <div class="modal-item-block" style="border-bottom: 1px dashed #eaecef; padding-bottom: 10px;">
                                 <div class="modal-month-title">
@@ -755,7 +747,7 @@
                 globalParsedData.forEach(item => {
                     let receiptGroup = `<div class="receipt-group-box">`;
                     if (item.waterReceipt) receiptGroup += `<div class="receipt-link-btn" onclick="openImageModal('${item.waterReceipt}', '${item.waterDate}', '${item.month} 水費憑證')">水費憑證</div>`;
-                    if (item.eleReceipt) receiptGroup += `<div class="receipt-link-btn orange-btn" onclick="openImageModal('${item.eleReceipt}', '${item.eleDate}', '${item.month} 電費憑證')">電費憑證</div>`;
+                    if (item.eleReceipt) receiptGroup += `<div class="receipt-link-btn" onclick="openImageModal('${item.eleReceipt}', '${item.eleDate}', '${item.month} 電費憑證')">電費憑證</div>`;
                     receiptGroup += `</div>`;
 
                     htmlContent += `
@@ -777,7 +769,8 @@
                         內大: 633.7 | 內小: 401.0 | 中: 366.5 | 外: 748.0
                     </div>`;
                 globalParsedData.forEach(item => {
-                    const photoBtn = item.meterPhoto ? `<div class="receipt-link-btn" style="color:#626973; background:#f0f2f5; border-color:#cbd1d6;" onclick="openImageModal('${item.meterPhoto}', '${item.meterDate}', '${item.month} 電表照片憑證')">電表照片</div>` : "";
+                    // 電表照片按鈕：樣式完全切換為標準莫蘭迪藍色調 (receipt-link-btn)
+                    const photoBtn = item.meterPhoto ? `<div class="receipt-link-btn" onclick="openImageModal('${item.meterPhoto}', '${item.meterDate}', '${item.month} 電表照片憑證')">電表照片</div>` : "";
                     htmlContent += `
                         <div class="modal-item-block" style="background:#f8fafc; padding:12px; border-radius:12px; margin-bottom:10px; border: 1px solid #eef2f5;">
                             <div class="modal-month-title" style="color:#54606e; border-left-color:#7e8794;">
@@ -806,13 +799,11 @@
             const dateDisplay = document.getElementById('receiptDateDisplay');
             const imgDisplay = document.getElementById('receiptImageDisplay');
             
-            // 轉換 Google Drive 預覽網址為直接圖片路徑
             let directImageUrl = driveUrl;
             if (driveUrl.includes("drive.google.com")) {
-                // 擷取網址中的 file ID
                 const match = driveUrl.match(/\/file\/d\/([^\/]+)/) || driveUrl.match(/id=([^&]+)/);
                 if (match && match[1]) {
-                    directImageUrl = `https://lh3.googleusercontent.com/d/${match[1]}=w1000?authuser=0`;
+                    directImageUrl = `https://lh3.googleusercontent.com/d/${match[1]}=w1000`;
                 }
             }
             
@@ -825,7 +816,7 @@
 
         function closeImageModal() {
             document.getElementById('imageModal').classList.remove('active');
-            document.getElementById('receiptImageDisplay').src = ""; // 關閉時清空，避免下次開啟閃爍舊圖
+            document.getElementById('receiptImageDisplay').src = ""; 
         }
 
         updateTimestamp();
