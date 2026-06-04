@@ -150,7 +150,7 @@
             border: 1px solid #cedde7;
             padding: 3px 10px;
             border-radius: 6px;
-            text-decoration: none;
+            cursor: pointer;
             transition: all 0.2s;
         }
         .receipt-link-btn:hover {
@@ -168,6 +168,42 @@
         }
         .receipt-group-box {
             display: flex; gap: 6px;
+        }
+
+        /* 📸 照片憑證展示專用彈出視窗樣式 */
+        .image-modal-box {
+            max-width: 460px;
+            text-align: center;
+            padding: 24px;
+        }
+        .receipt-img-container {
+            width: 100%;
+            background: #f8fafc;
+            border-radius: 12px;
+            border: 1px solid #eaecef;
+            margin: 14px 0;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 200px;
+        }
+        .receipt-img-container img {
+            width: 100%;
+            height: auto;
+            max-height: 50vh;
+            object-fit: contain;
+            display: block;
+        }
+        .receipt-date-tag {
+            font-size: 13px;
+            color: #7a828a;
+            background: #f1f3f5;
+            padding: 6px 14px;
+            border-radius: 30px;
+            display: inline-block;
+            margin-bottom: 10px;
+            font-weight: 500;
         }
 
         /* 彈出視窗精緻表格 */
@@ -249,6 +285,17 @@
             <div class="modal-title" id="modalTitle">明細摘要</div>
             <div id="modalBody"></div>
             <button class="close-btn" onclick="closeModal()">關閉明細</button>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="imageModal" onclick="closeImageModal()" style="z-index: 1100;">
+        <div class="modal-box image-modal-box" onclick="event.stopPropagation()">
+            <div class="modal-title" id="imageModalTitle">檢視憑證照片</div>
+            <div class="receipt-date-tag" id="receiptDateDisplay">加入日期：--/--</div>
+            <div class="receipt-img-container">
+                <img id="receiptImageDisplay" src="" alt="憑證照片載入中...">
+            </div>
+            <button class="close-btn" onclick="closeImageModal()" style="background:#7a828a;">關閉照片</button>
         </div>
     </div>
 
@@ -417,10 +464,13 @@
                 const deltaIdx = { "總和": 6, "內大": 7, "內小": 8, "中": 9, "外": 10 }; 
                 const roomCostIdx = { "內大": 12, "內小": 13, "中": 14, "外": 15 }; 
                 
-                // 憑證連結對應索引 (AC 欄: 28, AE 欄: 30, AG 欄: 32)
-                const meterPhotoIdx = 28;
-                const waterReceiptIdx = 30;
-                const eleReceiptIdx = 32;
+                // 憑證連結與日期索引配置
+                const meterPhotoIdx = 28;  // AC 欄
+                const meterDateIdx = 29;   // AD 欄
+                const waterReceiptIdx = 30;// AE 欄
+                const waterDateIdx = 31;   // AF 欄
+                const eleReceiptIdx = 32;  // AG 欄
+                const eleDateIdx = 33;     // AH 欄
 
                 let totalWater = 0; let totalElectricity = 0; let historyTotal = 0;
                 const labels = []; const waterChartData = []; const eleChartData = [];
@@ -464,16 +514,16 @@
                                     
                     const eleImpute = Math.max(0, Math.floor(eleTotalVal - roomSum));
 
-                    // 讀取網址並處理空字串
-                    const meterPhoto = cells[meterPhotoIdx] || "";
-                    const waterReceipt = cells[waterReceiptIdx] || "";
-                    const eleReceipt = cells[eleReceiptIdx] || "";
-
                     globalParsedData.push({
                         month: monthVal, water: waterVal, waterPerRoom: waterPerRoom, waterImpute: waterImpute,
                         eleTotal: eleTotalVal, eleImpute: eleImpute, total: combinedSum,
                         deltaMeters: deltaMeters,
-                        meterPhoto: meterPhoto, waterReceipt: waterReceipt, eleReceipt: eleReceipt,
+                        meterPhoto: cells[meterPhotoIdx] || "",
+                        meterDate: cells[meterDateIdx] || "",
+                        waterReceipt: cells[waterReceiptIdx] || "",
+                        waterDate: cells[waterDateIdx] || "",
+                        eleReceipt: cells[eleReceiptIdx] || "",
+                        eleDate: cells[eleDateIdx] || "",
                         rooms: { 
                             "內大": parseFloat(cells[roomCostIdx["內大"]]) || 0, 
                             "內小": parseFloat(cells[roomCostIdx["內小"]]) || 0, 
@@ -625,8 +675,7 @@
 
             if (type === 'currentEle') {
                 title.innerText = `${eleItem.month} 電費分房明細`;
-                // 檢查有無憑證
-                const receiptBtn = eleItem.eleReceipt ? `<a href="${eleItem.eleReceipt}" target="_blank" class="receipt-link-btn orange-btn">查看憑證</a>` : "";
+                const receiptBtn = eleItem.eleReceipt ? `<div class="receipt-link-btn orange-btn" onclick="openImageModal('${eleItem.eleReceipt}', '${eleItem.eleDate}', '${eleItem.month} 電費憑證')">查看憑證</div>` : "";
                 
                 htmlContent = `
                     <div class="modal-item-block">
@@ -648,7 +697,7 @@
                     </div>`;
             } else if (type === 'currentWater') {
                 title.innerText = `${waterItem.month} 水費明細摘要`;
-                const receiptBtn = waterItem.waterReceipt ? `<a href="${waterItem.waterReceipt}" target="_blank" class="receipt-link-btn">查看憑證</a>` : "";
+                const receiptBtn = waterItem.waterReceipt ? `<div class="receipt-link-btn" onclick="openImageModal('${waterItem.waterReceipt}', '${waterItem.waterDate}', '${waterItem.month} 水費憑證')">查看憑證</div>` : "";
                 
                 htmlContent = `
                     <div class="modal-item-block">
@@ -673,7 +722,7 @@
                 title.innerText = "歷月電費總額紀錄";
                 globalParsedData.forEach(item => {
                     if(item.eleTotal > 0) {
-                        const receiptBtn = item.eleReceipt ? `<a href="${item.eleReceipt}" target="_blank" class="receipt-link-btn orange-btn">查看憑證</a>` : "";
+                        const receiptBtn = item.eleReceipt ? `<div class="receipt-link-btn orange-btn" onclick="openImageModal('${item.eleReceipt}', '${item.eleDate}', '${item.month} 電費憑證')">查看憑證</div>` : "";
                         htmlContent += `
                             <div class="modal-item-block" style="border-bottom: 1px dashed #eaecef; padding-bottom: 10px;">
                                 <div class="modal-month-title">
@@ -689,7 +738,7 @@
                 title.innerText = "歷月水費明細紀錄";
                 globalParsedData.forEach(item => {
                     if(item.water > 0) {
-                        const receiptBtn = item.waterReceipt ? `<a href="${item.waterReceipt}" target="_blank" class="receipt-link-btn">查看憑證</a>` : "";
+                        const receiptBtn = item.waterReceipt ? `<div class="receipt-link-btn" onclick="openImageModal('${item.waterReceipt}', '${item.waterDate}', '${item.month} 水費憑證')">查看憑證</div>` : "";
                         htmlContent += `
                             <div class="modal-item-block" style="border-bottom: 1px dashed #eaecef; padding-bottom: 10px;">
                                 <div class="modal-month-title">
@@ -704,10 +753,9 @@
             } else if (type === 'historySummary') {
                 title.innerText = "歷史水電帳單紀錄明細";
                 globalParsedData.forEach(item => {
-                    // 彙整總表內可能同時存在水費與電費憑證
                     let receiptGroup = `<div class="receipt-group-box">`;
-                    if (item.waterReceipt) receiptGroup += `<a href="${item.waterReceipt}" target="_blank" class="receipt-link-btn">水費憑證</a>`;
-                    if (item.eleReceipt) receiptGroup += `<a href="${item.eleReceipt}" target="_blank" class="receipt-link-btn orange-btn">電費憑證</a>`;
+                    if (item.waterReceipt) receiptGroup += `<div class="receipt-link-btn" onclick="openImageModal('${item.waterReceipt}', '${item.waterDate}', '${item.month} 水費憑證')">水費憑證</div>`;
+                    if (item.eleReceipt) receiptGroup += `<div class="receipt-link-btn orange-btn" onclick="openImageModal('${item.eleReceipt}', '${item.eleDate}', '${item.month} 電費憑證')">電費憑證</div>`;
                     receiptGroup += `</div>`;
 
                     htmlContent += `
@@ -729,7 +777,7 @@
                         內大: 633.7 | 內小: 401.0 | 中: 366.5 | 外: 748.0
                     </div>`;
                 globalParsedData.forEach(item => {
-                    const photoBtn = item.meterPhoto ? `<a href="${item.meterPhoto}" target="_blank" class="receipt-link-btn" style="color:#626973; background:#f0f2f5; border-color:#cbd1d6;">電表照片</a>` : "";
+                    const photoBtn = item.meterPhoto ? `<div class="receipt-link-btn" style="color:#626973; background:#f0f2f5; border-color:#cbd1d6;" onclick="openImageModal('${item.meterPhoto}', '${item.meterDate}', '${item.month} 電表照片憑證')">電表照片</div>` : "";
                     htmlContent += `
                         <div class="modal-item-block" style="background:#f8fafc; padding:12px; border-radius:12px; margin-bottom:10px; border: 1px solid #eef2f5;">
                             <div class="modal-month-title" style="color:#54606e; border-left-color:#7e8794;">
@@ -750,6 +798,35 @@
         }
 
         function closeModal() { document.getElementById('detailModal').classList.remove('active'); }
+
+        // 📸 照片彈出視窗控制邏輯
+        function openImageModal(driveUrl, uploadDate, titleText) {
+            const imgModal = document.getElementById('imageModal');
+            const imgTitle = document.getElementById('imageModalTitle');
+            const dateDisplay = document.getElementById('receiptDateDisplay');
+            const imgDisplay = document.getElementById('receiptImageDisplay');
+            
+            // 轉換 Google Drive 預覽網址為直接圖片路徑
+            let directImageUrl = driveUrl;
+            if (driveUrl.includes("drive.google.com")) {
+                // 擷取網址中的 file ID
+                const match = driveUrl.match(/\/file\/d\/([^\/]+)/) || driveUrl.match(/id=([^&]+)/);
+                if (match && match[1]) {
+                    directImageUrl = `https://lh3.googleusercontent.com/d/${match[1]}=w1000?authuser=0`;
+                }
+            }
+            
+            imgTitle.innerText = titleText;
+            dateDisplay.innerText = `上傳/抄錄日期：${uploadDate || "未記錄"}`;
+            imgDisplay.src = directImageUrl;
+            
+            imgModal.classList.add('active');
+        }
+
+        function closeImageModal() {
+            document.getElementById('imageModal').classList.remove('active');
+            document.getElementById('receiptImageDisplay').src = ""; // 關閉時清空，避免下次開啟閃爍舊圖
+        }
 
         updateTimestamp();
         loadAnnouncements();
