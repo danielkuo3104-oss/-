@@ -857,23 +857,22 @@
         function closeModal() { document.getElementById('detailModal').classList.remove('active'); }
 
         // 📸 照片彈出視窗控制邏輯（完美修復破圖與對接髒字串問題）
+        // 📸 照片彈出視窗控制邏輯（完美修復版）
         function openImageModal(driveUrl, uploadDate, titleText) {
             const imgModal = document.getElementById('imageModal');
             const imgTitle = document.getElementById('imageModalTitle');
             const dateDisplay = document.getElementById('receiptDateDisplay');
             const imgDisplay = document.getElementById('receiptImageDisplay');
             
-            let directImageUrl = "";
+            let directImageUrl = driveUrl;
             
             if (driveUrl && driveUrl.includes("drive.google.com")) {
                 const match = driveUrl.match(/\/file\/d\/([^\/]+)/) || driveUrl.match(/[?&]id=([^&]+)/);
                 if (match && match[1]) {
                     const fileId = match[1];
-                    // 🎯 使用 Google Workspace 安全核發的官方全屏直連封包網址，完美排除緩存破圖與跨域阻擋
+                    // 🎯 使用最純淨、無第三方流量限制的 Google 官方直連網址
                     directImageUrl = `https://docs.google.com/uc?export=view&id=${fileId}`;
                 }
-            } else {
-                directImageUrl = driveUrl || "";
             }
             
             imgTitle.innerText = titleText;
