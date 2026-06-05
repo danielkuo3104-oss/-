@@ -149,18 +149,20 @@
                 globalAnnouncements = []; 
 
                 for (let i = 1; i < lines.length; i++) {
+                    // 💡 終極修正：使用 Regex 安全拆解 CSV 欄位，自動忽略公告內容「雙引號內」的所有逗號
                     const cells = lines[i].match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || lines[i].split(",");
                     const cleanCells = cells.map(c => c.replace(/^["']|["']$/g, '').trim());
                     
-                    const content = cleanCells[0];       
-                    const summary = cleanCells[1] || ""; 
-                    const level   = cleanCells[2] || "普通"; 
-                    const dueDate = cleanCells[3] || "無特定期限"; 
-                    const author  = cleanCells[4] || "管理員";     
+                    const content = cleanCells[0];       // A 欄：公告內容
+                    const summary = cleanCells[1] || ""; // B 欄：摘要
+                    const level   = cleanCells[2] || "普通"; // C 欄：級別
+                    const dueDate = cleanCells[3] || "無特定期限"; // D 欄：到期日
+                    const author  = cleanCells[4] || "管理員";     // E 欄：公告人
 
                     if (content && !content.includes("<!DOCTYPE")) {
                         globalAnnouncements.push({ content, summary, level, dueDate, author });
                         const idx = globalAnnouncements.length - 1;
+
                         const cardDisplayText = summary || content;
 
                         html += `
