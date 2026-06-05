@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>宿舍智慧管理系統 - 系統公告欄</title>
+    <style>
+        body {
+            font-family: 'PingFang TC', 'SF Pro Display', 'Microsoft JhengHei', sans-serif;
+            background: linear-gradient(135deg, #f4f5f7 0%, #eaecef 100%);
+            margin: 0; padding: 0; min-height: 100vh; color: #4a515a;
+        }
+        .header-banner {
+            background: linear-gradient(135deg, #7a828a 0%, #9099a1 100%);
+            color: white; padding: 40px 24px; text-align: left;
+            box-shadow: 0 4px 20px rgba(122, 130, 138, 0.15);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .header-container h1 { margin: 0; font-size: 24px; font-weight: 700; letter-spacing: 1.5px; }
+        .header-container p { margin: 8px 0 0 0; opacity: 0.85; font-size: 13px; }
+        
+        .back-home-btn {
+            background: rgba(255, 255, 255, 0.2); color: white; border: 1px solid rgba(255, 255, 255, 0.4);
+            padding: 10px 18px; border-radius: 12px; font-size: 13px; font-weight: 600;
+            cursor: pointer; text-decoration: none; transition: all 0.2s; backdrop-filter: blur(4px);
+        }
+        .back-home-btn:hover { background: #ffffff; color: #69779b; border-color: #ffffff; }
+
+        .main-container { max-width: 800px; margin: 40px auto; padding: 0 20px; box-sizing: border-box; }
+        .loading { padding: 40px 0; text-align: center; font-size: 14px; color: #8a929a; }
+        
+        /* 公告卡片清單樣式 */
+        .announce-list-container { display: flex; flex-direction: column; gap: 16px; }
+        .announce-card {
+            background: #ffffff; border-radius: 16px; padding: 20px;
+            box-shadow: 0 6px 15px rgba(140, 149, 159, 0.06); border: 1px solid #e1e4e8;
+            cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .announce-card:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(140, 149, 159, 0.12); }
+        .announce-left { display: flex; align-items: center; flex: 1; overflow: hidden; }
+        .announce-text { font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 15px; }
+        .announce-date { font-size: 12px; color: #9ba3ab; min-width: 85px; text-align: right; font-family: monospace; }
+
+        .badge { padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; margin-right: 12px; flex-shrink: 0; }
+        .badge.緊急 { background: #d96b6b; color: white; }
+        .badge.重要 { background: #d9886b; color: white; }
+        .badge.普通 { background: #cbd1d6; color: #5a6168; }
+        .text-緊急 { color: #b54a4a; }
+        .text-重要 { color: #b56a4a; }
+        .text-普通 { color: #5a6168; }
+
+        /* 彈出視窗細緻樣式 */
+        .modal-overlay { position: fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.4); display:none; justify-content:center; align-items:center; z-index:1000; backdrop-filter: blur(4px); }
+        .modal-overlay.active { display:flex; }
+        .modal-box { background:#ffffff; width:90%; max-width:520px; border-radius:24px; padding:28px; box-shadow:0 12px 30px rgba(0,0,0,0.15); max-height:80vh; overflow-y:auto; }
+        .modal-title { font-size:18px; font-weight:700; color:#4a515a; margin-bottom:20px; border-bottom:1px solid #eaecef; padding-bottom:12px; text-align:center; }
+        .modal-item-block { margin-bottom:20px; position: relative; }
+        .modal-month-title { font-size:14px; font-weight:600; color:#69779b; margin-bottom:12px; border-left: 3px solid #69779b; padding-left: 8px; display: flex; justify-content: space-between; align-items: center; }
+        .detail-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 8px; color: #5a6168; }
+        .detail-table th, .detail-table td { padding: 10px 12px; border-bottom: 1px solid #f0f2f5; text-align: left; }
+        .detail-table th { background: #f8fafc; color: #8a929a; font-weight: 600; }
+        .close-btn { width:100%; background:#69779b; color:white; border:none; padding:13px; border-radius:12px; font-size:14px; font-weight:600; cursor:pointer; margin-top:15px; transition:background 0.2s; }
+        .close-btn:hover { background:#586585; }
+
+        @media (max-width: 600px) {
+            .header-banner { flex-direction: column; align-items: flex-start; gap: 16px; padding: 30px 20px; }
+            .back-home-btn { width: 100%; text-align: center; box-sizing: border-box; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header-banner">
+        <div class="header-container">
+            <h1>宿舍公告管理中心</h1>
+            <p>歷史與當前即時公告清單查閱</p>
+        </div>
+        <a href="index.html" class="back-home-btn">← 返回首頁儀表板</a>
+    </div>
+
+    <div class="main-container">
+        <div id="announceContent">
+            <div class="loading">正在連線資料庫，同步宿舍公告中...</div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="detailModal" onclick="closeModal()">
+        <div class="modal-box" onclick="event.stopPropagation()">
+            <div class="modal-title" id="modalTitle">公告詳細內容</div>
+            <div id="modalBody"></div>
+            <button class="close-btn" onclick="closeModal()">關閉公告</button>
+        </div>
+    </div>
+
+    <script>
+        const urlAnnounce = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQkqhXCPp4XiHKCEpI3pz4pzcu3sQreQ_qNRLger00ULCHFr9cTbXHMQqAfk7dLa_gUBAIBSJ5sZM4F/pub?gid=1058170538&single=true&output=csv"; 
+        let globalAnnouncements = [];
+
+        async function loadAnnouncementsPage() {
+            try {
+                const controller = new AbortController();
+                setTimeout(() => controller.abort(), 5000);
+                const response = await fetch(urlAnnounce, { signal: controller.signal });
+                const text = await response.text();
+                
+                if (text.includes("<!doctype html") || text.includes("<script")) {
+                    throw new Error("無法成功解析數據，請確認 Google 試算表權限已開放公開發布。");
+                }
+
+                const lines = text.replace(/\r/g, "").split("\n").map(l => l.trim()).filter(l => l);
+                if (lines.length < 2) {
+                    document.getElementById('announceContent').innerHTML = '<div class="loading">目前暫無任何宿舍公告。</div>';
+                    return;
+                }
+
+                let html = '<div class="announce-list-container">';
+                globalAnnouncements = []; 
+
+                for (let i = 1; i < lines.length; i++) {
+                    const cells = lines[i].split(",").map(c => c.replace(/["']/g, '').trim());
+                    const content = cells[0];
+                    const level = cells[1] || "普通";
+                    const dueDate = cells[2] || "無特定期限";
+                    const author = cells[3] || "管理員";
+
+                    if (content && !content.includes("<!DOCTYPE")) {
+                        globalAnnouncements.push({ content, level, dueDate, author });
+                        const idx = globalAnnouncements.length - 1;
+
+                        html += `
+                            <div class="announce-card" onclick="openAnnouncementDetail(${idx})">
+                                <div class="announce-left">
+                                    <span class="badge ${level}">${level}</span>
+                                    <span class="announce-text text-${level}">${content}</span>
+                                </div>
+                                <div class="announce-date">${dueDate.split(" ")[0]}</div>
+                            </div>`;
+                    }
+                }
+                html += '</div>';
+                document.getElementById('announceContent').innerHTML = html;
+
+            } catch (e) {
+                document.getElementById('announceContent').innerHTML = `
+                    <div class="loading" style="color: #b54a4a;">
+                        ❌ 公告加載失敗。<br><span style="font-size:12px; color:#8a929a;">原因：${e.message}</span>
+                    </div>`;
+            }
+        }
+
+        function openAnnouncementDetail(index) {
+            const item = globalAnnouncements[index];
+            if (!item) return;
+
+            const overlay = document.getElementById('detailModal');
+            const body = document.getElementById('modalBody');
+            const leftBorderColor = (item.level === '緊急') ? '#d96b6b' : ((item.level === '重要') ? '#d9886b' : '#69779b');
+
+            body.innerHTML = `
+                <div class="modal-item-block">
+                    <div class="modal-month-title" style="border-left-color: ${leftBorderColor};">
+                        <span>公告層級：<span class="badge ${item.level}">${item.level}</span></span>
+                    </div>
+                    <div style="padding: 18px; border-radius: 12px; margin: 14px 0; font-size: 14px; line-height: 1.6; word-break: break-all; white-space: pre-wrap; background: #f8fafc; border: 1px solid #eaecef; color: #4a515a;">
+                        ${item.content}
+                    </div>
+                    <table class="detail-table">
+                        <tbody>
+                            <tr><th style="width: 80px;">發布人員</th><td>${item.author}</td></tr>
+                            <tr><th>有效期限</th><td>至 ${item.dueDate} 止</td></tr>
+                        </tbody>
+                    </table>
+                </div>`;
+            overlay.classList.add('active');
+        }
+
+        function closeModal() { document.getElementById('detailModal').classList.remove('active'); }
+
+        // 頁面加載時執行
+        loadAnnouncementsPage();
+    </script>
+</body>
+</html>
