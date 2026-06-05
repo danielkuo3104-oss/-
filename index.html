@@ -345,7 +345,7 @@
             if (dutyCountdownTimer) clearInterval(dutyCountdownTimer);
         }
 
-        async function loadAnnouncementsPreview() {
+        async async function loadAnnouncementsPreview() {
             try {
                 const response = await fetchWithTimeout(urlAnnounce, { timeout: 4000 });
                 const text = await response.text();
@@ -359,14 +359,20 @@
 
                 for (let i = 1; i < lines.length; i++) {
                     const cells = lines[i].split(",").map(c => c.replace(/["']/g, '').trim());
-                    const content = cells[0];
-                    const level = cells[1] || "普通";
+                    
+                    // 依照對應的全新欄位架構：
+                    const content = cells[0];       // A 欄：公告內容
+                    const summary = cells[1] || ""; // B 欄：摘要
+                    const level = cells[2] || "普通"; // C 欄：級別
+
+                    // 如果沒有摘要，就用完整的公告內容代替，確保跑馬燈不留白
+                    const displayText = summary || content;
 
                     if (content && !content.includes("<!DOCTYPE")) {
                         validCount++;
                         html += `
                             <div class="announcement-item text-${level}">
-                                <span class="badge ${level}">${level}</span> ${content}
+                                <span class="badge ${level}">${level}</span> ${displayText}
                             </div>`;
                     }
                 }
