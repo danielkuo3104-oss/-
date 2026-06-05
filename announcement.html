@@ -194,11 +194,11 @@
             const body = document.getElementById('modalBody');
             const leftBorderColor = (item.level === '緊急') ? '#d96b6b' : ((item.level === '重要') ? '#d9886b' : '#69779b');
 
-            // 💡 核心進化：將內文用換行符切開，過濾掉每行前後的多餘隱形空格，並用獨立的 <p> 標籤包裝
-            let rawLines = item.content ? item.content.split('\n') : [];
-            let paragraphsHtml = rawLines
-                .map(line => `<p>${line.trim()}</p>`)
-                .join('');
+            // 💡 終極修正：直接使用原始 content，絕不做任何 split("度") 或 indexOf("度") 的危險文字切割
+            // 先過濾掉前後可能殘留的空白，接著直接用段落包裝
+            const originalContent = item.content ? item.content.trim() : "無公告內容";
+            
+            let paragraphsHtml = `<p>${originalContent}</p>`;
 
             body.innerHTML = `
                 <div class="modal-item-block">
