@@ -52,7 +52,14 @@
             0% { left: 100%; transform: translate3d(0,0,0); }
             100% { left: 0; transform: translate3d(-100%,0,0); }
         }
-        .announcement-item { display: inline-flex; align-items: center; margin-right: 50px; font-size: 13px; font-weight: 500; }
+        
+        /* 優化公告項目點擊手勢與 Hover 特效 */
+        .announcement-item { 
+            display: inline-flex; align-items: center; margin-right: 50px; 
+            font-size: 13px; font-weight: 500; cursor: pointer; transition: opacity 0.2s; 
+        }
+        .announcement-item:hover { opacity: 0.8; text-decoration: underline; }
+        
         .badge { padding: 3px 9px; border-radius: 6px; font-size: 11px; font-weight: 700; margin-right: 8px; }
         .badge.緊急 { background: #d96b6b; color: white; animation: pulse 1s infinite alternate; }
         .badge.重要 { background: #d9886b; color: white; }
@@ -140,7 +147,7 @@
         .close-btn { width:100%; background:#69779b; color:white; border:none; padding:13px; border-radius:12px; font-size:14px; font-weight:600; cursor:pointer; margin-top:15px; transition:background 0.2s; }
         .close-btn:hover { background:#586585; }
 
-        /* 🎨 統一查看憑證與照片按鈕：全體維持原版藍色調 */
+        /* 查看憑證與照片按鈕：全體維持原版藍色調 */
         .receipt-link-btn {
             display: inline-block;
             font-size: 11px;
@@ -161,7 +168,7 @@
             display: flex; gap: 6px;
         }
 
-        /* 📸 照片憑證展示專用彈出視窗樣式 */
+        /* 照片憑證展示專用彈出視窗樣式 */
         .image-modal-box {
             max-width: 460px;
             text-align: center;
@@ -317,9 +324,10 @@
         const tenantNames = { "內大": "洪健棋", "內小": "郭丹騏", "中": "尹奕竤", "外": "林易諒" };
 
         let globalParsedData = []; 
+        let globalAnnouncements = []; // 儲存撈取下來的公告陣列
         let trendChartInstance = null; 
         let dutyCountdownTimer = null;
-        let globalBasePhotoUrl = ""; // 💡 新增：儲存試算表抓取的基準照片網址
+        let globalBasePhotoUrl = ""; 
 
         function updateTimestamp() {
             const now = new Date();
@@ -336,7 +344,6 @@
             const controller = new AbortController();
             const id = setTimeout(() => controller.abort(), timeout);
             const response = await fetch(resource, { ...options, signal: controller.signal });
-            clearTimeout(id);
             return response;
         }
 
@@ -414,16 +421,22 @@
 
                 let html = "";
                 let validCount = 0;
+                globalAnnouncements = []; 
 
                 for (let i = 1; i < lines.length; i++) {
                     const cells = lines[i].split(",").map(c => c.replace(/["']/g, '').trim());
                     const content = cells[0];
                     const level = cells[1] || "普通";
+                    const dueDate = cells[2] || "無特定期限";
+                    const author = cells[3] || "管理員";
 
                     if (content && !content.includes("<!DOCTYPE")) {
+                        globalAnnouncements.push({ content, level, dueDate, author });
+                        const idx = globalAnnouncements.length - 1;
+
                         validCount++;
                         html += `
-                            <div class="announcement-item text-${level}">
+                            <div class="announcement-item text-${level}" onclick="openAnnouncementDetail(${idx})">
                                 <span class="badge ${level}">${level}</span> ${content}
                             </div>`;
                     }
@@ -437,6 +450,42 @@
             } catch (e) {
                 console.error("公告欄加載失敗或超時:", e);
             }
+        }
+
+        // 💡 點擊跑馬燈公告項目彈出詳細內容（完全維持原版莫蘭迪風格，無表符、無鮮紅）
+        function openAnnouncementDetail(index) {
+            const item = globalAnnouncements[index];
+            if (!item) return;
+
+            const overlay = document.getElementById('detailModal');
+            const title = document.getElementById('modalTitle');
+            const body = document.getElementById('modalBody');
+
+            title.innerText = "公告詳細內容";
+
+            // 根據級別對齊原工作表莫蘭迪配色：緊急(#d96b6b)、重要(#d9886b)、普通(#69779b)
+            const leftBorderColor = (item.level === '緊急') ? '#d96b6b' : ((item.level === '重要') ? '#d9886b' : '#69779b');
+            
+            // 卡片樣式比照電表區塊的高質感灰色與預設莫蘭迪字體色
+            const contentBoxStyle = 'background: #f8fafc; border: 1px solid #eaecef; color: #4a515a;';
+
+            body.innerHTML = `
+                <div class="modal-item-block">
+                    <div class="modal-month-title" style="border-left-color: ${leftBorderColor};">
+                        <span>公告層級：<span class="badge ${item.level}">${item.level}</span></span>
+                    </div>
+                    <div style="padding: 18px; border-radius: 12px; margin: 14px 0; font-size: 14px; line-height: 1.6; word-break: break-all; white-space: pre-wrap; ${contentBoxStyle}">
+                        ${item.content}
+                    </div>
+                    <table class="detail-table">
+                        <tbody>
+                            <tr><th style="width: 80px;">發布人員</th><td>${item.author}</td></tr>
+                            <tr><th>有效期限</th><td>至 ${item.dueDate} 止</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            overlay.classList.add('active');
         }
 
         async function initDashboard() {
@@ -458,25 +507,23 @@
                 
                 const recordIdx = { "內大": 2, "內小": 3, "中": 4, "外": 5 };
 
-                // 憑證連結與日期欄位索引配置
-                const meterPhotoIdx = 28;  // AC 欄
-                const meterDateIdx = 29;   // AD 欄
-                const waterReceiptIdx = 30;// AE 欄
-                const waterDateIdx = 31;   // AF 欄
-                const eleReceiptIdx = 32;  // AG 欄
-                const eleDateIdx = 33;     // AH 欄
+                const meterPhotoIdx = 28;  
+                const meterDateIdx = 29;   
+                const waterReceiptIdx = 30;
+                const waterDateIdx = 31;   
+                const eleReceiptIdx = 32;  
+                const eleDateIdx = 33;     
 
                 let totalWater = 0; let totalElectricity = 0; let historyTotal = 0;
                 const labels = []; const waterChartData = []; const eleChartData = [];
                 const meterDeltaTotal = [];
                 
                 globalParsedData = [];
-                globalBasePhotoUrl = ""; // 初始化基準照片
+                globalBasePhotoUrl = ""; 
 
                 for(let i = 1; i < lines.length; i++) {
                     const cells = lines[i].split(",").map(c => c.replace(/["'\uFEFF]/g, '').trim());
                     
-                    // 💡 動態讀取：如果遇到「基準值」這列，就把 AC 欄的照片網址存起來
                     if (cells[monthIdx] && cells[monthIdx].includes("基準")) {
                         globalBasePhotoUrl = cells[meterPhotoIdx] || "";
                         continue;
@@ -782,10 +829,8 @@
             } else if (type === 'meter') {
                 title.innerText = "歷月電表抄錄與實用度數";
                 
-                // 基準照片按鈕配置
                 const basePhotoBtn = globalBasePhotoUrl ? `<div class="receipt-link-btn" onclick="openImageModal('${globalBasePhotoUrl}', '入住當日', '初始入住電表基準照片')">查看基準照片</div>` : "";
 
-                // 基準值精確對齊（7479.9, 3664.6, 6337.0, 4010.4），順序：外、中、內大、內小
                 htmlContent = `
                     <div style="background:#eef2f5; padding:14px; border-radius:12px; font-size:12px; color:#54606e; margin-bottom:15px; line-height:1.6; border: 1px solid #dbe2e8;">
                         <div style="float: right; margin-top: -2px;">${basePhotoBtn}</div>
@@ -796,13 +841,11 @@
                 globalParsedData.forEach(item => {
                     const photoBtn = item.meterPhoto ? `<div class="receipt-link-btn" onclick="openImageModal('${item.meterPhoto}', '${item.meterDate}', '${item.month} 電表照片憑證')">電表照片</div>` : "";
                     
-                    // 🎯 正確換算：每月所有成員抄錄值全部「除以 10」來符合機械電表小數點，並強制留下一位小數
                     const recInBig   = item.recordMeters["內大"] !== "--" ? (parseFloat(item.recordMeters["內大"]) / 10).toFixed(1) : "--";
                     const recInSmall = item.recordMeters["內小"] !== "--" ? (parseFloat(item.recordMeters["內小"]) / 10).toFixed(1) : "--";
                     const recMid     = item.recordMeters["中"]   !== "--" ? (parseFloat(item.recordMeters["中"]) / 10).toFixed(1) : "--";
                     const recOut     = item.recordMeters["外"]   !== "--" ? (parseFloat(item.recordMeters["外"]) / 10).toFixed(1) : "--";
 
-                    // 排列順序完全與電表照片一致：外 -> 中 -> 內大 -> 內小
                     htmlContent += `
                         <div class="modal-item-block" style="background:#f8fafc; padding:16px; border-radius:12px; margin-bottom:12px; border: 1px solid #eef2f5;">
                             <div class="modal-month-title" style="color:#54606e; border-left-color:#7e8794; margin-bottom: 14px;">
@@ -872,7 +915,6 @@
                 const match = driveUrl.match(/\/file\/d\/([^\/]+)/) || driveUrl.match(/[?&]id=([^&]+)/);
                 if (match && match[1]) {
                     const fileId = match[1];
-                    // 🎯 使用 Google 官方 Thumbnail API (sz=w1000 代表寬度 1000px 的高畫質)
                     directImageUrl = `https://drive.google.com/thumbnail?id=${fileId}&sz=w1000`;
                 }
             }
@@ -894,7 +936,7 @@
         function closeImageModal() {
             document.getElementById('imageModal').classList.remove('active');
             const imgDisplay = document.getElementById('receiptImageDisplay');
-            imgDisplay.onerror = null; // 關閉時移除錯誤偵測，防止瀏覽器誤判
+            imgDisplay.onerror = null; 
             imgDisplay.src = ""; 
         }
 
