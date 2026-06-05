@@ -32,7 +32,7 @@
         .nav-link { padding: 16px 24px; font-size: 14px; font-weight: 600; color: #8a929a; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.25s ease; text-decoration: none; }
         .nav-link.active { color: #69779b; border-bottom-color: #69779b; }
 
-        /* 公告欄跑馬燈（優化為整條點擊跳轉） */
+        /* 公告欄跑馬燈 */
         .marquee-wrapper {
             background: #ffffff; border-bottom: 1px solid #e1e4e8; height: 44px;
             overflow: hidden; position: relative; display: flex; align-items: center;
@@ -122,7 +122,7 @@
         .rules-list li { margin-bottom: 10px; }
         .copyright { font-size: 11px; color: #9ba3ab; text-align: center; letter-spacing: 0.5px; }
 
-        /* 彈出視窗細緻表格樣式 */
+        /* 彈出視窗樣式 */
         .modal-overlay { position: fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.4); display:none; justify-content:center; align-items:center; z-index:1000; backdrop-filter: blur(4px); }
         .modal-overlay.active { display:flex; }
         .modal-box { background:#ffffff; width:90%; max-width:520px; border-radius:24px; padding:28px; box-shadow:0 12px 30px rgba(0,0,0,0.15); max-height:80vh; overflow-y:auto; }
@@ -345,6 +345,20 @@
             if (dutyCountdownTimer) clearInterval(dutyCountdownTimer);
         }
 
+        // 💡 內置的高質感 CSV 狀態機解析器，精準避開 Emoji 與千分位斷開問題
+        function parseCSVLine(line) {
+            let cells = []; let currentCell = ""; let inQuotes = false;
+            for (let i = 0; i < line.length; i++) {
+                let char = line[i];
+                if (char === '"') { inQuotes = !inQuotes; }
+                else if (char === ',' && !inQuotes) { cells.push(currentCell.trim()); currentCell = ""; }
+                else { currentCell += char; }
+            }
+            cells.push(currentCell.trim());
+            return cells;
+        }
+
+        // 📧 升級版跑馬燈預覽載入函式：具備【級別權重優先排序 + 同級依新到舊二次排序】機制
         async function loadAnnouncementsPreview() {
             try {
                 const response = await fetchWithTimeout(urlAnnounce, { timeout: 4000 });
@@ -354,35 +368,54 @@
                 const lines = text.replace(/\r/g, "").split("\n").map(l => l.trim()).filter(l => l);
                 if (lines.length < 2) return;
 
-                let html = "";
-                let validCount = 0;
+                // 級別優先權配置表
+                const levelWeights = { "緊急": 3, "重要": 2, "普通": 1 };
+                let announcementList = [];
 
                 for (let i = 1; i < lines.length; i++) {
-                    const cells = lines[i].match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || lines[i].split(",");
-                    const cleanCells = cells.map(c => c.replace(/^["']|["']$/g, '').trim()); // 移除包裹在外面的雙引號
-            
-                    const content = cleanCells[0];       // A 欄：公告內容
-                    const summary = cleanCells[1] || ""; // B 欄：摘要
-                    const level   = cleanCells[2] || "普通"; // C 欄：級別
-            
-                    const displayText = summary || content;
+                    const cleanCells = parseCSVLine(lines[i]);
+                    const content = cleanCells[0];       
+                    const summary = cleanCells[1] || ""; 
+                    const level   = cleanCells[2] || "普通"; 
 
                     if (content && !content.includes("<!DOCTYPE")) {
-                        validCount++;
-                        html += `
-                            <div class="announcement-item text-${level}">
-                                <span class="badge ${level}">${level}</span> ${displayText}
-                            </div>`;
+                        // 儲存原始工作表索引 i 作為時間順序依據（i 越大代表越晚發布）
+                        announcementList.push({
+                            content: content,
+                            displayText: summary || content,
+                            level: level,
+                            weight: levelWeights[level] || 1,
+                            sequence: i 
+                        });
                     }
                 }
 
-                if (validCount > 0) {
-                    document.getElementById('marqueeContent').innerHTML = html + html;
-                    document.getElementById('marqueeContent').style.animationDuration = `${validCount * 12}s`;
-                    document.getElementById('marqueeBar').style.display = "flex";
-                }
+                if (announcementList.length === 0) return;
+
+                // 💡 雙重排序核心核心：第一權重看層級分數(降序)；第二權重看上傳先後(倒序，舊到新/新到舊依需求對齊)
+                // 這裡 sequence 採降序 (b.sequence - a.sequence) 確保同級別中「最新發布的在前面」
+                announcementList.sort((a, b) => {
+                    if (b.weight !== a.weight) {
+                        return b.weight - a.weight; 
+                    }
+                    return b.sequence - a.sequence; 
+                });
+
+                let html = "";
+                announcementList.forEach(item => {
+                    html += `
+                        <div class="announcement-item text-${item.level}">
+                            <span class="badge ${item.level}">${item.level}</span> ${item.displayText}
+                        </div>`;
+                });
+
+                const marqueeContent = document.getElementById('marqueeContent');
+                marqueeContent.innerHTML = html + html; // 複製雙份確保無限循環流暢
+                marqueeContent.style.animationDuration = `${announcementList.length * 11}s`;
+                document.getElementById('marqueeBar').style.display = "flex";
+
             } catch (e) {
-                console.error("預覽公告加載失敗:", e);
+                console.error("預覽公告加載與排序失敗:", e);
             }
         }
 
@@ -673,7 +706,7 @@
 
         function closeImageModal() {
             const imgDisplay = document.getElementById('receiptImageDisplay');
-            imgDisplay.onerror = null; // 💡 關鍵修正：在清空 src 之前，先解除 onerror 綁定，避免關閉時誤觸發警告
+            imgDisplay.onerror = null; 
             imgDisplay.src = ""; 
             document.getElementById('imageModal').classList.remove('active');
         }
