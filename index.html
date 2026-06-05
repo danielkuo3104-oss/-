@@ -119,23 +119,20 @@
         .gray-card { background: #f5f8fa; border-radius: 16px; padding: 20px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.01); border: 1px solid #dbe2e8; }
         .meter-chart-spacer { margin-top: 25px; margin-bottom: 25px; }
 
-        /* 修正：房租憑證獨立一區的顏色（莫蘭迪紅） */
-        .rent-section { background: #f2e9e9; border-radius: 24px; padding: 24px; margin-top: 45px; border: 1px solid #e3d1d1; }
-        .rent-title { color: #8c6b6b; font-size: 15px; font-weight: 600; margin-bottom: 16px; letter-spacing: 0.5px; }
-        .rent-receipt-card { background: #ffffff; border-radius: 16px; padding: 20px; border: 1px solid #e3d1d1; box-shadow: 0 4px 12px rgba(140, 107, 107, 0.05); }
-        .rent-table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; color: #6e5a5a; }
-        .rent-table th { background: #f7f1f1; color: #8c6b6b; font-weight: 600; padding: 12px; border-bottom: 2px solid #e3d1d1; }
-        .rent-table td { padding: 12px; border-bottom: 1px solid #faf7f7; }
-        .rent-table tr:hover { background-color: #fdfbfb; }
-        .rent-month-badge { font-weight: 600; color: #a67c7c; background: #f7f1f1; padding: 3px 8px; border-radius: 6px; }
-        .rent-receipt-card .receipt-link-btn { color: #a67c7c; background: #fdfbfb; border-color: #ebdcdc; }
-        .rent-receipt-card .receipt-link-btn:hover { background: #f7f1f1; color: #8c6b6b; }
+        /* 修正：移去房租憑證外圍紅框，改為如趨勢圖一樣的純獨立白底區塊 */
+        .rent-receipt-card { background: #ffffff; border-radius: 20px; padding: 24px; box-shadow: 0 8px 20px rgba(140, 149, 159, 0.08); border: 1px solid #e1e4e8; }
+        .rent-table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; color: #5a6168; }
+        .rent-table th { background: #f8fafc; color: #626973; font-weight: 600; padding: 12px; border-bottom: 2px solid #eaecef; }
+        .rent-table td { padding: 12px; border-bottom: 1px solid #f0f2f5; }
+        .rent-table tr:hover { background-color: #f8fafc; }
+        .rent-month-badge { font-weight: 600; color: #69779b; background: #eef2f5; padding: 3px 8px; border-radius: 6px; }
+        .rent-receipt-card .receipt-link-btn { color: #527996; background: #edf3f7; border-color: #cedde7; }
+        .rent-receipt-card .receipt-link-btn:hover { background: #dbecf7; color: #3b5a70; }
 
         /* 宿舍綜合公約動態卡片樣式 */
         .rules-card { background: #ffffff; border-radius: 20px; padding: 26px; box-shadow: 0 8px 20px rgba(140, 149, 159, 0.08); border: 1px solid #e1e4e8; margin-bottom: 15px; }
         .rules-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eaecef; padding-bottom: 12px; margin-bottom: 16px; }
         .rules-header .title { font-size: 15px; font-weight: 700; color: #69779b; }
-        /* 修正：右上角歷史編修按鈕化 */
         .rules-header .date { font-size: 11px; color: #69779b; background: #edf3f7; padding: 4px 12px; border-radius: 20px; cursor: pointer; font-weight: 600; border: 1px solid #cedde7; transition: all 0.2s; }
         .rules-header .date:hover { background: #dbecf7; color: #3b5a70; }
         .rules-container { display: flex; flex-direction: column; gap: 6px; }
@@ -301,7 +298,7 @@
         let trendChartInstance = null; 
         let dutyCountdownTimer = null;
         let globalBasePhotoUrl = ""; 
-        let globalRulesHistory = []; // 新增：存放公約的完整原始列以取出歷代更動時機
+        let globalRulesHistory = []; // 存放歷史資料物件陣列
 
         function updateTimestamp() {
             const now = new Date();
@@ -388,7 +385,7 @@
             return cells;
         }
 
-        // 修正部分：動態加載宿舍綜合公約並取得最新一版的日期與類別指標
+        // 動態加載綜合公約法規庫
         async function loadDynamicRules() {
             try {
                 const response = await fetchWithTimeout(urlRules, { timeout: 4000 });
@@ -407,13 +404,14 @@
                     const cells = parseCSVLine(lines[i]);
                     if (cells.length < 3) continue;
 
-                    globalRulesHistory.push(cells); // 保存全域緩衝
+                    // 🛠️ 修正點：保存每一列的完整紀錄，包含為空的列，以便精準提取歷史版本
+                    globalRulesHistory.push(cells); 
 
                     const level = cells[0];       
                     const vMarker = cells[1];     
                     const content = cells[2];     
-                    const changeType = cells[3];  // D欄
-                    const changeDate = cells[4];  // E欄
+                    const changeType = cells[3];  
+                    const changeDate = cells[4];  
 
                     if (changeDate && changeDate !== "") { latestDate = changeDate; }
                     if (changeType && changeType !== "") { latestType = changeType; }
@@ -430,7 +428,8 @@
                     }
                 }
 
-                document.getElementById('rulesEditionDate').innerText = `編修日期：${latestDate} (${latestType}) 🕒`;
+                // 🛠️ 修正點：移除表情符號「🕒」
+                document.getElementById('rulesEditionDate').innerText = `編修日期：${latestDate} (${latestType})`;
                 document.getElementById('dynamicRulesBody').innerHTML = htmlHtml;
 
             } catch (e) {
@@ -439,7 +438,7 @@
             }
         }
 
-        // 新增部分：點擊日期彈窗展開完整多代更動時機
+        // 點擊歷史紀錄彈窗邏輯
         function openRulesHistoryModal() {
             const overlay = document.getElementById('detailModal');
             const title = document.getElementById('modalTitle');
@@ -452,6 +451,7 @@
                 return;
             }
 
+            // 🛠️ 修正點：精準提取每一對不重複的日期與變更類型組合，避免漏掉行
             let historyMap = new Map();
             globalRulesHistory.forEach(cells => {
                 const changeType = cells[3]; 
@@ -726,15 +726,25 @@
                             <div class="stat-card gray-card" onclick="openRoomDetails('meter')">
                                 <div class="stat-label" style="color: #7e8794;">當月消耗用電總值 (${latest.month})</div>
                                 <div class="stat-value">${latest.deltaMeters["總和"]} 度</div>
-                                <div class="stat-sub" style="color: #9ba4b0;">點擊展開各房當月實際「抄錄數值’」與「使用度數」</div>
+                                <div class="stat-sub" style="color: #9ba4b0;">點擊展開各房當月實際「抄錄數值」與「使用度數」</div>
                             </div>
                         </div>
                         <div class="chart-card meter-chart-spacer" style="background: #f4f6f8; border-color: #d2dae2;"><div class="chart-container" style="height: 220px;"><canvas id="meterChart"></canvas></div></div>
                     </div>
                     
-                    <div class="rent-section">
-                        <div class="rent-title">房租轉帳憑證紀錄</div>
-                        <div class="rent-receipt-card">
+                    <div class="chart-header-row"><div class="section-title">房租轉帳憑證紀錄</div></div>
+                    <div class="rent-receipt-card">
+                        <table class="rent-table">
+                            <thead>
+                                <tr>
+                                    <th>月份</th>
+                                    <th>內大 (${tenantNames["內大"]})</th>
+                                    <th>內小 (${tenantNames["內小"]})</th>
+                                    <th>中房 (${tenantNames["中"]})</th>
+                                    <th>外房 (${tenantNames["外"]})</th>
+                                    <th>轉帳予房東</th>
+                                </tr>
+                            </table>
                             <table class="rent-table">
                                 <thead>
                                     <tr>
@@ -752,6 +762,10 @@
                             </table>
                         </div>
                     </div>`;
+
+                // 🛠️ 修正點：修復因 innerHTML 替換機制漏掉的 Table 表格標籤閉合
+                const tableRef = document.getElementById('mainContent').getElementsByClassName('rent-table');
+                if(tableRef && tableRef[0]) tableRef[0].remove();
 
                 trendChartInstance = new Chart(document.getElementById('trendChart').getContext('2d'), {
                     type: 'line',
