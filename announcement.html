@@ -170,19 +170,20 @@
             const body = document.getElementById('modalBody');
             const leftBorderColor = (item.level === '緊急') ? '#d96b6b' : ((item.level === '重要') ? '#d9886b' : '#69779b');
 
-            // 💡 這裡將內文容器改套用獨立定義的 .modal-body-content 樣式類別，強制 text-align: left 
+            // 💡 這裡加上了 display: block !important; 與 text-align: left !important;
+            // 強制解除所有可能從父層繼承過來的 flex 居中設定
             body.innerHTML = `
-                <div class="modal-item-block">
-                    <div class="modal-month-title" style="border-left-color: ${leftBorderColor};">
+                <div class="modal-item-block" style="display: block !important; text-align: left !important;">
+                    <div class="modal-month-title" style="border-left-color: ${leftBorderColor}; display: flex; justify-content: space-between; align-items: center;">
                         <span>公告層級：<span class="badge ${item.level}">${item.level}</span></span>
                     </div>
-                    <div class="modal-body-content">
+                    <div style="display: block !important; text-align: left !important; padding: 18px; border-radius: 12px; margin: 14px 0; font-size: 14px; line-height: 1.6; word-break: break-all; white-space: pre-wrap; background: #f8fafc; border: 1px solid #eaecef; color: #4a515a;">
                         ${item.content}
                     </div>
-                    <table class="detail-table">
+                    <table class="detail-table" style="width: 100%; text-align: left !important;">
                         <tbody>
-                            <tr><th style="width: 80px;">發布人員</th><td>${item.author}</td></tr>
-                            <tr><th>有效期限</th><td>至 ${item.dueDate} 止</td></tr>
+                            <tr><th style="width: 80px; text-align: left;">發布人員</th><td style="text-align: left;">${item.author}</td></tr>
+                            <tr><th style="text-align: left;">有效期限</th><td style="text-align: left;">至 ${item.dueDate} 止</td></tr>
                         </tbody>
                     </table>
                 </div>`;
