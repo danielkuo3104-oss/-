@@ -181,13 +181,16 @@
             const body = document.getElementById('modalBody');
             const leftBorderColor = (item.level === '緊急') ? '#d96b6b' : ((item.level === '重要') ? '#d9886b' : '#69779b');
 
+            // 💡 關鍵修正：使用 .trim() 徹底清除字串前後所有看不見的全形/半形空格與換行字元
+            const cleanContent = item.content ? item.content.trim() : "";
+
             body.innerHTML = `
                 <div class="modal-item-block" style="display: block !important; text-align: left !important;">
                     <div class="modal-month-title" style="border-left-color: ${leftBorderColor}; display: flex; justify-content: space-between; align-items: center;">
                         <span>公告層級：<span class="badge ${item.level}">${item.level}</span></span>
                     </div>
                     <div class="modal-body-content">
-                        ${item.content}
+                        ${cleanContent}
                     </div>
                     <table class="detail-table" style="width: 100%;">
                         <tbody>
