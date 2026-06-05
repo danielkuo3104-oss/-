@@ -126,7 +126,7 @@
         .gray-card { background: #f5f8fa; border-radius: 16px; padding: 20px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.01); border: 1px solid #dbe2e8; }
         .meter-chart-spacer { margin-top: 25px; margin-bottom: 25px; }
 
-        /* 房租憑證紀錄面板與響應式流暢滑動排版（解決內部擁擠） */
+        /* 房租憑證白底獨立外觀與手機端防擠壓滑動 */
         .rent-receipt-card { 
             background: #ffffff; border-radius: 20px; padding: 24px; 
             box-shadow: 0 8px 20px rgba(140, 149, 159, 0.08); border: 1px solid #e1e4e8;
@@ -136,8 +136,8 @@
         .rent-receipt-card.collapsed {
             max-height: 0 !important; padding-top: 0 !important; padding-bottom: 0 !important; border-color: transparent !important; opacity: 0; pointer-events: none;
         }
-        .rent-table-wrapper { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; } /* 支援手機水平滑動不擠壓 */
-        .rent-table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; color: #5a6168; min-width: 600px; } /* 保證桌面端與手機端按鈕拉開 */
+        .rent-table-wrapper { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        .rent-table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; color: #5a6168; min-width: 620px; }
         .rent-table th { background: #f8fafc; color: #626973; font-weight: 600; padding: 14px 12px; border-bottom: 2px solid #eaecef; }
         .rent-table td { padding: 14px 12px; border-bottom: 1px solid #f0f2f5; vertical-align: middle; }
         .rent-table tr:hover { background-color: #f8fafc; }
@@ -204,7 +204,7 @@
         .duty-btn { width:100%; background:#6e916e; color:white; border:none; padding:13px; border-radius:12px; font-size:14px; font-weight:600; cursor:pointer; margin-top:20px; box-shadow: 0 4px 12px rgba(110, 145, 110, 0.15); transition: background 0.2s; }
         .duty-btn:hover { background:#5c7a5c; }
 
-        /* 行動裝置最佳化排版 (RWD) */
+        /* 行動裝置排版最佳化 */
         @media (max-width: 768px) {
             .header-banner { padding: 35px 20px 45px 20px; }
             .header-banner h1 { font-size: 22px; }
@@ -218,8 +218,9 @@
             .chart-card { padding: 16px; border-radius: 18px; margin-top: 16px; }
             .chart-container { height: 280px; }
             .gray-section { padding: 16px; border-radius: 20px; margin-top: 40px; }
-            
-            /* 💡 修正：宿舍綜合公約頂層欄位響應式分流，防範小螢幕打架與字體擠壓 */
+            .rent-table th, .rent-table td { padding: 10px 8px; font-size: 12px; }
+
+            /* 修正：修復手機版公約標題與右上角編修日期按鈕擠壓打架 */
             .rules-header {
                 flex-direction: column;
                 align-items: flex-start;
@@ -261,6 +262,7 @@
         </div>
     </div>
     
+    <!-- 宿舍綜合公約 -->
     <div class="main-container">
         <div class="section-title">宿舍綜合公約</div>
         <div class="rules-card">
@@ -776,7 +778,8 @@
                         <div class="chart-card meter-chart-spacer" style="background: #f4f6f8; border-color: #d2dae2;"><div class="chart-container" style="height: 220px;"><canvas id="meterChart"></canvas></div></div>
                     </div>
                     
-                    <div class="chart-header-row" style="margin-top: 30px;">
+                    <!-- 房租憑證獨立白底面板區 (預設收合 + 解決內部擁擠與外部連貼問題) -->
+                    <div class="chart-header-row" style="margin-top: 40px; margin-bottom: 5px;">
                         <div class="section-title">房租轉帳憑證紀錄</div>
                         <button class="collapse-toggle-btn" id="rentToggleBtn" onclick="allToggleRentPanel()">展開面板</button>
                     </div>
