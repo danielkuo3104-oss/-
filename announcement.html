@@ -119,20 +119,26 @@
 
                 for (let i = 1; i < lines.length; i++) {
                     const cells = lines[i].split(",").map(c => c.replace(/["']/g, '').trim());
-                    const content = cells[0];
-                    const level = cells[1] || "普通";
-                    const dueDate = cells[2] || "無特定期限";
-                    const author = cells[3] || "管理員";
+                    
+                    // 🔍 對照全新資料欄位順序：
+                    const content = cells[0];       // A 欄：公告內容
+                    const summary = cells[1] || ""; // B 欄：摘要
+                    const level = cells[2] || "普通"; // C 欄：級別
+                    const dueDate = cells[3] || "無特定期限"; // D 欄：到期日
+                    const author = cells[4] || "管理員";     // E 欄：公告人
 
                     if (content && !content.includes("<!DOCTYPE")) {
-                        globalAnnouncements.push({ content, level, dueDate, author });
+                        globalAnnouncements.push({ content, summary, level, dueDate, author });
                         const idx = globalAnnouncements.length - 1;
+
+                        // 列表清單優先呈現摘要 (Summary)，若無摘要才顯示 Content
+                        const cardDisplayText = summary || content;
 
                         html += `
                             <div class="announce-card" onclick="openAnnouncementDetail(${idx})">
                                 <div class="announce-left">
                                     <span class="badge ${level}">${level}</span>
-                                    <span class="announce-text text-${level}">${content}</span>
+                                    <span class="announce-text text-${level}">${cardDisplayText}</span>
                                 </div>
                                 <div class="announce-date">${dueDate.split(" ")[0]}</div>
                             </div>`;
@@ -157,6 +163,7 @@
             const body = document.getElementById('modalBody');
             const leftBorderColor = (item.level === '緊急') ? '#d96b6b' : ((item.level === '重要') ? '#d9886b' : '#69779b');
 
+            // 彈出視窗則顯示詳細完整的「公告內容 (item.content)」
             body.innerHTML = `
                 <div class="modal-item-block">
                     <div class="modal-month-title" style="border-left-color: ${leftBorderColor};">
@@ -177,7 +184,6 @@
 
         function closeModal() { document.getElementById('detailModal').classList.remove('active'); }
 
-        // 頁面加載時執行
         loadAnnouncementsPage();
     </script>
 </body>
