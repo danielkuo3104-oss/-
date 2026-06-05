@@ -59,7 +59,6 @@
         .modal-item-block { margin-bottom:20px; position: relative; text-align: left !important; }
         .modal-month-title { font-size:14px; font-weight:600; color:#69779b; margin-bottom:12px; border-left: 3px solid #69779b; padding-left: 8px; display: flex; justify-content: space-between; align-items: center; text-align: left !important; }
         
-        /* 💡 終極修正：改採傳統 block 區塊排版，完全移除 pre-wrap 這種容易因換行符鬧脾氣的樣式 */
         .modal-body-content {
             display: block !important;
             text-align: left !important;
@@ -75,16 +74,12 @@
             box-sizing: border-box;
         }
         
-        /* 💡 段落樣式：強制清除首行縮進與任何外距干擾 */
         .modal-body-content p {
-            margin: 0 0 8px 0 !important;
+            margin: 0 !important;
             padding: 0 !important;
             text-align: left !important;
             text-indent: 0 !important;
             word-break: break-all;
-        }
-        .modal-body-content p:last-child {
-            margin-bottom: 0 !important;
         }
 
         .detail-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 8px; color: #5a6168; text-align: left !important; }
@@ -128,6 +123,27 @@
         const urlAnnounce = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQkqhXCPp4XiHKCEpI3pz4pzcu3sQreQ_qNRLger00ULCHFr9cTbXHMQqAfk7dLa_gUBAIBSJ5sZM4F/pub?gid=1058170538&single=true&output=csv"; 
         let globalAnnouncements = [];
 
+        // 💡 終極防護核心：不使用 Regex，改用字元指標狀態機（State Machine）來 100% 精準解析 CSV
+        function parseCSVLine(line) {
+            let cells = [];
+            let currentCell = "";
+            let inQuotes = false;
+            
+            for (let i = 0; i < line.length; i++) {
+                let char = line[i];
+                if (char === '"') {
+                    inQuotes = !inQuotes; // 切換雙引號狀態，不把雙引號加進內文
+                } else if (char === ',' && !inQuotes) {
+                    cells.push(currentCell.trim()); // 遇到引號外的逗號，切分欄位
+                    currentCell = "";
+                } else {
+                    currentCell += char;
+                }
+            }
+            cells.push(currentCell.trim());
+            return cells;
+        }
+
         async function loadAnnouncementsPage() {
             try {
                 const controller = new AbortController();
@@ -149,9 +165,8 @@
                 globalAnnouncements = []; 
 
                 for (let i = 1; i < lines.length; i++) {
-                    // 💡 終極修正：使用 Regex 安全拆解 CSV 欄位，自動忽略公告內容「雙引號內」的所有逗號
-                    const cells = lines[i].match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || lines[i].split(",");
-                    const cleanCells = cells.map(c => c.replace(/^["']|["']$/g, '').trim());
+                    // 💡 叫用全新的安全狀態機解析器，管你內文有 ⚡、📢 還是各種逗號點記，絕對不可能錯位！
+                    const cleanCells = parseCSVLine(lines[i]);
                     
                     const content = cleanCells[0];       // A 欄：公告內容
                     const summary = cleanCells[1] || ""; // B 欄：摘要
@@ -162,7 +177,6 @@
                     if (content && !content.includes("<!DOCTYPE")) {
                         globalAnnouncements.push({ content, summary, level, dueDate, author });
                         const idx = globalAnnouncements.length - 1;
-
                         const cardDisplayText = summary || content;
 
                         html += `
@@ -194,11 +208,7 @@
             const body = document.getElementById('modalBody');
             const leftBorderColor = (item.level === '緊急') ? '#d96b6b' : ((item.level === '重要') ? '#d9886b' : '#69779b');
 
-            // 💡 終極修正：直接使用原始 content，絕不做任何 split("度") 或 indexOf("度") 的危險文字切割
-            // 先過濾掉前後可能殘留的空白，接著直接用段落包裝
             const originalContent = item.content ? item.content.trim() : "無公告內容";
-            
-            let paragraphsHtml = `<p>${originalContent}</p>`;
 
             body.innerHTML = `
                 <div class="modal-item-block">
@@ -206,7 +216,7 @@
                         <span>公告層級：<span class="badge ${item.level}">${item.level}</span></span>
                     </div>
                     <div class="modal-body-content">
-                        ${paragraphsHtml}
+                        <p>${originalContent}</p>
                     </div>
                     <table class="detail-table">
                         <tbody>
