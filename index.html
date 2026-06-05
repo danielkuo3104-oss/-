@@ -401,7 +401,7 @@
             return cells;
         }
 
-        // 動態加載綜合公約法規庫
+        // 動態加載綜合公約法規庫 (精準修復歷史紀錄空欄位阻斷 Bug)
         async function loadDynamicRules() {
             try {
                 const response = await fetchWithTimeout(urlRules, { timeout: 4000 });
@@ -412,26 +412,39 @@
                 if (lines.length < 2) return;
         
                 let htmlHtml = "";
-                globalRulesHistory = []; // 重置全域歷史紀錄
+                globalRulesHistory = []; // 重置全域紀錄
                 
                 let latestDate = "2026/6/6";
                 let latestType = "初編";
         
+                // 用來比對日期的正規表達式 (符合 yyyy/m/d 或 yyyy/mm/dd)
+                const dateRegex = /\d{4}\/\d{1,2}\/\d{1,2}/;
+        
                 for(let i = 1; i < lines.length; i++) {
                     const cells = parseCSVLine(lines[i]);
-                    // 💡 移除嚴格的 cells.length < 3 限制，改為逐欄洗淨檢查
                     
                     const level = cells[0] ? cells[0].trim() : "";       
                     const vMarker = cells[1] ? cells[1].trim() : "";     
                     const content = cells[2] ? cells[2].trim() : "";     
-                    const changeType = cells[3] ? cells[3].trim() : "";  // 類別欄
-                    const changeDate = cells[4] ? cells[4].trim() : "";  // 日期欄
         
-                    // 💡 防呆強化：只要這列有填寫任何修訂日期與類別，就絕對壓入歷史緩衝
-                    if (changeDate !== "" && changeType !== "") {
-                        globalRulesHistory.push({ date: changeDate, type: changeType });
-                        latestDate = changeDate;
-                        latestType = changeType;
+                    // 💡 核心修正：不再綁定 cells[3] 或 cells[4]，直接遍歷整行，只要哪一格符合日期格式就撈出來
+                    let foundDate = "";
+                    let foundType = "";
+                    
+                    cells.forEach(cell => {
+                        const trimmed = cell.trim();
+                        if (dateRegex.test(trimmed)) {
+                            foundDate = trimmed;
+                        } else if (trimmed === "初編" || trimmed === "增修") {
+                            foundType = trimmed;
+                        }
+                    });
+        
+                    // 只要在這一行有同時找到日期與類別，就視為一筆有效的歷史紀錄
+                    if (foundDate !== "" && foundType !== "") {
+                        globalRulesHistory.push({ date: foundDate, type: foundType });
+                        latestDate = foundDate;
+                        latestType = foundType;
                     }
         
                     if (content === "") continue;
@@ -455,7 +468,6 @@
             }
         }
 
-        // 🛠️ 修正點：獨立優化的點擊歷史彈窗渲染機制，完全避開空列蓋台 Bug
         // 點擊歷史紀錄彈窗邏輯
         function openRulesHistoryModal() {
             const overlay = document.getElementById('detailModal');
@@ -470,7 +482,7 @@
                 return;
             }
         
-            // 精準去重
+            // 利用 Map 進行不重複過濾
             let uniqueHistory = new Map();
             globalRulesHistory.forEach(item => {
                 uniqueHistory.set(`${item.date}_${item.type}`, item);
