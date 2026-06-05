@@ -55,6 +55,15 @@
         .modal-overlay.active { display:flex; }
         .modal-box { background:#ffffff; width:90%; max-width:520px; border-radius:24px; padding:28px; box-shadow:0 12px 30px rgba(0,0,0,0.15); max-height:80vh; overflow-y:auto; }
         .modal-title { font-size:18px; font-weight:700; color:#4a515a; margin-bottom:20px; border-bottom:1px solid #eaecef; padding-bottom:12px; text-align:center; }
+        
+        /* 💡 這裡加上強制靠左，切斷繼承居中的問題 */
+        .modal-body-content {
+            padding: 18px; border-radius: 12px; margin: 14px 0; font-size: 14px; 
+            line-height: 1.6; word-break: break-all; white-space: pre-wrap; 
+            background: #f8fafc; border: 1px solid #eaecef; color: #4a515a; 
+            text-align: left !important;
+        }
+
         .modal-item-block { margin-bottom:20px; position: relative; }
         .modal-month-title { font-size:14px; font-weight:600; color:#69779b; margin-bottom:12px; border-left: 3px solid #69779b; padding-left: 8px; display: flex; justify-content: space-between; align-items: center; }
         .detail-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 8px; color: #5a6168; }
@@ -74,7 +83,7 @@
     <div class="header-banner">
         <div class="header-container">
             <h1>宿舍公告管理中心</h1>
-            <p>歷史與當前即時公告清單查閱</p>
+            <p>當前即時公告資訊查閱</p>
         </div>
         <a href="index.html" class="back-home-btn">← 返回首頁儀表板</a>
     </div>
@@ -161,13 +170,13 @@
             const body = document.getElementById('modalBody');
             const leftBorderColor = (item.level === '緊急') ? '#d96b6b' : ((item.level === '重要') ? '#d9886b' : '#69779b');
 
-            // 💡 修正關鍵：在此處的 div inline style 中加入了 text-align: left;
+            // 💡 這裡將內文容器改套用獨立定義的 .modal-body-content 樣式類別，強制 text-align: left 
             body.innerHTML = `
                 <div class="modal-item-block">
                     <div class="modal-month-title" style="border-left-color: ${leftBorderColor};">
                         <span>公告層級：<span class="badge ${item.level}">${item.level}</span></span>
                     </div>
-                    <div style="padding: 18px; border-radius: 12px; margin: 14px 0; font-size: 14px; line-height: 1.6; word-break: break-all; white-space: pre-wrap; background: #f8fafc; border: 1px solid #eaecef; color: #4a515a; text-align: left;">
+                    <div class="modal-body-content">
                         ${item.content}
                     </div>
                     <table class="detail-table">
