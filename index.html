@@ -67,7 +67,7 @@
         .text-普通 { color: #5a6168; }
         @keyframes pulse { 0% { opacity: 1; } 100% { opacity: 0.6; } }
 
-        .main-container { max-width: 1200px; margin: 0 auto 40px auto; padding: 0 20px; box-sizing: border-box; }
+        .main-container { max-width: 1200px; margin: 0 auto; padding: 0 20px; box-sizing: border-box; }
         .loading { padding: 40px 0; text-align: center; font-size: 14px; color: #8a929a; }
         .section-title { 
             font-size: 16px; 
@@ -115,12 +115,31 @@
         .gray-section { background: #e6ebf0; border-radius: 24px; padding: 24px; margin-top: 45px; border: 1px solid #d2dae2; }
         .gray-title { color: #54606e; font-size: 15px; font-weight: 600; margin-bottom: 16px; letter-spacing: 0.5px; }
         .gray-card { background: #f5f8fa; border-radius: 16px; padding: 20px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.01); border: 1px solid #dbe2e8; }
-        .meter-chart-spacer { margin-top: 25px; }
+        .meter-chart-spacer { margin-top: 25px; margin-bottom: 25px; }
 
-        .rules-card { background: #ffffff; border-radius: 20px; padding: 26px; box-shadow: 0 8px 20px rgba(140, 149, 159, 0.08); border: 1px solid #e1e4e8; margin-bottom: 40px; }
-        .rules-list { margin: 0; padding-left: 20px; color: #626973; line-height: 1.8; font-size: 13px; }
-        .rules-list li { margin-bottom: 10px; }
-        .copyright { font-size: 11px; color: #9ba3ab; text-align: center; letter-spacing: 0.5px; }
+        /* 新增：房租憑證紀錄表格樣式 */
+        .rent-receipt-card { background: #ffffff; border-radius: 16px; padding: 20px; border: 1px solid #d2dae2; }
+        .rent-table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; color: #5a6168; }
+        .rent-table th { background: #eef2f5; color: #626973; font-weight: 600; padding: 12px; border-bottom: 2px solid #d2dae2; }
+        .rent-table td { padding: 12px; border-bottom: 1px solid #eef2f5; }
+        .rent-table tr:hover { background-color: #f8fafc; }
+        .rent-month-badge { font-weight: 600; color: #69779b; background: #eef2f5; padding: 3px 8px; border-radius: 6px; }
+
+        /* 宿舍規範動態卡片樣式 */
+        .rules-card { background: #ffffff; border-radius: 20px; padding: 26px; box-shadow: 0 8px 20px rgba(140, 149, 159, 0.08); border: 1px solid #e1e4e8; margin-bottom: 15px; }
+        .rules-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eaecef; padding-bottom: 12px; margin-bottom: 16px; }
+        .rules-header .title { font-size: 15px; font-weight: 700; color: #69779b; }
+        .rules-header .date { font-size: 11px; color: #9ba3ab; background: #f4f5f7; padding: 4px 10px; border-radius: 20px; }
+        .rules-container { display: flex; flex-direction: column; gap: 6px; }
+        
+        /* 規則層次感排版 */
+        .rule-item { font-size: 13px; line-height: 1.8; padding: 6px 12px; border-radius: 8px; color: #4a515a; }
+        .rule-category-block { background: #eef2f5; color: #54606e; font-weight: 700; font-size: 14px; margin-top: 14px; margin-bottom: 6px; border-left: 4px solid #69779b; border-radius: 0 8px 8px 0; }
+        .rule-bold { font-weight: 700; color: #2d3238; }
+        .rule-indent { padding-left: 24px; position: relative; }
+        .rule-indent::before { content: "•"; position: absolute; left: 12px; color: #8696b8; }
+
+        .copyright { font-size: 11px; color: #9ba3ab; text-align: center; letter-spacing: 0.5px; margin-bottom: 40px; margin-top: 15px; }
 
         /* 彈出視窗樣式 */
         .modal-overlay { position: fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.4); display:none; justify-content:center; align-items:center; z-index:1000; backdrop-filter: blur(4px); }
@@ -170,7 +189,7 @@
             .header-banner { padding: 35px 20px 45px 20px; }
             .header-banner h1 { font-size: 22px; }
             .update-time-tag { bottom: -28px; right: 20px; font-size: 10px; padding: 3px 8px; }
-            .main-container { padding: 0 16px; margin-bottom: 25px; }
+            .main-container { padding: 0 16px; }
             .section-title { margin: 38px 0 16px 0; font-size: 15px; }
             .stats-grid { gap: 28px; }
             .stat-card { padding: 20px; border-radius: 18px; }
@@ -179,6 +198,7 @@
             .chart-card { padding: 16px; border-radius: 18px; margin-top: 16px; }
             .chart-container { height: 280px; }
             .gray-section { padding: 16px; border-radius: 20px; margin-top: 40px; }
+            .rent-table th, .rent-table td { padding: 8px; font-size: 12px; }
         }
     </style>
 </head>
@@ -212,12 +232,13 @@
     <div class="main-container">
         <div class="section-title">宿舍規範</div>
         <div class="rules-card">
-            <ul class="rules-list">
-                <li>維護公共區域整潔，個人垃圾請定時清理。</li>
-                <li>節約用電用水，離開房間時請隨手關閉電燈與冷氣。</li>
-                <li>深夜時段請放低音量，避免影響室友及鄰居安寧。</li>
-                <li>公共設備若有損壞，請及時回報管理人群組處理。</li>
-            </ul>
+            <div class="rules-header">
+                <span class="title">生活公約與核心原則細則</span>
+                <span class="date" id="rulesEditionDate">編修日期：載入中...</span>
+            </div>
+            <div class="rules-container" id="dynamicRulesBody">
+                <div class="loading" style="padding: 10px 0;">公約內容法規載入中...</div>
+            </div>
         </div>
         <div class="copyright">© 2026 GUO DANIEL. ALL RIGHTS RESERVED.</div>
     </div>
@@ -264,6 +285,8 @@
         const urlPrimary = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQkqhXCPp4XiHKCEpI3pz4pzcu3sQreQ_qNRLger00ULCHFr9cTbXHMQqAfk7dLa_gUBAIBSJ5sZM4F/pub?gid=0&single=true&output=csv";
         const urlAnnounce = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQkqhXCPp4XiHKCEpI3pz4pzcu3sQreQ_qNRLger00ULCHFr9cTbXHMQqAfk7dLa_gUBAIBSJ5sZM4F/pub?gid=1058170538&single=true&output=csv"; 
         const urlTenantInfo = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQkqhXCPp4XiHKCEpI3pz4pzcu3sQreQ_qNRLger00ULCHFr9cTbXHMQqAfk7dLa_gUBAIBSJ5sZM4F/pub?gid=1423212010&single=true&output=csv";
+        // 第二部分：宿舍規則發布網址
+        const urlRules = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQkqhXCPp4XiHKCEpI3pz4pzcu3sQreQ_qNRLger00ULCHFr9cTbXHMQqAfk7dLa_gUBAIBSJ5sZM4F/pub?gid=1321214296&single=true&output=csv";
 
         const tenantNames = { "內大": "洪健棋", "內小": "郭丹騏", "中": "尹奕竤", "外": "林易諒" };
 
@@ -303,7 +326,7 @@
                 let nextDutyName = "未設定";
 
                 for (let i = 1; i < lines.length; i++) {
-                    const cells = lines[i].split(",").map(c => c.replace(/["']/g, '').trim());
+                    const cells = parseCSVLine(lines[i]);
                     const roomKey = cells[0];
                     const nameVal = cells[1];
                     const dutyMarker = cells[6]; 
@@ -345,7 +368,6 @@
             if (dutyCountdownTimer) clearInterval(dutyCountdownTimer);
         }
 
-        // 💡 內置的高質感 CSV 狀態機解析器，精準避開 Emoji 與千分位斷開問題
         function parseCSVLine(line) {
             let cells = []; let currentCell = ""; let inQuotes = false;
             for (let i = 0; i < line.length; i++) {
@@ -358,7 +380,54 @@
             return cells;
         }
 
-        // 📧 升級版跑馬燈預覽載入函式：具備【級別權重優先排序 + 同級依新到舊二次排序】機制
+        // 第二部分：動態加載並轉譯「宿舍規則」CSV
+        async function loadDynamicRules() {
+            try {
+                const response = await fetchWithTimeout(urlRules, { timeout: 4000 });
+                const csvText = await response.text();
+                if (csvText.includes("<!doctype html") || csvText.includes("<script")) return;
+
+                const lines = csvText.replace(/\r/g, "").split("\n").map(l => l.trim()).filter(l => l);
+                if (lines.length < 2) return;
+
+                let htmlHtml = "";
+                let editionDate = "2026/6/6"; // 備用預設值
+
+                for(let i = 1; i < lines.length; i++) {
+                    const cells = parseCSVLine(lines[i]);
+                    if (cells.length < 3) continue;
+
+                    const level = cells[0];       // 級別 (總綱/主法/細則)
+                    const vMarker = cells[1];     // 粗體標記 (v)
+                    const content = cells[2];     // 內容文字
+                    
+                    // 從第二列抓取試算表右側定義的「編修日期」(E欄 -> 索引 4)
+                    if (i === 1 && cells[4]) {
+                        editionDate = cells[4];
+                    }
+
+                    if (!content || content === "") continue;
+
+                    // 依據級別進行樣式與粗體層次判斷
+                    if (level === "總綱") {
+                        htmlHtml += `<div class="rule-item rule-category-block">${content}</div>`;
+                    } else if (level === "主法") {
+                        htmlHtml += `<div class="rule-item rule-bold">${content}</div>`;
+                    } else if (level === "細則") {
+                        let isBold = (vMarker.toLowerCase() === 'v') ? "rule-bold" : "";
+                        htmlHtml += `<div class="rule-item rule-indent ${isBold}">${content}</div>`;
+                    }
+                }
+
+                document.getElementById('rulesEditionDate').innerText = `編修日期：${editionDate}`;
+                document.getElementById('dynamicRulesBody').innerHTML = htmlHtml;
+
+            } catch (e) {
+                console.error("宿舍公約規則讀取失敗:", e);
+                document.getElementById('dynamicRulesBody').innerHTML = `<div style="font-size:12px; color:#b54a4a;">⚠️ 動態法規庫聯機失敗，顯示唯讀快取。</div>`;
+            }
+        }
+
         async function loadAnnouncementsPreview() {
             try {
                 const response = await fetchWithTimeout(urlAnnounce, { timeout: 4000 });
@@ -368,7 +437,6 @@
                 const lines = text.replace(/\r/g, "").split("\n").map(l => l.trim()).filter(l => l);
                 if (lines.length < 2) return;
 
-                // 級別優先權配置表
                 const levelWeights = { "緊急": 3, "重要": 2, "普通": 1 };
                 let announcementList = [];
 
@@ -379,7 +447,6 @@
                     const level   = cleanCells[2] || "普通"; 
 
                     if (content && !content.includes("<!DOCTYPE")) {
-                        // 儲存原始工作表索引 i 作為時間順序依據（i 越大代表越晚發布）
                         announcementList.push({
                             content: content,
                             displayText: summary || content,
@@ -392,12 +459,8 @@
 
                 if (announcementList.length === 0) return;
 
-                // 💡 雙重排序核心核心：第一權重看層級分數(降序)；第二權重看上傳先後(倒序，舊到新/新到舊依需求對齊)
-                // 這裡 sequence 採降序 (b.sequence - a.sequence) 確保同級別中「最新發布的在前面」
                 announcementList.sort((a, b) => {
-                    if (b.weight !== a.weight) {
-                        return b.weight - a.weight; 
-                    }
+                    if (b.weight !== a.weight) { return b.weight - a.weight; }
                     return b.sequence - a.sequence; 
                 });
 
@@ -410,7 +473,7 @@
                 });
 
                 const marqueeContent = document.getElementById('marqueeContent');
-                marqueeContent.innerHTML = html + html; // 複製雙份確保無限循環流暢
+                marqueeContent.innerHTML = html + html; 
                 marqueeContent.style.animationDuration = `${announcementList.length * 11}s`;
                 document.getElementById('marqueeBar').style.display = "flex";
 
@@ -444,11 +507,15 @@
                 const eleReceiptIdx = 32;  
                 const eleDateIdx = 33;     
 
+                // 房租轉帳憑證索引對齊 (AI=34, AJ=35, AK=36, AL=37, AM=38)
+                const rentIdx = { "內大": 34, "內小": 35, "中": 36, "外": 37, "房東": 38 };
+
                 let totalWater = 0; let totalElectricity = 0; let historyTotal = 0;
                 const labels = []; const waterChartData = []; const eleChartData = [];
                 const meterDeltaTotal = [];
                 
                 globalParsedData = [];
+                let rentTableRowsHtml = ""; // 新增：用來動態堆疊房租憑證紀錄的列
 
                 for(let i = 1; i < lines.length; i++) {
                     const cells = lines[i].split(",").map(c => c.replace(/["'\uFEFF]/g, '').trim());
@@ -511,6 +578,29 @@
                             "外": parseFloat(cells[roomCostIdx["外"]]) || 0 
                         }
                     });
+
+                    // 第一部分：解析並拼裝房租憑證表格列資料 (純網址字串傳入圖片檢視器)
+                    const uBig   = cells[rentIdx["內大"]] || "";
+                    const uSmall = cells[rentIdx["內小"]] || "";
+                    const uMid   = cells[rentIdx["中"]] || "";
+                    const uOut   = cells[rentIdx["外"]] || "";
+                    const uOwner = cells[rentIdx["房東"]] || "";
+
+                    const btnBig   = uBig   ? `<span class="receipt-link-btn" onclick="openImageModal('${uBig}', '', '${monthVal} 內大房租憑證')">檢視</span>` : "<span style='color:#cbd1d6;'>-</span>";
+                    const btnSmall = uSmall ? `<span class="receipt-link-btn" onclick="openImageModal('${uSmall}', '', '${monthVal} 內小房租憑證')">檢視</span>` : "<span style='color:#cbd1d6;'>-</span>";
+                    const btnMid   = uMid   ? `<span class="receipt-link-btn" onclick="openImageModal('${uMid}', '', '${monthVal} 中房房租憑證')">檢視</span>` : "<span style='color:#cbd1d6;'>-</span>";
+                    const btnOut   = uOut   ? `<span class="receipt-link-btn" onclick="openImageModal('${uOut}', '', '${monthVal} 外房房租憑證')">檢視</span>` : "<span style='color:#cbd1d6;'>-</span>";
+                    const btnOwner = uOwner ? `<span class="receipt-link-btn" onclick="openImageModal('${uOwner}', '', '${monthVal} 轉帳房東證明')">檢視</span>` : "<span style='color:#cbd1d6;'>-</span>";
+
+                    rentTableRowsHtml += `
+                        <tr>
+                            <td><span class="rent-month-badge">${monthVal}</span></td>
+                            <td>${btnBig}</td>
+                            <td>${btnSmall}</td>
+                            <td>${btnMid}</td>
+                            <td>${btnOut}</td>
+                            <td>${btnOwner}</td>
+                        </tr>`;
                 }
                 
                 if (globalParsedData.length === 0) throw new Error("過濾後無可用月份紀錄");
@@ -581,6 +671,25 @@
                             </div>
                         </div>
                         <div class="chart-card meter-chart-spacer" style="background: #f4f6f8; border-color: #d2dae2;"><div class="chart-container" style="height: 220px;"><canvas id="meterChart"></canvas></div></div>
+                        
+                        <div class="gray-title" style="margin-top: 25px;">房租轉帳憑證紀錄</div>
+                        <div class="rent-receipt-card">
+                            <table class="rent-table">
+                                <thead>
+                                    <tr>
+                                        <th>月份</th>
+                                        <th>內大 (${tenantNames["內大"]})</th>
+                                        <th>內小 (${tenantNames["內小"]})</th>
+                                        <th>中房 (${tenantNames["中"]})</th>
+                                        <th>外房 (${tenantNames["外"]})</th>
+                                        <th>轉帳予房東</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${rentTableRowsHtml}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>`;
 
                 trendChartInstance = new Chart(document.getElementById('trendChart').getContext('2d'), {
@@ -602,6 +711,7 @@
                 });
 
                 loadDutyStatus();
+                loadDynamicRules(); // 觸發第二部分：動態規則讀取
             } catch (error) {
                 document.getElementById('mainContent').innerHTML = `<div class="loading" style="color: #b54a4a; text-align: left; max-width: 600px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">❌ 系統載入失敗。<br><br><span style="font-size:13px; color:#828a95; line-height: 1.5;">${error.message}</span></div>`;
             }
@@ -694,7 +804,7 @@
             }
             
             imgTitle.innerText = titleText;
-            dateDisplay.innerText = `上傳/抄錄日期：${uploadDate || "未記錄"}`;
+            dateDisplay.innerText = `上傳/抄錄日期：${uploadDate || "未填寫或依月份為準"}`;
             imgDisplay.onerror = function() {
                 this.onerror = null;
                 this.src = "https://placehold.co/600x400/f4f5f7/b54a4a?text=載入失敗\\n請確認雲端資料夾權限";
