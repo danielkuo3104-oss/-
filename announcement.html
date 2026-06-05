@@ -50,16 +50,16 @@
         .text-重要 { color: #b56a4a; }
         .text-普通 { color: #5a6168; }
 
-        /* 彈出視窗細緻樣式 */
+        /* 彈出視窗樣式 */
         .modal-overlay { position: fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.4); display:none; justify-content:center; align-items:center; z-index:1000; backdrop-filter: blur(4px); }
         .modal-overlay.active { display:flex; }
-        .modal-box { background:#ffffff; width:90%; max-width:520px; border-radius:24px; padding:28px; box-shadow:0 12px 30px rgba(0,0,0,0.15); max-height:80vh; overflow-y:auto; }
-        .modal-title { font-size:18px; font-weight:700; color:#4a515a; margin-bottom:20px; border-bottom:1px solid #eaecef; padding-bottom:12px; text-align:center; }
+        .modal-box { background:#ffffff; width:90%; max-width:520px; border-radius:24px; padding:28px; box-shadow:0 12px 30px rgba(0,0,0,0.15); max-height:80vh; overflow-y:auto; text-align: left !important; }
+        .modal-title { font-size:18px; font-weight:700; color:#4a515a; margin-bottom:20px; border-bottom:1px solid #eaecef; padding-bottom:12px; text-align:center !important; }
         
-        .modal-item-block { margin-bottom:20px; position: relative; }
-        .modal-month-title { font-size:14px; font-weight:600; color:#69779b; margin-bottom:12px; border-left: 3px solid #69779b; padding-left: 8px; display: flex; justify-content: space-between; align-items: center; }
+        .modal-item-block { margin-bottom:20px; position: relative; text-align: left !important; }
+        .modal-month-title { font-size:14px; font-weight:600; color:#69779b; margin-bottom:12px; border-left: 3px solid #69779b; padding-left: 8px; display: flex; justify-content: space-between; align-items: center; text-align: left !important; }
         
-        /* 💡 修正關鍵：設定獨立 class，徹底解除任何 Flex 產生的居中與寬度壓縮問題 */
+        /* 💡 終極修正關鍵：改用 break-spaces，並徹底阻斷任何繼承的居中或對齊混亂 */
         .modal-body-content {
             display: block !important;
             text-align: left !important;
@@ -69,7 +69,7 @@
             font-size: 14px; 
             line-height: 1.6; 
             word-break: break-all; 
-            white-space: pre-wrap; 
+            white-space: break-spaces !important; 
             background: #f8fafc; 
             border: 1px solid #eaecef; 
             color: #4a515a;
@@ -77,9 +77,11 @@
             box-sizing: border-box;
         }
 
-        .detail-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 8px; color: #5a6168; }
-        .detail-table th, .detail-table td { padding: 10px 12px; border-bottom: 1px solid #f0f2f5; text-align: left; }
-        .detail-table th { background: #f8fafc; color: #8a929a; font-weight: 600; }
+        /* 💡 修正下方的細項表格，確保所有 th 和 td 都絕對靠左 */
+        .detail-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 8px; color: #5a6168; text-align: left !important; }
+        .detail-table th, .detail-table td { padding: 10px 12px; border-bottom: 1px solid #f0f2f5; text-align: left !important; }
+        .detail-table th { background: #f8fafc; color: #8a929a; font-weight: 600; width: 80px; }
+        
         .close-btn { width:100%; background:#69779b; color:white; border:none; padding:13px; border-radius:12px; font-size:14px; font-weight:600; cursor:pointer; margin-top:15px; transition:background 0.2s; }
         .close-btn:hover { background:#586585; }
 
@@ -138,19 +140,19 @@
                 globalAnnouncements = []; 
 
                 for (let i = 1; i < lines.length; i++) {
-                    // 💡 安全解析防護：防止內文千分位逗號斷開欄位
                     const cells = lines[i].match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || lines[i].split(",");
                     const cleanCells = cells.map(c => c.replace(/^["']|["']$/g, '').trim());
                     
-                    const content = cleanCells[0];       // A 欄：公告內容
-                    const summary = cleanCells[1] || ""; // B 欄：摘要
-                    const level   = cleanCells[2] || "普通"; // C 欄：級別
-                    const dueDate = cleanCells[3] || "無特定期限"; // D 欄：到期日
-                    const author  = cleanCells[4] || "管理員";     // E 欄：公告人
+                    const content = cleanCells[0];       
+                    const summary = cleanCells[1] || ""; 
+                    const level   = cleanCells[2] || "普通"; 
+                    const dueDate = cleanCells[3] || "無特定期限"; 
+                    const author  = cleanCells[4] || "管理員";     
 
                     if (content && !content.includes("<!DOCTYPE")) {
                         globalAnnouncements.push({ content, summary, level, dueDate, author });
                         const idx = globalAnnouncements.length - 1;
+
                         const cardDisplayText = summary || content;
 
                         html += `
@@ -182,20 +184,19 @@
             const body = document.getElementById('modalBody');
             const leftBorderColor = (item.level === '緊急') ? '#d96b6b' : ((item.level === '重要') ? '#d9886b' : '#69779b');
 
-            // 💡 關鍵修正：使用 .trim() 徹底清除字串前後所有看不見的全形/半形空格與換行字元
             const cleanContent = item.content ? item.content.trim() : "";
 
             body.innerHTML = `
-                <div class="modal-item-block" style="display: block !important; text-align: left !important;">
-                    <div class="modal-month-title" style="border-left-color: ${leftBorderColor}; display: flex; justify-content: space-between; align-items: center;">
+                <div class="modal-item-block">
+                    <div class="modal-month-title" style="border-left-color: ${leftBorderColor};">
                         <span>公告層級：<span class="badge ${item.level}">${item.level}</span></span>
                     </div>
                     <div class="modal-body-content">
                         ${cleanContent}
                     </div>
-                    <table class="detail-table" style="width: 100%;">
+                    <table class="detail-table">
                         <tbody>
-                            <tr><th style="width: 80px;">發布人員</th><td>${item.author}</td></tr>
+                            <tr><th>發布人員</th><td>${item.author}</td></tr>
                             <tr><th>有效期限</th><td>至 ${item.dueDate} 止</td></tr>
                         </tbody>
                     </table>
