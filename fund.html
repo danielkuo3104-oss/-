@@ -30,7 +30,7 @@
         }
 
         .nav-tabs { display: flex; justify-content: center; background: #ffffff; border-bottom: 1px solid #d2dad5; gap: 30px; padding: 0 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.01); }
-        .nav-link { padding: 16px 24px; font-size: 14px; font-weight: 600; color: #8fa095; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.25s ease; text-decoration: none; }
+        .nav-link { padding: 16px 24px; font-size: 14px; font-weight: 600; color: #8fa095; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.2s ease; text-decoration: none; }
         .nav-link.active { color: #556b5c; border-bottom-color: #556b5c; }
 
         .main-container { max-width: 1200px; margin: 0 auto 40px auto; padding: 0 20px; box-sizing: border-box; }
@@ -47,7 +47,7 @@
             padding-left: 8px;
         }
 
-        /* 置頂網格卡片：無邊框極簡風 */
+        /* 置頂網格卡片 */
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-bottom: 0; }
         .stat-card {
             background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(12px); border-radius: 20px; padding: 24px;
@@ -59,7 +59,7 @@
         .stat-value { font-size: 24px; font-weight: 700; color: #404742; }
         .stat-sub { font-size: 12px; color: #8fa095; margin-top: 8px; line-height: 1.5; }
 
-        /* 🟢 結餘專屬卡片：深莫蘭迪綠 */
+        /* 🟢 結餘專屬卡片 */
         .stat-card.fund-balance { 
             background: linear-gradient(135deg, #647d6c 0%, #4a5d51 100%); 
             border: none; 
@@ -69,25 +69,25 @@
         .stat-card.fund-balance .stat-value { color: #ffffff; font-size: 32px; }
         .stat-card.fund-balance .stat-sub { color: rgba(255, 255, 255, 0.6); }
 
-        /* 🟢 總收入專屬卡片：淺莫蘭迪綠 */
-        .stat-card.total-income { background: linear-gradient(135deg, #ffffff 0%, #edf4f0 100%); }
+        /* 🟢 總收入專屬卡片 (加入點擊手勢) */
+        .stat-card.total-income { background: linear-gradient(135deg, #ffffff 0%, #edf4f0 100%); cursor: pointer; }
         .stat-card.total-income .stat-label { color: #556b5c; font-weight: 600; }
         .stat-card.total-income .stat-value { color: #437353; }
         .stat-card.total-income .stat-sub { color: #768a7d; }
 
-        /* 🟠 總支出專屬卡片：淺莫蘭迪橘紅 */
-        .stat-card.total-expense { background: linear-gradient(135deg, #ffffff 0%, #fdf5f2 100%); }
+        /* 🟠 總支出專屬卡片 (加入點擊手勢) */
+        .stat-card.total-expense { background: linear-gradient(135deg, #ffffff 0%, #fdf5f2 100%); cursor: pointer; }
         .stat-card.total-expense .stat-label { color: #bc6c3a; font-weight: 600; }
-        .stat-card.total-expense .stat-value { color: #bc6c3a; } /* 🎯 修正為橘色調 */
+        .stat-card.total-expense .stat-value { color: #bc6c3a; } 
         .stat-card.total-expense .stat-sub { color: #c98a73; }
 
-        /* 🔘 最新動態卡片：全灰階莫蘭迪灰 */
+        /* 🔘 最新動態卡片 */
         .stat-card.latest-record { background: linear-gradient(135deg, #ffffff 0%, #f4f5f4 100%); }
         .stat-card.latest-record .stat-label { color: #8fa095; }
-        .stat-card.latest-record .stat-value { color: #626973; } /* 🎯 數字強制灰色 */
+        .stat-card.latest-record .stat-value { color: #626973; } 
         .stat-card.latest-record .stat-sub { color: #8fa095; }
 
-        /* 👁️ 憑證按鈕與文字省略 */
+        /* 👁️ 憑證按鈕 */
         .receipt-btn {
             display: inline-flex; align-items: center; justify-content: center;
             padding: 5px 12px; font-size: 11px; font-weight: 600; color: #556b5c;
@@ -98,15 +98,11 @@
         .no-receipt { font-size: 12px; color: #b8c4bc; font-style: italic; }
 
         .truncate-text {
-            max-width: 150px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            display: inline-block;
-            vertical-align: middle;
+            max-width: 150px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            display: inline-block; vertical-align: middle;
         }
 
-        /* 表格與互動列 */
+        /* 表格與歷史清單 */
         .morandi-table-container { width: 100%; overflow-x: auto; background: #ffffff; border-radius: 20px; border: 1px solid #dcdfdc; margin-top: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.01); }
         .morandi-table { width: 100%; border-collapse: collapse; font-size: 14px; text-align: left; }
         .morandi-table th, .morandi-table td { padding: 16px 20px; border-bottom: 1px solid #f2f4f2; }
@@ -126,14 +122,23 @@
         /* 彈出視窗細緻設計 */
         .modal-overlay { position: fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.4); display:none; justify-content:center; align-items:center; z-index:1000; backdrop-filter: blur(4px); }
         .modal-overlay.active { display:flex; }
-        .modal-box { background:#ffffff; width:90%; max-width:480px; border-radius:24px; padding:32px; box-shadow:0 12px 30px rgba(0,0,0,0.2); }
+        .modal-box { background:#ffffff; width:90%; max-width:480px; border-radius:24px; padding:32px; box-shadow:0 12px 30px rgba(0,0,0,0.2); max-height:85vh; overflow-y:auto; }
         .modal-title { font-size:18px; font-weight:700; color:#404742; margin-bottom:24px; border-bottom:1px solid #eaecef; padding-bottom:16px; text-align:center; }
         .modal-row { display:flex; justify-content:space-between; align-items: center; padding:12px 0; font-size:14px; color:#5a6168; border-bottom:1px solid #f0f2f5; }
         .modal-row:last-child { border-bottom: none; }
         .close-btn { width:100%; background:#556b5c; color:white; border:none; padding:14px; border-radius:12px; font-size:14px; font-weight:600; cursor:pointer; margin-top:20px; transition:background 0.2s; }
         .close-btn:hover { background:#435448; }
 
-        /* 手機版優化：隱藏次要資訊，保留核心，依靠點擊展開 */
+        /* 高質感內嵌憑證相片視窗專用樣式 */
+        .image-modal-box { max-width: 440px; text-align: center; padding: 24px; }
+        .receipt-date-tag { font-size: 13px; color: #768a7d; background: #edf2ee; padding: 6px 14px; border-radius: 30px; display: inline-block; margin-bottom: 12px; font-weight: 500; }
+        .receipt-img-container {
+            width: 100%; background: #f5f7f5; border-radius: 14px; border: 1px solid #dcdfdc;
+            margin: 12px 0; overflow: hidden; display: flex; justify-content: center; align-items: center; min-height: 200px;
+        }
+        .receipt-img-container img { width: 100%; height: auto; max-height: 52vh; object-fit: contain; display: block; }
+
+        /* 手機版優化 */
         @media (max-width: 768px) {
             .header-banner { padding: 35px 20px 45px 20px; }
             .header-banner h1 { font-size: 22px; }
@@ -181,10 +186,39 @@
         </div>
     </div>
 
+    <div class="modal-overlay" id="filterListModal" onclick="closeFilterListModal()">
+        <div class="modal-box" style="max-width: 540px;" onclick="event.stopPropagation()">
+            <div class="modal-title" id="filterModalTitle">收支明細清單</div>
+            <div class="morandi-table-container" style="max-height: 50vh; overflow-y: auto; margin-top: 0; border-radius: 12px;">
+                <table class="morandi-table" style="font-size: 13px;">
+                    <thead>
+                        <tr>
+                            <th>入帳日期</th>
+                            <th>款項類別</th>
+                            <th>金額變動</th>
+                        </tr>
+                    </thead>
+                    <tbody id="filterModalTableBody"></tbody>
+                </table>
+            </div>
+            <button class="close-btn" onclick="closeFilterListModal()">關閉視窗</button>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="fundImageModal" onclick="closeFundImageModal()" style="z-index: 1100;">
+        <div class="modal-box image-modal-box" onclick="event.stopPropagation()">
+            <div class="modal-title" id="fundImageModalTitle">檢視相片憑證</div>
+            <div class="receipt-date-tag" id="fundReceiptDateDisplay">上傳日期：--/--</div>
+            <div class="receipt-img-container">
+                <img id="fundReceiptImageDisplay" src="" alt="憑證照片載入中...">
+            </div>
+            <button class="close-btn" onclick="closeFundImageModal()" style="background:#768a7d;">關閉照片</button>
+        </div>
+    </div>
+
     <script>
         const urlFund = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQkqhXCPp4XiHKCEpI3pz4pzcu3sQreQ_qNRLger00ULCHFr9cTbXHMQqAfk7dLa_gUBAIBSJ5sZM4F/pub?gid=1043153411&single=true&output=csv";
 
-        // 全域變數供點擊彈窗使用
         window.currentFundData = [];
 
         function updateTimestamp() {
@@ -210,22 +244,13 @@
                 const lines = cleanText.split("\n").map(line => line.trim()).filter(line => line);
                 if(lines.length < 2) throw Error("公基金工作表內尚無任何記帳明細");
 
-                const dateIdx = 0;       
-                const typeIdx = 1;       
-                const amountIdx = 2;     
-                const balanceIdx = 3;    
-                const categoryIdx = 4;   
-                const descIdx = 5;       
-                const handlerIdx = 6;    
-                const receiptIdx = 7;    
+                const dateIdx = 0; const typeIdx = 1; const amountIdx = 2; const balanceIdx = 3;    
+                const categoryIdx = 4; const descIdx = 5; const handlerIdx = 6; const receiptIdx = 7;    
 
-                let totalIncome = 0;
-                let totalExpense = 0;
-                let fundHistory = [];
+                let totalIncome = 0; let totalExpense = 0; let fundHistory = [];
 
                 for(let i = 1; i < lines.length; i++) {
                     const cells = lines[i].split(",").map(c => c.replace(/["'\uFEFF]/g, '').trim());
-                    
                     if(!cells[dateIdx] || cells[dateIdx] === "" || cells[dateIdx].includes("日期")) continue;
 
                     const dateVal = cells[dateIdx];
@@ -235,7 +260,6 @@
                     const categoryVal = cells[categoryIdx] || "未分類";
                     const descVal = cells[descIdx] || "";
                     const handlerVal = cells[handlerIdx] || "無";
-                    
                     const receiptVal = cells.length > receiptIdx ? cells[receiptIdx] : ""; 
 
                     if (typeVal === "收入") {
@@ -245,14 +269,8 @@
                     }
 
                     fundHistory.push({
-                        date: dateVal,
-                        type: typeVal,
-                        amount: rawAmt,
-                        balance: balanceVal,
-                        category: categoryVal,
-                        desc: descVal,
-                        handler: handlerVal,
-                        receipt: receiptVal
+                        date: dateVal, type: typeVal, amount: rawAmt, balance: balanceVal,
+                        category: categoryVal, desc: descVal, handler: handlerVal, receipt: receiptVal
                     });
                 }
 
@@ -262,7 +280,6 @@
 
                 const latestRecord = window.currentFundData[0];
                 const currentBalance = latestRecord.balance; 
-
                 const latestAmtSign = latestRecord.type === "收入" ? "+" : "-";
 
                 const displayArea = document.getElementById('fundDisplayArea');
@@ -274,13 +291,13 @@
                             <div class="stat-value">NT$ ${currentBalance.toLocaleString()}</div>
                             <div class="stat-sub">即時帳戶可用總存額</div>
                         </div>
-                        <div class="stat-card total-income">
-                            <div class="stat-label">歷年累計總收入</div>
+                        <div class="stat-card total-income" onclick="openFilterListModal('收入')">
+                            <div class="stat-label">歷年累計總收入 (點擊看清單)</div>
                             <div class="stat-value">NT$ ${totalIncome.toLocaleString()}</div>
                             <div class="stat-sub">包含室友繳納與定期會費</div>
                         </div>
-                        <div class="stat-card total-expense">
-                            <div class="stat-label">歷年累計總支出</div>
+                        <div class="stat-card total-expense" onclick="openFilterListModal('支出')">
+                            <div class="stat-label">歷年累計總支出 (點擊看清單)</div>
                             <div class="stat-value">NT$ ${totalExpense.toLocaleString()}</div>
                             <div class="stat-sub">包含各項花費及修繕補貼</div>
                         </div>
@@ -304,7 +321,7 @@
                         <table class="morandi-table">
                             <thead>
                                 <tr>
-                                    <th>交易日期</th>
+                                    <th>入帳日期</th>
                                     <th class="hide-mobile">收支</th>
                                     <th>金額變動</th>
                                     <th>當期結餘</th>
@@ -318,9 +335,8 @@
                                 ${window.currentFundData.map((f, index) => {
                                     const amtClass = f.type === "收入" ? "amt-income" : "amt-expense";
                                     const amtSign = f.type === "收入" ? "+" : "-";
-                                    
                                     const receiptHtml = (f.receipt && f.receipt.includes("http"))
-                                        ? `<a href="${f.receipt}" target="_blank" class="receipt-btn" onclick="event.stopPropagation()">👁️ 憑證</a>`
+                                        ? `<div class="receipt-btn" onclick="event.stopPropagation(); openFundImageModal('${f.receipt}', '${f.date}', '${f.category} 款項憑證')">👁️ 憑證</div>`
                                         : `<span class="no-receipt">無憑證</span>`;
 
                                     return `
@@ -333,18 +349,15 @@
                                             <td class="hide-mobile"><span class="truncate-text" title="點擊查看完整內容">${f.desc || '無'}</span></td>
                                             <td class="hide-mobile" style="color:#8fa095; font-size:13px;">${f.handler}</td>
                                             <td class="hide-mobile">${receiptHtml}</td>
-                                        </tr>
-                                    `;
+                                        </tr>`;
                                 }).join('')}
                             </tbody>
                         </table>
-                    </div>
-                `;
+                    </div>`;
 
             } catch (error) {
                 document.getElementById('fundDisplayArea').innerHTML = `
-                    <div class="loading" style="color:#b54a4a; font-weight:600;">❌ 公基金調度看板解析失敗：${error.message}</div>
-                `;
+                    <div class="loading" style="color:#b54a4a; font-weight:600;">❌ 公局金調度看板解析失敗：${error.message}</div>`;
             }
         }
 
@@ -355,7 +368,7 @@
             const amtClass = f.type === "收入" ? "amt-income" : "amt-expense";
             const amtSign = f.type === "收入" ? "+" : "-";
             const receiptHtml = (f.receipt && f.receipt.includes("http"))
-                ? `<a href="${f.receipt}" target="_blank" class="receipt-btn" style="font-size: 13px; padding: 8px 16px; margin-top: 5px;">👁️ 點擊查看相片憑證</a>`
+                ? `<div class="receipt-btn" style="font-size: 13px; padding: 8px 16px; margin-top: 5px;" onclick="openFundImageModal('${f.receipt}', '${f.date}', '${f.category} 款項憑證')">👁️ 點擊查看相片憑證</div>`
                 : `<span class="no-receipt" style="display:block; margin-top:10px;">此筆款項無附憑證</span>`;
 
             document.getElementById('modalTitle').innerText = `交易明細 (${f.date})`;
@@ -388,13 +401,80 @@
                     <div style="margin-top: 25px; text-align: center;">
                         ${receiptHtml}
                     </div>
-                </div>
-            `;
+                </div>`;
             document.getElementById('detailModal').classList.add('active');
+        }
+
+        // 💡 全新實作：點擊總收/支卡片，彈出對應的精簡版篩選清單
+        function openFilterListModal(filterType) {
+            document.getElementById('filterModalTitle').innerText = `歷年公基金「純${filterType}」明細清單`;
+            
+            // 篩選出符合的資料
+            const filteredData = window.currentFundData.filter(f => f.type === filterType);
+            
+            let htmlContent = "";
+            if (filteredData.length === 0) {
+                htmlContent = `<tr><td colspan="3" style="text-align:center; color:#8fa095;">暫無任何${filterType}紀錄</td></tr>`;
+            } else {
+                filteredData.forEach(f => {
+                    const amtClass = f.type === "收入" ? "amt-income" : "amt-expense";
+                    const amtSign = f.type === "收入" ? "+" : "-";
+                    // 日期精簡為 YYYY/MM/DD
+                    const cleanDate = f.date.split(" ")[0];
+
+                    htmlContent += `
+                        <tr>
+                            <td class="td-date">${cleanDate}</td>
+                            <td class="td-category">${f.category}</td>
+                            <td class="${amtClass}"> ${amtSign}${Math.abs(f.amount).toLocaleString()}</td>
+                        </tr>`;
+                });
+            }
+            
+            document.getElementById('filterModalTableBody').innerHTML = htmlContent;
+            document.getElementById('filterListModal').classList.add('active');
+        }
+
+        function closeFilterListModal() {
+            document.getElementById('filterListModal').classList.remove('active');
         }
 
         function closeFundModal() { 
             document.getElementById('detailModal').classList.remove('active'); 
+        }
+
+        function openFundImageModal(driveUrl, uploadDate, titleText) {
+            const imgModal = document.getElementById('fundImageModal');
+            const imgTitle = document.getElementById('fundImageModalTitle');
+            const dateDisplay = document.getElementById('fundReceiptDateDisplay');
+            const imgDisplay = document.getElementById('fundReceiptImageDisplay');
+            
+            let directImageUrl = driveUrl;
+            if (driveUrl && driveUrl.includes("drive.google.com")) {
+                const match = driveUrl.match(/\/file\/d\/([^\/]+)/) || driveUrl.match(/[?&]id=([^&]+)/);
+                if (match && match[1]) {
+                    directImageUrl = `https://drive.google.com/thumbnail?id=${match[1]}&sz=w1000`;
+                }
+            }
+            
+            imgTitle.innerText = titleText;
+            dateDisplay.innerText = `入帳/上傳日期：${uploadDate || "未記錄"}`;
+            
+            imgDisplay.onerror = function() {
+                this.onerror = null;
+                this.src = "https://placehold.co/600x400/f2f5f3/b54a4a?text=載入失敗\\n請確認雲端資料夾權限";
+                alert("【圖片無法顯示】\n請確認儲存照片的 Google Drive 資料夾權限已開放。");
+            };
+            
+            imgDisplay.src = directImageUrl;
+            imgModal.classList.add('active');
+        }
+
+        function closeFundImageModal() {
+            const imgDisplay = document.getElementById('fundReceiptImageDisplay');
+            imgDisplay.onerror = null; 
+            imgDisplay.src = ""; 
+            document.getElementById('fundImageModal').classList.remove('active');
         }
 
         updateTimestamp();
