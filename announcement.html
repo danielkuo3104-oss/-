@@ -59,7 +59,7 @@
         .modal-item-block { margin-bottom:20px; position: relative; text-align: left !important; }
         .modal-month-title { font-size:14px; font-weight:600; color:#69779b; margin-bottom:12px; border-left: 3px solid #69779b; padding-left: 8px; display: flex; justify-content: space-between; align-items: center; text-align: left !important; }
         
-        /* 💡 終極修正關鍵：改用 break-spaces，並徹底阻斷任何繼承的居中或對齊混亂 */
+        /* 💡 終極修正：改採傳統 block 區塊排版，完全移除 pre-wrap 這種容易因換行符鬧脾氣的樣式 */
         .modal-body-content {
             display: block !important;
             text-align: left !important;
@@ -68,16 +68,25 @@
             margin: 14px 0 !important; 
             font-size: 14px; 
             line-height: 1.6; 
-            word-break: break-all; 
-            white-space: break-spaces !important; 
             background: #f8fafc; 
             border: 1px solid #eaecef; 
             color: #4a515a;
             width: auto !important;
             box-sizing: border-box;
         }
+        
+        /* 💡 段落樣式：強制清除首行縮進與任何外距干擾 */
+        .modal-body-content p {
+            margin: 0 0 8px 0 !important;
+            padding: 0 !important;
+            text-align: left !important;
+            text-indent: 0 !important;
+            word-break: break-all;
+        }
+        .modal-body-content p:last-child {
+            margin-bottom: 0 !important;
+        }
 
-        /* 💡 修正下方的細項表格，確保所有 th 和 td 都絕對靠左 */
         .detail-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 8px; color: #5a6168; text-align: left !important; }
         .detail-table th, .detail-table td { padding: 10px 12px; border-bottom: 1px solid #f0f2f5; text-align: left !important; }
         .detail-table th { background: #f8fafc; color: #8a929a; font-weight: 600; width: 80px; }
@@ -152,7 +161,6 @@
                     if (content && !content.includes("<!DOCTYPE")) {
                         globalAnnouncements.push({ content, summary, level, dueDate, author });
                         const idx = globalAnnouncements.length - 1;
-
                         const cardDisplayText = summary || content;
 
                         html += `
@@ -184,7 +192,11 @@
             const body = document.getElementById('modalBody');
             const leftBorderColor = (item.level === '緊急') ? '#d96b6b' : ((item.level === '重要') ? '#d9886b' : '#69779b');
 
-            const cleanContent = item.content ? item.content.trim() : "";
+            // 💡 核心進化：將內文用換行符切開，過濾掉每行前後的多餘隱形空格，並用獨立的 <p> 標籤包裝
+            let rawLines = item.content ? item.content.split('\n') : [];
+            let paragraphsHtml = rawLines
+                .map(line => `<p>${line.trim()}</p>`)
+                .join('');
 
             body.innerHTML = `
                 <div class="modal-item-block">
@@ -192,7 +204,7 @@
                         <span>公告層級：<span class="badge ${item.level}">${item.level}</span></span>
                     </div>
                     <div class="modal-body-content">
-                        ${cleanContent}
+                        ${paragraphsHtml}
                     </div>
                     <table class="detail-table">
                         <tbody>
