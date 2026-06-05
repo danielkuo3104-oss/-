@@ -345,7 +345,7 @@
             if (dutyCountdownTimer) clearInterval(dutyCountdownTimer);
         }
 
-        async async function loadAnnouncementsPreview() {
+        async function loadAnnouncementsPreview() {
             try {
                 const response = await fetchWithTimeout(urlAnnounce, { timeout: 4000 });
                 const text = await response.text();
