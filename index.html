@@ -6,7 +6,6 @@
     <title>宿舍智慧管理系統 - 首頁儀表板</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        /* 🎨 原版莫蘭迪（Morandi）高級色系調色盤 */
         body {
             font-family: 'PingFang TC', 'SF Pro Display', 'Microsoft JhengHei', sans-serif;
             background: linear-gradient(135deg, #f4f5f7 0%, #eaecef 100%);
@@ -33,12 +32,13 @@
         .nav-link { padding: 16px 24px; font-size: 14px; font-weight: 600; color: #8a929a; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.25s ease; text-decoration: none; }
         .nav-link.active { color: #69779b; border-bottom-color: #69779b; }
 
-        /* 公告欄跑馬燈 */
+        /* 公告欄跑馬燈（優化為整條點擊跳轉） */
         .marquee-wrapper {
             background: #ffffff; border-bottom: 1px solid #e1e4e8; height: 44px;
             overflow: hidden; position: relative; display: flex; align-items: center;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.02); cursor: pointer; transition: background-color 0.2s;
         }
+        .marquee-wrapper:hover { background-color: #f8fafc; }
         .marquee-title {
             position: absolute; left: 0; top: 0; bottom: 0; background: #7a828a;
             color: #ffffff; padding: 0 16px; font-size: 13px; font-weight: 600;
@@ -53,12 +53,10 @@
             100% { left: 0; transform: translate3d(-100%,0,0); }
         }
         
-        /* 優化公告項目點擊手勢與 Hover 特效 */
         .announcement-item { 
             display: inline-flex; align-items: center; margin-right: 50px; 
-            font-size: 13px; font-weight: 500; cursor: pointer; transition: opacity 0.2s; 
+            font-size: 13px; font-weight: 500; 
         }
-        .announcement-item:hover { opacity: 0.8; text-decoration: underline; }
         
         .badge { padding: 3px 9px; border-radius: 6px; font-size: 11px; font-weight: 700; margin-right: 8px; }
         .badge.緊急 { background: #d96b6b; color: white; animation: pulse 1s infinite alternate; }
@@ -93,31 +91,20 @@
         .stat-value { font-size: 24px; font-weight: 700; color: #3a414a; }
         .stat-sub { font-size: 12px; color: #9ba3ab; margin-top: 8px; line-height: 1.5; }
         
-        /* 公告欄補貼標籤風格 */
         .impute-green-badge {
-            display: inline-block;
-            font-size: 11px;
-            font-weight: 600;
-            color: #437353;
-            background: #ebf5ee;
-            border: 1px solid #d5ebd9;
-            padding: 4px 10px;
-            border-radius: 8px;
-            margin-top: 10px;
+            display: inline-block; font-size: 11px; font-weight: 600; color: #437353;
+            background: #ebf5ee; border: 1px solid #d5ebd9; padding: 4px 10px; border-radius: 8px; margin-top: 10px;
         }
         
         .stat-card.current-ele { background: linear-gradient(135deg, #ffffff 0%, #fdf6f0 100%); border: 1px solid rgba(217, 119, 54, 0.15); }
         .stat-card.current-ele .stat-value { color: #d97736; }
-        
         .stat-card.current-water { background: linear-gradient(135deg, #ffffff 0%, #edf3f7 100%); border: 1px solid rgba(82, 121, 150, 0.18); }
         .stat-card.current-water .stat-value { color: #527996; }
-        
         .stat-card.current-total { background: linear-gradient(135deg, #ffffff 0%, #f3f6f3 100%); border: 1px solid rgba(110, 145, 110, 0.15); }
         .stat-card.current-total .stat-value { color: #6e916e; }
 
         .stat-card.history-card { background: #ffffff; border: 1px solid #e1e4e8; }
         .stat-card.history-card .stat-value { color: #4a515a; }
-        
         .stat-card.history-purple { background: #ffffff; border: 1px solid #e1e4e8; }
         .stat-card.history-purple .stat-label { font-weight: 600; } 
         .stat-card.history-purple .stat-value { color: #7b2cbf; }
@@ -147,69 +134,26 @@
         .close-btn { width:100%; background:#69779b; color:white; border:none; padding:13px; border-radius:12px; font-size:14px; font-weight:600; cursor:pointer; margin-top:15px; transition:background 0.2s; }
         .close-btn:hover { background:#586585; }
 
-        /* 查看憑證與照片按鈕：全體維持原版藍色調 */
         .receipt-link-btn {
-            display: inline-block;
-            font-size: 11px;
-            font-weight: 600;
-            color: #527996;
-            background: #edf3f7;
-            border: 1px solid #cedde7;
-            padding: 3px 10px;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.2s;
+            display: inline-block; font-size: 11px; font-weight: 600; color: #527996; background: #edf3f7;
+            border: 1px solid #cedde7; padding: 3px 10px; border-radius: 6px; cursor: pointer; transition: all 0.2s;
         }
-        .receipt-link-btn:hover {
-            background: #dbecf7;
-            color: #3b5a70;
-        }
-        .receipt-group-box {
-            display: flex; gap: 6px;
-        }
+        .receipt-link-btn:hover { background: #dbecf7; color: #3b5a70; }
+        .receipt-group-box { display: flex; gap: 6px; }
 
-        /* 照片憑證展示專用彈出視窗樣式 */
-        .image-modal-box {
-            max-width: 460px;
-            text-align: center;
-            padding: 24px;
-        }
+        .image-modal-box { max-width: 460px; text-align: center; padding: 24px; }
         .receipt-img-container {
-            width: 100%;
-            background: #f8fafc;
-            border-radius: 12px;
-            border: 1px solid #eaecef;
-            margin: 14px 0;
-            overflow: hidden;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 200px;
+            width: 100%; background: #f8fafc; border-radius: 12px; border: 1px solid #eaecef;
+            margin: 14px 0; overflow: hidden; display: flex; justify-content: center; align-items: center; min-height: 200px;
         }
-        .receipt-img-container img {
-            width: 100%;
-            height: auto;
-            max-height: 50vh;
-            object-fit: contain;
-            display: block;
-        }
-        .receipt-date-tag {
-            font-size: 13px;
-            color: #7a828a;
-            background: #f1f3f5;
-            padding: 6px 14px;
-            border-radius: 30px;
-            display: inline-block;
-            margin-bottom: 10px;
-            font-weight: 500;
-        }
+        .receipt-img-container img { width: 100%; height: auto; max-height: 50vh; object-fit: contain; display: block; }
+        .receipt-date-tag { font-size: 13px; color: #7a828a; background: #f1f3f5; padding: 6px 14px; border-radius: 30px; display: inline-block; margin-bottom: 10px; font-weight: 500; }
 
-        /* 彈出視窗精緻表格 */
         .detail-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 8px; color: #5a6168; }
         .detail-table th, .detail-table td { padding: 10px 12px; border-bottom: 1px solid #f0f2f5; text-align: left; }
         .detail-table th { background: #f8fafc; color: #8a929a; font-weight: 600; }
 
-        /* 禮拜值日生風格 */
+        /* 值日生視窗樣式 */
         .duty-modal { max-width: 420px; text-align: center; border: 1px solid rgba(110, 145, 110, 0.2); }
         .duty-title { color: #4a515a; font-size: 18px; font-weight: 700; margin-bottom: 6px; }
         .duty-timer-sub { font-size: 11px; color: #9ba3ab; margin-bottom: 22px; font-weight: 500; }
@@ -254,7 +198,7 @@
         <a href="fund.html" class="nav-link">公基金資訊</a>
     </div>
 
-    <div class="marquee-wrapper" id="marqueeBar" style="display:none;">
+    <div class="marquee-wrapper" id="marqueeBar" style="display:none;" onclick="location.href='announcement.html'">
         <div class="marquee-title">公告欄</div>
         <div class="marquee-content" id="marqueeContent"></div>
     </div>
@@ -324,7 +268,6 @@
         const tenantNames = { "內大": "洪健棋", "內小": "郭丹騏", "中": "尹奕竤", "外": "林易諒" };
 
         let globalParsedData = []; 
-        let globalAnnouncements = []; // 儲存撈取下來的公告陣列
         let trendChartInstance = null; 
         let dutyCountdownTimer = null;
         let globalBasePhotoUrl = ""; 
@@ -343,15 +286,12 @@
             const { timeout = 6000 } = options;
             const controller = new AbortController();
             const id = setTimeout(() => controller.abort(), timeout);
-            const response = await fetch(resource, { ...options, signal: controller.signal });
-            return response;
+            return await fetch(resource, { ...options, signal: controller.signal });
         }
 
         async function loadDutyStatus() {
             try {
-                if (sessionStorage.getItem('dutyModalShown') === 'true') {
-                    return; 
-                }
+                if (sessionStorage.getItem('dutyModalShown') === 'true') return; 
 
                 const response = await fetchWithTimeout(urlTenantInfo, { timeout: 4000 });
                 const csvText = await response.text();
@@ -377,9 +317,7 @@
 
                 document.getElementById('currentDutyName').innerText = currentDutyName;
                 document.getElementById('nextDutyName').innerText = nextDutyName;
-
                 triggerDutyModal();
-
             } catch (e) {
                 console.error("值日生資料抓取失敗:", e);
             }
@@ -389,7 +327,6 @@
             const dutyModal = document.getElementById('dutyModal');
             const timerText = document.getElementById('dutyTimerText');
             dutyModal.classList.add('active');
-
             sessionStorage.setItem('dutyModalShown', 'true');
 
             let secondsLeft = 5;
@@ -405,12 +342,10 @@
 
         function closeDutyModal() {
             document.getElementById('dutyModal').classList.remove('active');
-            if (dutyCountdownTimer) {
-                clearInterval(dutyCountdownTimer);
-            }
+            if (dutyCountdownTimer) clearInterval(dutyCountdownTimer);
         }
 
-        async function loadAnnouncements() {
+        async function loadAnnouncementsPreview() {
             try {
                 const response = await fetchWithTimeout(urlAnnounce, { timeout: 4000 });
                 const text = await response.text();
@@ -421,22 +356,16 @@
 
                 let html = "";
                 let validCount = 0;
-                globalAnnouncements = []; 
 
                 for (let i = 1; i < lines.length; i++) {
                     const cells = lines[i].split(",").map(c => c.replace(/["']/g, '').trim());
                     const content = cells[0];
                     const level = cells[1] || "普通";
-                    const dueDate = cells[2] || "無特定期限";
-                    const author = cells[3] || "管理員";
 
                     if (content && !content.includes("<!DOCTYPE")) {
-                        globalAnnouncements.push({ content, level, dueDate, author });
-                        const idx = globalAnnouncements.length - 1;
-
                         validCount++;
                         html += `
-                            <div class="announcement-item text-${level}" onclick="openAnnouncementDetail(${idx})">
+                            <div class="announcement-item text-${level}">
                                 <span class="badge ${level}">${level}</span> ${content}
                             </div>`;
                     }
@@ -448,44 +377,8 @@
                     document.getElementById('marqueeBar').style.display = "flex";
                 }
             } catch (e) {
-                console.error("公告欄加載失敗或超時:", e);
+                console.error("預覽公告加載失敗:", e);
             }
-        }
-
-        // 💡 點擊跑馬燈公告項目彈出詳細內容（完全維持原版莫蘭迪風格，無表符、無鮮紅）
-        function openAnnouncementDetail(index) {
-            const item = globalAnnouncements[index];
-            if (!item) return;
-
-            const overlay = document.getElementById('detailModal');
-            const title = document.getElementById('modalTitle');
-            const body = document.getElementById('modalBody');
-
-            title.innerText = "公告詳細內容";
-
-            // 根據級別對齊原工作表莫蘭迪配色：緊急(#d96b6b)、重要(#d9886b)、普通(#69779b)
-            const leftBorderColor = (item.level === '緊急') ? '#d96b6b' : ((item.level === '重要') ? '#d9886b' : '#69779b');
-            
-            // 卡片樣式比照電表區塊的高質感灰色與預設莫蘭迪字體色
-            const contentBoxStyle = 'background: #f8fafc; border: 1px solid #eaecef; color: #4a515a;';
-
-            body.innerHTML = `
-                <div class="modal-item-block">
-                    <div class="modal-month-title" style="border-left-color: ${leftBorderColor};">
-                        <span>公告層級：<span class="badge ${item.level}">${item.level}</span></span>
-                    </div>
-                    <div style="padding: 18px; border-radius: 12px; margin: 14px 0; font-size: 14px; line-height: 1.6; word-break: break-all; white-space: pre-wrap; ${contentBoxStyle}">
-                        ${item.content}
-                    </div>
-                    <table class="detail-table">
-                        <tbody>
-                            <tr><th style="width: 80px;">發布人員</th><td>${item.author}</td></tr>
-                            <tr><th>有效期限</th><td>至 ${item.dueDate} 止</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            `;
-            overlay.classList.add('active');
         }
 
         async function initDashboard() {
@@ -504,7 +397,6 @@
                 const monthIdx = 0; const waterIdx = 1; const eleTotalIdx = 11; 
                 const deltaIdx = { "總和": 6, "內大": 7, "內小": 8, "中": 9, "外": 10 }; 
                 const roomCostIdx = { "內大": 12, "內小": 13, "中": 14, "外": 15 }; 
-                
                 const recordIdx = { "內大": 2, "內小": 3, "中": 4, "外": 5 };
 
                 const meterPhotoIdx = 28;  
@@ -519,7 +411,6 @@
                 const meterDeltaTotal = [];
                 
                 globalParsedData = [];
-                globalBasePhotoUrl = ""; 
 
                 for(let i = 1; i < lines.length; i++) {
                     const cells = lines[i].split(",").map(c => c.replace(/["'\uFEFF]/g, '').trim());
@@ -529,9 +420,7 @@
                         continue;
                     }
 
-                    if(cells.length < 16 || !cells[monthIdx] || cells[monthIdx].includes("<script")) {
-                        continue;
-                    }
+                    if(cells.length < 16 || !cells[monthIdx] || cells[monthIdx].includes("<script")) continue;
 
                     const monthVal = cells[monthIdx];
                     const waterVal = parseFloat(cells[waterIdx]) || 0;
@@ -573,14 +462,10 @@
                     globalParsedData.push({
                         month: monthVal, water: waterVal, waterPerRoom: waterPerRoom, waterImpute: waterImpute,
                         eleTotal: eleTotalVal, eleImpute: eleImpute, total: combinedSum,
-                        deltaMeters: deltaMeters,
-                        recordMeters: recordMeters,
-                        meterPhoto: cells[meterPhotoIdx] || "",
-                        meterDate: cells[meterDateIdx] || "",
-                        waterReceipt: cells[waterReceiptIdx] || "",
-                        waterDate: cells[waterDateIdx] || "",
-                        eleReceipt: cells[eleReceiptIdx] || "",
-                        eleDate: cells[eleDateIdx] || "",
+                        deltaMeters: deltaMeters, recordMeters: recordMeters,
+                        meterPhoto: cells[meterPhotoIdx] || "", meterDate: cells[meterDateIdx] || "",
+                        waterReceipt: cells[waterReceiptIdx] || "", waterDate: cells[waterDateIdx] || "",
+                        eleReceipt: cells[eleReceiptIdx] || "", eleDate: cells[eleDateIdx] || "",
                         rooms: { 
                             "內大": parseFloat(cells[roomCostIdx["內大"]]) || 0, 
                             "內小": parseFloat(cells[roomCostIdx["內小"]]) || 0, 
@@ -595,14 +480,11 @@
                 const lastIdx = globalParsedData.length - 1;
                 const latest = globalParsedData[lastIdx];
 
-                let eleIdx = lastIdx;
-                let currentWaterIdx = lastIdx; 
-                
+                let eleIdx = lastIdx; let currentWaterIdx = lastIdx; 
                 while(eleIdx > 0 && globalParsedData[eleIdx].eleTotal === 0) eleIdx--;
                 while(currentWaterIdx > 0 && globalParsedData[currentWaterIdx].water === 0) currentWaterIdx--;
                 
-                const dispEle = globalParsedData[eleIdx];
-                const dispWater = globalParsedData[currentWaterIdx]; 
+                const dispEle = globalParsedData[eleIdx]; const dispWater = globalParsedData[currentWaterIdx]; 
 
                 const eleRemark = (eleIdx !== lastIdx) ? `<div style="font-size: 11px; color: #b56a6a; margin-top: 8px; font-weight: 600;">* 當月無帳單，顯示 ${dispEle.month} 費用</div>` : "";
                 const waterRemark = (currentWaterIdx !== lastIdx) ? `<div style="font-size: 11px; color: #b56a6a; margin-top: 8px; font-weight: 600;">* 當月無帳單，顯示 ${dispWater.month} 費用</div>` : "";
@@ -641,16 +523,14 @@
                             <div class="stat-value">NT$ ${totalWater.toLocaleString()}</div>
                             <div class="stat-sub">查看歷月自來水費單與補貼紀錄</div>
                         </div>
-                       <div class="stat-card history-purple" onclick="openRoomDetails('historySummary')">
+                        <div class="stat-card history-purple" onclick="openRoomDetails('historySummary')">
                             <div class="stat-label">歷年費用加總</div>
                             <div class="stat-value">NT$ ${historyTotal.toLocaleString()}</div>
                             <div class="stat-sub">查看歷月水電合併摘要小計</div>
                         </div> 
                     </div>
 
-                    <div class="chart-header-row">
-                        <div class="section-title">歷年費用趨勢分析</div>
-                    </div>
+                    <div class="chart-header-row"><div class="section-title">歷年費用趨勢分析</div></div>
                     <div class="chart-card"><div class="chart-container"><canvas id="trendChart"></canvas></div></div>
 
                     <div class="gray-section">
@@ -663,11 +543,9 @@
                             </div>
                         </div>
                         <div class="chart-card meter-chart-spacer" style="background: #f4f6f8; border-color: #d2dae2;"><div class="chart-container" style="height: 220px;"><canvas id="meterChart"></canvas></div></div>
-                    </div>
-                `;
+                    </div>`;
 
-                const ctx = document.getElementById('trendChart').getContext('2d');
-                trendChartInstance = new Chart(ctx, {
+                trendChartInstance = new Chart(document.getElementById('trendChart').getContext('2d'), {
                     type: 'line',
                     data: {
                         labels: labels,
@@ -676,38 +554,18 @@
                             { label: '水費帳單', data: waterChartData, borderColor: '#527996', backgroundColor: 'transparent', borderWidth: 2.5, pointBackgroundColor: '#527996', tension: 0.25, spanGaps: true }
                         ]
                     },
-                    options: { 
-                        responsive: true, 
-                        maintainAspectRatio: false, 
-                        scales: { 
-                            x: { display: false }, 
-                            y: { ticks: { callback: val => 'NT$ ' + val.toLocaleString() } } 
-                        } 
-                    }
+                    options: { responsive: true, maintainAspectRatio: false, scales: { x: { display: false }, y: { ticks: { callback: val => 'NT$ ' + val.toLocaleString() } } } }
                 });
 
                 new Chart(document.getElementById('meterChart').getContext('2d'), {
                     type: 'line',
                     data: { labels: labels, datasets: [{ label: '全戶用電淨增加 (度)', data: meterDeltaTotal, borderColor: '#7e8794', backgroundColor: 'rgba(126, 135, 148, 0.04)', borderWidth: 2, pointBackgroundColor: '#626973', fill: true, tension: 0.2, spanGaps: true }]},
-                    options: { 
-                        responsive: true, 
-                        maintainAspectRatio: false, 
-                        plugins: { legend: { display: false } }, 
-                        scales: { 
-                            x: { display: false }, 
-                            y: { ticks: { callback: val => val + ' 度' } } 
-                        } 
-                    }
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { ticks: { callback: val => val + ' 度' } } } }
                 });
 
                 loadDutyStatus();
-
             } catch (error) {
-                document.getElementById('mainContent').innerHTML = `
-                    <div class="loading" style="color: #b54a4a; text-align: left; max-width: 600px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
-                        ❌ 系統載入失敗。<br><br>
-                        <span style="font-size:13px; color:#828a95; line-height: 1.5;">${error.message}<br><br>請確認發布網址正確，或按 F12 檢視主控台錯誤。</span>
-                    </div>`;
+                document.getElementById('mainContent').innerHTML = `<div class="loading" style="color: #b54a4a; text-align: left; max-width: 600px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">❌ 系統載入失敗。<br><br><span style="font-size:13px; color:#828a95; line-height: 1.5;">${error.message}</span></div>`;
             }
         }
 
@@ -718,77 +576,32 @@
             let htmlContent = "";
 
             if (globalParsedData.length === 0) return;
-
             const lastIdx = globalParsedData.length - 1;
             const latestItem = globalParsedData[lastIdx];
             
-            let eleIdx = lastIdx;
-            let waterIdx = lastIdx;
+            let eleIdx = lastIdx; let waterIdx = lastIdx;
             while(eleIdx > 0 && globalParsedData[eleIdx].eleTotal === 0) eleIdx--;
             while(waterIdx > 0 && globalParsedData[waterIdx].water === 0) waterIdx--;
 
-            const eleItem = globalParsedData[eleIdx];
-            const waterItem = globalParsedData[waterIdx];
+            const eleItem = globalParsedData[eleIdx]; const waterItem = globalParsedData[waterIdx];
 
             if (type === 'currentEle') {
                 title.innerText = `${eleItem.month} 電費分房明細`;
                 const receiptBtn = eleItem.eleReceipt ? `<div class="receipt-link-btn" onclick="openImageModal('${eleItem.eleReceipt}', '${eleItem.eleDate}', '${eleItem.month} 電費憑證')">查看憑證</div>` : "";
-                
-                htmlContent = `
-                    <div class="modal-item-block">
-                        <div class="modal-month-title">
-                            <span>${eleItem.month} 實付分攤</span>
-                            ${receiptBtn}
-                        </div>
-                        <table class="detail-table">
-                            <thead><tr><th>房客</th><th>實付金額</th></tr></thead>
-                            <tbody>
-                                <tr><td>${tenantNames["內大"]}</td><td>NT$ ${eleItem.rooms["內大"].toLocaleString()}</td></tr>
-                                <tr><td>${tenantNames["內小"]}</td><td>NT$ ${eleItem.rooms["內小"].toLocaleString()}</td></tr>
-                                <tr><td>${tenantNames["中"]}</td><td>NT$ ${eleItem.rooms["中"].toLocaleString()}</td></tr>
-                                <tr><td>${tenantNames["外"]}</td><td>NT$ ${eleItem.rooms["外"].toLocaleString()}</td></tr>
-                            </tbody>
-                        </table>
-                        <div style="font-size: 11px; color: #437353; background: #ebf5ee; padding: 8px 10px; border-radius: 6px; margin-top: 12px; font-weight: 600;">* 經電表精算後，公基金已自動補貼分攤 NT$ ${eleItem.eleImpute} 元</div>
-                        <div class="modal-row total-line"><span class="modal-row-label">當月電費總額</span><span class="modal-row-value" style="color:#d97736;">NT$ ${eleItem.eleTotal.toLocaleString()}</span></div>
-                    </div>`;
+                htmlContent = `<div class="modal-item-block"><div class="modal-month-title"><span>${eleItem.month} 實付分攤</span>${receiptBtn}</div><table class="detail-table"><thead><tr><th>房客</th><th>實付金額</th></tr></thead><tbody><tr><td>${tenantNames["內大"]}</td><td>NT$ ${eleItem.rooms["內大"].toLocaleString()}</td></tr><tr><td>${tenantNames["內小"]}</td><td>NT$ ${eleItem.rooms["內小"].toLocaleString()}</td></tr><tr><td>${tenantNames["中"]}</td><td>NT$ ${eleItem.rooms["中"].toLocaleString()}</td></tr><tr><td>${tenantNames["外"]}</td><td>NT$ ${eleItem.rooms["外"].toLocaleString()}</td></tr></tbody></table><div style="font-size: 11px; color: #437353; background: #ebf5ee; padding: 8px 10px; border-radius: 6px; margin-top: 12px; font-weight: 600;">* 經電表精算後，公基金已自動補貼分攤 NT$ ${eleItem.eleImpute} 元</div><div class="modal-row total-line"><span>當月電費總額</span><span style="color:#d97736;">NT$ ${eleItem.eleTotal.toLocaleString()}</span></div></div>`;
             } else if (type === 'currentWater') {
                 title.innerText = `${waterItem.month} 水費明細摘要`;
                 const receiptBtn = waterItem.waterReceipt ? `<div class="receipt-link-btn" onclick="openImageModal('${waterItem.waterReceipt}', '${waterItem.waterDate}', '${waterItem.month} 水費憑證')">查看憑證</div>` : "";
-                
-                htmlContent = `
-                    <div class="modal-item-block">
-                        <div class="modal-month-title">
-                            <span>${waterItem.month} 自來水費明細</span>
-                            ${receiptBtn}
-                        </div>
-                        <div class="modal-row"><span class="modal-row-label">全戶總水費</span><span class="modal-row-value">NT$ ${waterItem.water.toLocaleString()}</span></div>
-                        <div class="modal-row"><span class="modal-row-label">每房實付 (4房均分)</span><span class="modal-row-value">NT$ ${waterItem.waterPerRoom.toLocaleString()}</span></div>
-                        <div style="font-size: 11px; color: #437353; background: #ebf5ee; padding: 8px 10px; border-radius: 6px; margin-top: 12px; font-weight: 600;">* 餘數 NT$ ${waterItem.waterImpute} 已由公共基金自動補貼分攤</div>
-                    </div>`;
+                htmlContent = `<div class="modal-item-block"><div class="modal-month-title"><span>${waterItem.month} 自來水費明細</span>${receiptBtn}</div><div class="modal-row"><span>全戶總水費</span><span>NT$ ${waterItem.water.toLocaleString()}</span></div><div class="modal-row"><span>每房實付 (4房均分)</span><span>NT$ ${waterItem.waterPerRoom.toLocaleString()}</span></div><div style="font-size: 11px; color: #437353; background: #ebf5ee; padding: 8px 10px; border-radius: 6px; margin-top: 12px; font-weight: 600;">* 餘數 NT$ ${waterItem.waterImpute} 已由公共基金自動補貼分攤</div></div>`;
             } else if (type === 'currentSummary') {
                 title.innerText = `${latestItem.month} 水電加總摘要`;
-                htmlContent = `
-                    <div class="modal-item-block">
-                        <div class="modal-month-title">${latestItem.month} 實際結算加總</div>
-                        <div class="modal-row"><span class="modal-row-label">總電費出帳金額</span><span class="modal-row-value">NT$ ${latestItem.eleTotal.toLocaleString()}</span></div>
-                        <div class="modal-row"><span class="modal-row-label">總水費出帳金額</span><span class="modal-row-value">NT$ ${latestItem.water.toLocaleString()}</span></div>
-                        <div class="modal-row total-line"><span class="modal-row-label">當月實際花費總計</span><span class="modal-row-value" style="color:#6e916e;">NT$ ${latestItem.total.toLocaleString()}</span></div>
-                    </div>`;
+                htmlContent = `<div class="modal-item-block"><div class="modal-month-title">${latestItem.month} 實際結算加總</div><div class="modal-row"><span>總電費出帳金額</span><span>NT$ ${latestItem.eleTotal.toLocaleString()}</span></div><div class="modal-row"><span>總水費出帳金額</span><span>NT$ ${latestItem.water.toLocaleString()}</span></div><div class="modal-row total-line"><span>當月實際花費總計</span><span style="color:#6e916e;">NT$ ${latestItem.total.toLocaleString()}</span></div></div>`;
             } else if (type === 'historyEle') {
                 title.innerText = "歷月電費總額紀錄";
                 globalParsedData.forEach(item => {
                     if(item.eleTotal > 0) {
                         const receiptBtn = item.eleReceipt ? `<div class="receipt-link-btn" onclick="openImageModal('${item.eleReceipt}', '${item.eleDate}', '${item.month} 電費憑證')">查看憑證</div>` : "";
-                        htmlContent += `
-                            <div class="modal-item-block" style="border-bottom: 1px dashed #eaecef; padding-bottom: 10px;">
-                                <div class="modal-month-title">
-                                    <span>${item.month}</span>
-                                    ${receiptBtn}
-                                </div>
-                                <div class="modal-row"><span class="modal-row-label">電費帳單總額</span><span class="modal-row-value">NT$ ${item.eleTotal.toLocaleString()}</span></div>
-                                <div style="font-size: 11px; color: #437353; background: #ebf5ee; padding: 4px 8px; border-radius: 4px; display: inline-block; margin-top: 4px;">公基金補貼：NT$ ${item.eleImpute}</div>
-                            </div>`;
+                        htmlContent += `<div class="modal-item-block" style="border-bottom: 1px dashed #eaecef; padding-bottom: 10px;"><div class="modal-month-title"><span>${item.month}</span>${receiptBtn}</div><div class="modal-row"><span>電費帳單總額</span><span>NT$ ${item.eleTotal.toLocaleString()}</span></div><div style="font-size: 11px; color: #437353; background: #ebf5ee; padding: 4px 8px; border-radius: 4px; display: inline-block; margin-top: 4px;">公基金補貼：NT$ ${item.eleImpute}</div></div>`;
                     }
                 });
             } else if (type === 'historyWater') {
@@ -796,15 +609,7 @@
                 globalParsedData.forEach(item => {
                     if(item.water > 0) {
                         const receiptBtn = item.waterReceipt ? `<div class="receipt-link-btn" onclick="openImageModal('${item.waterReceipt}', '${item.waterDate}', '${item.month} 水費憑證')">查看憑證</div>` : "";
-                        htmlContent += `
-                            <div class="modal-item-block" style="border-bottom: 1px dashed #eaecef; padding-bottom: 10px;">
-                                <div class="modal-month-title">
-                                    <span>${item.month}</span>
-                                    ${receiptBtn}
-                                </div>
-                                <div class="modal-row"><span class="modal-row-label">全戶總水費</span><span class="modal-row-value">NT$ ${item.water.toLocaleString()}</span></div>
-                                <div class="modal-row"><span class="modal-row-label">每房實付 (均分)</span><span class="modal-row-value">NT$ ${item.waterPerRoom}</span></div>
-                            </div>`;
+                        htmlContent += `<div class="modal-item-block" style="border-bottom: 1px dashed #eaecef; padding-bottom: 10px;"><div class="modal-month-title"><span>${item.month}</span>${receiptBtn}</div><div class="modal-row"><span>全戶總水費</span><span>NT$ ${item.water.toLocaleString()}</span></div><div class="modal-row"><span>每房實付 (均分)</span><span>NT$ ${item.waterPerRoom}</span></div></div>`;
                     }
                 });
             } else if (type === 'historySummary') {
@@ -814,86 +619,21 @@
                     if (item.waterReceipt) receiptGroup += `<div class="receipt-link-btn" onclick="openImageModal('${item.waterReceipt}', '${item.waterDate}', '${item.month} 水費憑證')">水費憑證</div>`;
                     if (item.eleReceipt) receiptGroup += `<div class="receipt-link-btn" onclick="openImageModal('${item.eleReceipt}', '${item.eleDate}', '${item.month} 電費憑證')">電費憑證</div>`;
                     receiptGroup += `</div>`;
-
-                    htmlContent += `
-                        <div class="modal-item-block" style="border-bottom: 1px dashed #eaecef; padding-bottom: 10px;">
-                            <div class="modal-month-title">
-                                <span>${item.month}</span>
-                                ${receiptGroup}
-                            </div>
-                            <div class="modal-row"><span class="modal-row-label">水費金額</span><span class="modal-row-value">NT$ ${item.water.toLocaleString()}</span></div>
-                            <div class="modal-row"><span class="modal-row-label">電費金額</span><span class="modal-row-value">NT$ ${item.eleTotal.toLocaleString()}</span></div>
-                            <div class="modal-row total-line"><span class="modal-row-label">當月支出小計</span><span class="modal-row-value" style="color: #7b2cbf;">NT$ ${item.total.toLocaleString()}</span></div>
-                        </div>`;
+                    htmlContent += `<div class="modal-item-block" style="border-bottom: 1px dashed #eaecef; padding-bottom: 10px;"><div class="modal-month-title"><span>${item.month}</span>${receiptGroup}</div><div class="modal-row"><span>水費金額</span><span>NT$ ${item.water.toLocaleString()}</span></div><div class="modal-row"><span>電費金額</span><span>NT$ ${item.eleTotal.toLocaleString()}</span></div><div class="modal-row total-line"><span>當月支出小計</span><span style="color: #7b2cbf;">NT$ ${item.total.toLocaleString()}</span></div></div>`;
                 });
             } else if (type === 'meter') {
                 title.innerText = "歷月電表抄錄與實用度數";
-                
                 const basePhotoBtn = globalBasePhotoUrl ? `<div class="receipt-link-btn" onclick="openImageModal('${globalBasePhotoUrl}', '入住當日', '初始入住電表基準照片')">查看基準照片</div>` : "";
-
-                htmlContent = `
-                    <div style="background:#eef2f5; padding:14px; border-radius:12px; font-size:12px; color:#54606e; margin-bottom:15px; line-height:1.6; border: 1px solid #dbe2e8;">
-                        <div style="float: right; margin-top: -2px;">${basePhotoBtn}</div>
-                        初始入住電表基準值：<br>
-                        外: 7479.9 | 中: 3664.6 | 內大: 6337.0 | 內小: 4010.4
-                    </div>`;
+                htmlContent = `<div style="background:#eef2f5; padding:14px; border-radius:12px; font-size:12px; color:#54606e; margin-bottom:15px; line-height:1.6; border: 1px solid #dbe2e8;"><div style="float: right; margin-top: -2px;">${basePhotoBtn}</div>初始入住電表基準值：<br>外: 7479.9 | 中: 3664.6 | 內大: 6337.0 | 內小: 4010.4</div>`;
                     
                 globalParsedData.forEach(item => {
                     const photoBtn = item.meterPhoto ? `<div class="receipt-link-btn" onclick="openImageModal('${item.meterPhoto}', '${item.meterDate}', '${item.month} 電表照片憑證')">電表照片</div>` : "";
-                    
                     const recInBig   = item.recordMeters["內大"] !== "--" ? (parseFloat(item.recordMeters["內大"]) / 10).toFixed(1) : "--";
                     const recInSmall = item.recordMeters["內小"] !== "--" ? (parseFloat(item.recordMeters["內小"]) / 10).toFixed(1) : "--";
                     const recMid     = item.recordMeters["中"]   !== "--" ? (parseFloat(item.recordMeters["中"]) / 10).toFixed(1) : "--";
                     const recOut     = item.recordMeters["外"]   !== "--" ? (parseFloat(item.recordMeters["外"]) / 10).toFixed(1) : "--";
 
-                    htmlContent += `
-                        <div class="modal-item-block" style="background:#f8fafc; padding:16px; border-radius:12px; margin-bottom:12px; border: 1px solid #eef2f5;">
-                            <div class="modal-month-title" style="color:#54606e; border-left-color:#7e8794; margin-bottom: 14px;">
-                                <span>${item.month} 電表抄錄</span>
-                                ${photoBtn}
-                            </div>
-                            
-                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #f0f2f5;">
-                                <span style="font-size: 14px; font-weight: 500; color: #4a515a;">${tenantNames["外"]}</span>
-                                <div style="display: flex; align-items: center; gap: 12px;">
-                                    <span style="font-size: 13px; color: #8a929a; font-family: monospace; text-align: right; min-width: 60px;">${recOut}</span>
-                                    <div style="width: 1px; height: 14px; background: #cbd1d6;"></div>
-                                    <span style="font-size: 14px; font-weight: 700; color: #527996; min-width: 75px; text-align: right;">${item.deltaMeters["外"]} 度</span>
-                                </div>
-                            </div>
-
-                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #f0f2f5;">
-                                <span style="font-size: 14px; font-weight: 500; color: #4a515a;">${tenantNames["中"]}</span>
-                                <div style="display: flex; align-items: center; gap: 12px;">
-                                    <span style="font-size: 13px; color: #8a929a; font-family: monospace; text-align: right; min-width: 60px;">${recMid}</span>
-                                    <div style="width: 1px; height: 14px; background: #cbd1d6;"></div>
-                                    <span style="font-size: 14px; font-weight: 700; color: #527996; min-width: 75px; text-align: right;">${item.deltaMeters["長"] || item.deltaMeters["中"]} 度</span>
-                                </div>
-                            </div>
-
-                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #f0f2f5;">
-                                <span style="font-size: 14px; font-weight: 500; color: #4a515a;">${tenantNames["內大"]}</span>
-                                <div style="display: flex; align-items: center; gap: 12px;">
-                                    <span style="font-size: 13px; color: #8a929a; font-family: monospace; text-align: right; min-width: 60px;">${recInBig}</span>
-                                    <div style="width: 1px; height: 14px; background: #cbd1d6;"></div>
-                                    <span style="font-size: 14px; font-weight: 700; color: #527996; min-width: 75px; text-align: right;">${item.deltaMeters["內大"]} 度</span>
-                                </div>
-                            </div>
-
-                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #f0f2f5;">
-                                <span style="font-size: 14px; font-weight: 500; color: #4a515a;">${tenantNames["內小"]}</span>
-                                <div style="display: flex; align-items: center; gap: 12px;">
-                                    <span style="font-size: 13px; color: #8a929a; font-family: monospace; text-align: right; min-width: 60px;">${recInSmall}</span>
-                                    <div style="width: 1px; height: 14px; background: #cbd1d6;"></div>
-                                    <span style="font-size: 14px; font-weight: 700; color: #527996; min-width: 75px; text-align: right;">${item.deltaMeters["內小"]} 度</span>
-                                </div>
-                            </div>
-
-                            <div class="modal-row total-line" style="border-color:#d2dae2; padding-top: 14px;">
-                                <span class="modal-row-label" style="color:#4a515a; font-weight: 600;">全戶用電總計增加</span>
-                                <span class="modal-row-value" style="color:#527996; font-size: 16px; font-weight: 700;">${item.deltaMeters["總和"]} 度</span>
-                            </div>
-                        </div>`;
+                    htmlContent += `<div class="modal-item-block" style="background:#f8fafc; padding:16px; border-radius:12px; margin-bottom:12px; border: 1px solid #eef2f5;"><div class="modal-month-title" style="color:#54606e; border-left-color:#7e8794; margin-bottom: 14px;"><span>${item.month} 電表抄錄</span>${photoBtn}</div><div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #f0f2f5;"><span>${tenantNames["外"]}</span><div style="display: flex; align-items: center; gap: 12px;"><span style="font-size: 13px; color: #8a929a; font-family: monospace; text-align: right; min-width: 60px;">${recOut}</span><div style="width: 1px; height: 14px; background: #cbd1d6;"></div><span style="font-size: 14px; font-weight: 700; color: #527996; min-width: 75px; text-align: right;">${item.deltaMeters["外"]} 度</span></div></div><div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #f0f2f5;"><span>${tenantNames["中"]}</span><div style="display: flex; align-items: center; gap: 12px;"><span style="font-size: 13px; color: #8a929a; font-family: monospace; text-align: right; min-width: 60px;">${recMid}</span><div style="width: 1px; height: 14px; background: #cbd1d6;"></div><span style="font-size: 14px; font-weight: 700; color: #527996; min-width: 75px; text-align: right;">${item.deltaMeters["長"] || item.deltaMeters["中"]} 度</span></div></div><div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #f0f2f5;"><span>${tenantNames["內大"]}</span><div style="display: flex; align-items: center; gap: 12px;"><span style="font-size: 13px; color: #8a929a; font-family: monospace; text-align: right; min-width: 60px;">${recInBig}</span><div style="width: 1px; height: 14px; background: #cbd1d6;"></div><span style="font-size: 14px; font-weight: 700; color: #527996; min-width: 75px; text-align: right;">${item.deltaMeters["內大"]} 度</span></div></div><div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #f0f2f5;"><span>${tenantNames["內小"]}</span><div style="display: flex; align-items: center; gap: 12px;"><span style="font-size: 13px; color: #8a929a; font-family: monospace; text-align: right; min-width: 60px;">${recInSmall}</span><div style="width: 1px; height: 14px; background: #cbd1d6;"></div><span style="font-size: 14px; font-weight: 700; color: #527996; min-width: 75px; text-align: right;">${item.deltaMeters["內小"]} 度</span></div></div><div class="modal-row total-line" style="border-color:#d2dae2; padding-top: 14px;"><span style="color:#4a515a; font-weight: 600;">全戶用電總計增加</span><span style="color:#527996; font-size: 16px; font-weight: 700;">${item.deltaMeters["總和"]} 度</span></div></div>`;
                 });
             }
 
@@ -910,38 +650,29 @@
             const imgDisplay = document.getElementById('receiptImageDisplay');
             
             let directImageUrl = driveUrl;
-            
             if (driveUrl && driveUrl.includes("drive.google.com")) {
                 const match = driveUrl.match(/\/file\/d\/([^\/]+)/) || driveUrl.match(/[?&]id=([^&]+)/);
-                if (match && match[1]) {
-                    const fileId = match[1];
-                    directImageUrl = `https://drive.google.com/thumbnail?id=${fileId}&sz=w1000`;
-                }
+                if (match && match[1]) directImageUrl = `https://drive.google.com/thumbnail?id=${match[1]}&sz=w1000`;
             }
             
             imgTitle.innerText = titleText;
             dateDisplay.innerText = `上傳/抄錄日期：${uploadDate || "未記錄"}`;
-            
             imgDisplay.onerror = function() {
                 this.onerror = null;
-                console.error("圖片載入失敗，網址為:", directImageUrl);
                 this.src = "https://placehold.co/600x400/f4f5f7/b54a4a?text=載入失敗\\n請確認雲端資料夾權限";
-                alert("【圖片無法顯示】\n請確認儲存照片的 Google Drive 資料夾權限，是否已設為「知道連結的任何人均可查看」。");
+                alert("【圖片無法顯示】\n請確認儲存照片的 Google Drive 資料夾權限。");
             };
-            
             imgDisplay.src = directImageUrl;
             imgModal.classList.add('active');
         }
 
         function closeImageModal() {
             document.getElementById('imageModal').classList.remove('active');
-            const imgDisplay = document.getElementById('receiptImageDisplay');
-            imgDisplay.onerror = null; 
-            imgDisplay.src = ""; 
+            document.getElementById('receiptImageDisplay').src = ""; 
         }
 
         updateTimestamp();
-        loadAnnouncements();
+        loadAnnouncementsPreview();
         initDashboard();
     </script>
 </body>
