@@ -138,18 +138,19 @@
                 globalAnnouncements = []; 
 
                 for (let i = 1; i < lines.length; i++) {
-                    const cells = lines[i].split(",").map(c => c.replace(/["']/g, '').trim());
+                    // 💡 安全解析防護：防止內文千分位逗號斷開欄位
+                    const cells = lines[i].match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || lines[i].split(",");
+                    const cleanCells = cells.map(c => c.replace(/^["']|["']$/g, '').trim());
                     
-                    const content = cells[0];       // A 欄：公告內容
-                    const summary = cells[1] || ""; // B 欄：摘要
-                    const level = cells[2] || "普通"; // C 欄：級別
-                    const dueDate = cells[3] || "無特定期限"; // D 欄：到期日
-                    const author = cells[4] || "管理員";     // E 欄：公告人
+                    const content = cleanCells[0];       // A 欄：公告內容
+                    const summary = cleanCells[1] || ""; // B 欄：摘要
+                    const level   = cleanCells[2] || "普通"; // C 欄：級別
+                    const dueDate = cleanCells[3] || "無特定期限"; // D 欄：到期日
+                    const author  = cleanCells[4] || "管理員";     // E 欄：公告人
 
                     if (content && !content.includes("<!DOCTYPE")) {
                         globalAnnouncements.push({ content, summary, level, dueDate, author });
                         const idx = globalAnnouncements.length - 1;
-
                         const cardDisplayText = summary || content;
 
                         html += `
