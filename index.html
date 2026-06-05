@@ -358,14 +358,13 @@
                 let validCount = 0;
 
                 for (let i = 1; i < lines.length; i++) {
-                    const cells = lines[i].split(",").map(c => c.replace(/["']/g, '').trim());
-                    
-                    // 依照對應的全新欄位架構：
-                    const content = cells[0];       // A 欄：公告內容
-                    const summary = cells[1] || ""; // B 欄：摘要
-                    const level = cells[2] || "普通"; // C 欄：級別
-
-                    // 如果沒有摘要，就用完整的公告內容代替，確保跑馬燈不留白
+                    const cells = lines[i].match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || lines[i].split(",");
+                    const cleanCells = cells.map(c => c.replace(/^["']|["']$/g, '').trim()); // 移除包裹在外面的雙引號
+            
+                    const content = cleanCells[0];       // A 欄：公告內容
+                    const summary = cleanCells[1] || ""; // B 欄：摘要
+                    const level   = cleanCells[2] || "普通"; // C 欄：級別
+            
                     const displayText = summary || content;
 
                     if (content && !content.includes("<!DOCTYPE")) {
