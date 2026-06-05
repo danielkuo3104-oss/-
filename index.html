@@ -673,8 +673,10 @@
         }
 
         function closeImageModal() {
+            const imgDisplay = document.getElementById('receiptImageDisplay');
+            imgDisplay.onerror = null; // 💡 關鍵修正：在清空 src 之前，先解除 onerror 綁定，避免關閉時誤觸發警告
+            imgDisplay.src = ""; 
             document.getElementById('imageModal').classList.remove('active');
-            document.getElementById('receiptImageDisplay').src = ""; 
         }
 
         updateTimestamp();
