@@ -62,7 +62,7 @@
         .badge.緊急 { background: #d96b6b; color: white; animation: pulse 1s infinite alternate; }
         .badge.重要 { background: #d9886b; color: white; }
         .badge.普通 { background: #cbd1d6; color: #5a6168; }
-        .badge.增修 { background: #bd8a8a; color: white; }
+        .badge.增修 { background: #8696b8; color: white; }
         .badge.初編 { background: #cbd1d6; color: #5a6168; }
         .text-緊急 { color: #b54a4a; font-weight: 700; }
         .text-重要 { color: #b56a4a; }
@@ -81,6 +81,14 @@
         }
         
         .chart-header-row { display: flex; justify-content: space-between; align-items: center; margin: 0; }
+
+        /* 新增：可收合面板控制按鈕 */
+        .collapse-toggle-btn {
+            font-size: 12px; font-weight: 600; color: #69779b; background: #ffffff;
+            border: 1px solid #cbd1d6; padding: 4px 12px; border-radius: 20px;
+            cursor: pointer; transition: all 0.2s ease;
+        }
+        .collapse-toggle-btn:hover { background: #f0f2f5; color: #4a515a; }
 
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; margin-bottom: 0; }
         .stat-card {
@@ -119,20 +127,27 @@
         .gray-card { background: #f5f8fa; border-radius: 16px; padding: 20px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.01); border: 1px solid #dbe2e8; }
         .meter-chart-spacer { margin-top: 25px; margin-bottom: 25px; }
 
-        /* 修正：移去房租憑證外圍紅框，改為如趨勢圖一樣的純獨立白底區塊 */
-        .rent-receipt-card { background: #ffffff; border-radius: 20px; padding: 24px; box-shadow: 0 8px 20px rgba(140, 149, 159, 0.08); border: 1px solid #e1e4e8; }
+        /* 修正：移除紅框，與趨勢分析圖卡對齊，並配置收合過渡 */
+        .rent-receipt-card { 
+            background: #ffffff; border-radius: 20px; padding: 24px; 
+            box-shadow: 0 8px 20px rgba(140, 149, 159, 0.08); border: 1px solid #e1e4e8;
+            transition: max-height 0.3s ease-out, padding 0.3s ease, opacity 0.3s ease;
+            overflow: hidden; max-height: 1000px; opacity: 1;
+        }
+        .rent-receipt-card.collapsed {
+            max-height: 0 !important; padding-top: 0 !important; padding-bottom: 0 !important; border-color: transparent !important; opacity: 0; pointer-events: none;
+        }
         .rent-table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; color: #5a6168; }
         .rent-table th { background: #f8fafc; color: #626973; font-weight: 600; padding: 12px; border-bottom: 2px solid #eaecef; }
         .rent-table td { padding: 12px; border-bottom: 1px solid #f0f2f5; }
         .rent-table tr:hover { background-color: #f8fafc; }
         .rent-month-badge { font-weight: 600; color: #69779b; background: #eef2f5; padding: 3px 8px; border-radius: 6px; }
-        .rent-receipt-card .receipt-link-btn { color: #527996; background: #edf3f7; border-color: #cedde7; }
-        .rent-receipt-card .receipt-link-btn:hover { background: #dbecf7; color: #3b5a70; }
 
         /* 宿舍綜合公約動態卡片樣式 */
         .rules-card { background: #ffffff; border-radius: 20px; padding: 26px; box-shadow: 0 8px 20px rgba(140, 149, 159, 0.08); border: 1px solid #e1e4e8; margin-bottom: 15px; }
         .rules-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eaecef; padding-bottom: 12px; margin-bottom: 16px; }
         .rules-header .title { font-size: 15px; font-weight: 700; color: #69779b; }
+        /* 修正：移除表情符號，按鈕樣式優化 */
         .rules-header .date { font-size: 11px; color: #69779b; background: #edf3f7; padding: 4px 12px; border-radius: 20px; cursor: pointer; font-weight: 600; border: 1px solid #cedde7; transition: all 0.2s; }
         .rules-header .date:hover { background: #dbecf7; color: #3b5a70; }
         .rules-container { display: flex; flex-direction: column; gap: 6px; }
@@ -298,7 +313,7 @@
         let trendChartInstance = null; 
         let dutyCountdownTimer = null;
         let globalBasePhotoUrl = ""; 
-        let globalRulesHistory = []; // 存放歷史資料物件陣列
+        let globalRulesHistory = []; // 存放過濾後的有效歷史紀錄
 
         function updateTimestamp() {
             const now = new Date();
@@ -404,14 +419,16 @@
                     const cells = parseCSVLine(lines[i]);
                     if (cells.length < 3) continue;
 
-                    // 🛠️ 修正點：保存每一列的完整紀錄，包含為空的列，以便精準提取歷史版本
-                    globalRulesHistory.push(cells); 
-
                     const level = cells[0];       
                     const vMarker = cells[1];     
                     const content = cells[2];     
-                    const changeType = cells[3];  
-                    const changeDate = cells[4];  
+                    const changeType = cells[3];  // D欄 (修訂類別)
+                    const changeDate = cells[4];  // E欄 (編修日期)
+
+                    // 🛠️ 修正重構：只有當這一列有明確填寫「日期」與「類別」時，才將其視為一筆獨立的歷史修訂紀錄快照
+                    if (changeDate && changeDate !== "" && changeType && changeType !== "") {
+                        globalRulesHistory.push({ date: changeDate, type: changeType });
+                    }
 
                     if (changeDate && changeDate !== "") { latestDate = changeDate; }
                     if (changeType && changeType !== "") { latestType = changeType; }
@@ -451,14 +468,10 @@
                 return;
             }
 
-            // 🛠️ 修正點：精準提取每一對不重複的日期與變更類型組合，避免漏掉行
-            let historyMap = new Map();
-            globalRulesHistory.forEach(cells => {
-                const changeType = cells[3]; 
-                const changeDate = cells[4]; 
-                if (changeDate && changeDate !== "" && changeType && changeType !== "") {
-                    historyMap.set(`${changeDate}_${changeType}`, { date: changeDate, type: changeType });
-                }
+            // 🛠️ 修正點：利用過濾後的物件陣列，依據唯一鍵值進行去重，解決空白列阻斷渲染的問題
+            let uniqueHistory = new Map();
+            globalRulesHistory.forEach(item => {
+                uniqueHistory.set(`${item.date}_${item.type}`, item);
             });
 
             let htmlContent = `<div class="modal-item-block">
@@ -474,7 +487,7 @@
                     <tbody>`;
 
             let idx = 1;
-            historyMap.forEach((val) => {
+            uniqueHistory.forEach((val) => {
                 htmlContent += `
                     <tr>
                         <td><span class="rent-month-badge" style="background:#edf3f7; color:#69779b;">第 ${idx} 版</span></td>
@@ -487,6 +500,19 @@
             htmlContent += `</tbody></table></div>`;
             body.innerHTML = htmlContent;
             overlay.classList.add('active');
+        }
+
+        // 新增：房租憑證紀錄面板的展開/收合觸發器
+        function toggleRentPanel() {
+            const panel = document.getElementById('rentReceiptPanel');
+            const btn = document.getElementById('rentToggleBtn');
+            if (panel.classList.contains('collapsed')) {
+                panel.classList.remove('collapsed');
+                btn.innerText = '收合面板';
+            } else {
+                panel.classList.add('collapsed');
+                btn.innerText = '展開面板';
+            }
         }
 
         async function loadAnnouncementsPreview() {
@@ -732,8 +758,11 @@
                         <div class="chart-card meter-chart-spacer" style="background: #f4f6f8; border-color: #d2dae2;"><div class="chart-container" style="height: 220px;"><canvas id="meterChart"></canvas></div></div>
                     </div>
                     
-                    <div class="chart-header-row"><div class="section-title">房租轉帳憑證紀錄</div></div>
-                    <div class="rent-receipt-card">
+                    <div class="chart-header-row">
+                        <div class="section-title">房租轉帳憑證紀錄</div>
+                        <button class="collapse-toggle-btn" id="rentToggleBtn" onclick="allToggleRentPanel()">收合面板</button>
+                    </div>
+                    <div class="rent-receipt-card" id="rentReceiptPanel">
                         <table class="rent-table">
                             <thead>
                                 <tr>
@@ -744,28 +773,12 @@
                                     <th>外房 (${tenantNames["外"]})</th>
                                     <th>轉帳予房東</th>
                                 </tr>
-                            </table>
-                            <table class="rent-table">
-                                <thead>
-                                    <tr>
-                                        <th>月份</th>
-                                        <th>內大 (${tenantNames["內大"]})</th>
-                                        <th>內小 (${tenantNames["內小"]})</th>
-                                        <th>中房 (${tenantNames["中"]})</th>
-                                        <th>外房 (${tenantNames["外"]})</th>
-                                        <th>轉帳予房東</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    ${rentTableRowsHtml}
-                                </tbody>
-                            </table>
-                        </div>
+                            </thead>
+                            <tbody>
+                                ${rentTableRowsHtml}
+                            </tbody>
+                        </table>
                     </div>`;
-
-                // 🛠️ 修正點：修復因 innerHTML 替換機制漏掉的 Table 表格標籤閉合
-                const tableRef = document.getElementById('mainContent').getElementsByClassName('rent-table');
-                if(tableRef && tableRef[0]) tableRef[0].remove();
 
                 trendChartInstance = new Chart(document.getElementById('trendChart').getContext('2d'), {
                     type: 'line',
@@ -789,6 +802,19 @@
                 loadDynamicRules(); 
             } catch (error) {
                 document.getElementById('mainContent').innerHTML = `<div class="loading" style="color: #b54a4a; text-align: left; max-width: 600px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">❌ 系統載入失敗。<br><br><span style="font-size:13px; color:#828a95; line-height: 1.5;">${error.message}</span></div>`;
+            }
+        }
+
+        // 房租面板收合控制器核心
+        function allToggleRentPanel() {
+            const panel = document.getElementById('rentReceiptPanel');
+            const btn = document.getElementById('rentToggleBtn');
+            if (panel.classList.contains('collapsed')) {
+                panel.classList.remove('collapsed');
+                btn.innerText = '收合面板';
+            } else {
+                panel.classList.add('collapsed');
+                btn.innerText = '展開面板';
             }
         }
 
@@ -879,7 +905,7 @@
             }
             
             imgTitle.innerText = titleText;
-            dateDisplay.innerText = `上傳/抄錄日期：${uploadDate || "未填寫或依月份為準"}`;
+            dateDisplay.innerText = `上傳/抄錄日期：${uploadDate || "未記錄"}`;
             imgDisplay.onerror = function() {
                 this.onerror = null;
                 this.src = "https://placehold.co/600x400/f4f5f7/b54a4a?text=載入失敗\\n請確認雲端資料夾權限";
