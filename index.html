@@ -407,35 +407,35 @@
                 const response = await fetchWithTimeout(urlRules, { timeout: 4000 });
                 const csvText = await response.text();
                 if (csvText.includes("<!doctype html") || csvText.includes("<script")) return;
-
+        
                 const lines = csvText.replace(/\r/g, "").split("\n").map(l => l.trim()).filter(l => l);
                 if (lines.length < 2) return;
-
+        
                 let htmlHtml = "";
-                globalRulesHistory = []; 
+                globalRulesHistory = []; // 重置全域歷史紀錄
+                
                 let latestDate = "2026/6/6";
                 let latestType = "初編";
-
+        
                 for(let i = 1; i < lines.length; i++) {
                     const cells = parseCSVLine(lines[i]);
-                    if (cells.length < 3) continue;
-
-                    const level = cells[0];       
-                    const vMarker = cells[1];     
-                    const content = cells[2];     
-                    const changeType = cells[3];  // D欄
-                    const changeDate = cells[4];  // E欄
-
-                    // 🛠️ 修正點：不論這一列內容是否為空，只要有版本修訂時間戳，均先壓入歷史暫存器
-                    if (changeDate && changeDate !== "" && changeType && changeType !== "") {
+                    // 💡 移除嚴格的 cells.length < 3 限制，改為逐欄洗淨檢查
+                    
+                    const level = cells[0] ? cells[0].trim() : "";       
+                    const vMarker = cells[1] ? cells[1].trim() : "";     
+                    const content = cells[2] ? cells[2].trim() : "";     
+                    const changeType = cells[3] ? cells[3].trim() : "";  // 類別欄
+                    const changeDate = cells[4] ? cells[4].trim() : "";  // 日期欄
+        
+                    // 💡 防呆強化：只要這列有填寫任何修訂日期與類別，就絕對壓入歷史緩衝
+                    if (changeDate !== "" && changeType !== "") {
                         globalRulesHistory.push({ date: changeDate, type: changeType });
+                        latestDate = changeDate;
+                        latestType = changeType;
                     }
-
-                    if (changeDate && changeDate !== "") { latestDate = changeDate; }
-                    if (changeType && changeType !== "") { latestType = changeType; }
-
-                    if (!content || content === "") continue;
-
+        
+                    if (content === "") continue;
+        
                     if (level === "總綱") {
                         htmlHtml += `<div class="rule-item rule-category-block">${content}</div>`;
                     } else if (level === "主法") {
@@ -445,10 +445,10 @@
                         htmlHtml += `<div class="rule-item rule-indent ${isBold}">${content}</div>`;
                     }
                 }
-
+        
                 document.getElementById('rulesEditionDate').innerText = `編修日期：${latestDate} (${latestType})`;
                 document.getElementById('dynamicRulesBody').innerHTML = htmlHtml;
-
+        
             } catch (e) {
                 console.error("宿舍公約規則讀取失敗:", e);
                 document.getElementById('dynamicRulesBody').innerHTML = `<div style="font-size:12px; color:#b54a4a;">⚠️ 動態法規庫聯機失敗，顯示唯讀快取。</div>`;
@@ -456,6 +456,7 @@
         }
 
         // 🛠️ 修正點：獨立優化的點擊歷史彈窗渲染機制，完全避開空列蓋台 Bug
+        // 點擊歷史紀錄彈窗邏輯
         function openRulesHistoryModal() {
             const overlay = document.getElementById('detailModal');
             const title = document.getElementById('modalTitle');
@@ -468,13 +469,13 @@
                 overlay.classList.add('active');
                 return;
             }
-
-            // 利用 Map 結構對 (日期_類別) 鍵值進行精準去重
+        
+            // 精準去重
             let uniqueHistory = new Map();
             globalRulesHistory.forEach(item => {
                 uniqueHistory.set(`${item.date}_${item.type}`, item);
             });
-
+        
             let htmlContent = `<div class="modal-item-block">
                 <p style="font-size: 12px; color: #8a929a; margin-bottom: 15px;">此公約歷經以下版本更動修訂，依時間由舊至新排列：</p>
                 <table class="detail-table">
@@ -486,7 +487,7 @@
                         </tr>
                     </thead>
                     <tbody>`;
-
+        
             let idx = 1;
             uniqueHistory.forEach((val) => {
                 htmlContent += `
@@ -497,7 +498,7 @@
                     </tr>`;
                 idx++;
             });
-
+        
             htmlContent += `</tbody></table></div>`;
             body.innerHTML = htmlContent;
             overlay.classList.add('active');
