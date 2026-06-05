@@ -120,7 +120,6 @@
                 for (let i = 1; i < lines.length; i++) {
                     const cells = lines[i].split(",").map(c => c.replace(/["']/g, '').trim());
                     
-                    // 🔍 對照全新資料欄位順序：
                     const content = cells[0];       // A 欄：公告內容
                     const summary = cells[1] || ""; // B 欄：摘要
                     const level = cells[2] || "普通"; // C 欄：級別
@@ -131,7 +130,6 @@
                         globalAnnouncements.push({ content, summary, level, dueDate, author });
                         const idx = globalAnnouncements.length - 1;
 
-                        // 列表清單優先呈現摘要 (Summary)，若無摘要才顯示 Content
                         const cardDisplayText = summary || content;
 
                         html += `
@@ -163,13 +161,13 @@
             const body = document.getElementById('modalBody');
             const leftBorderColor = (item.level === '緊急') ? '#d96b6b' : ((item.level === '重要') ? '#d9886b' : '#69779b');
 
-            // 彈出視窗則顯示詳細完整的「公告內容 (item.content)」
+            // 💡 修正關鍵：在此處的 div inline style 中加入了 text-align: left;
             body.innerHTML = `
                 <div class="modal-item-block">
                     <div class="modal-month-title" style="border-left-color: ${leftBorderColor};">
                         <span>公告層級：<span class="badge ${item.level}">${item.level}</span></span>
                     </div>
-                    <div style="padding: 18px; border-radius: 12px; margin: 14px 0; font-size: 14px; line-height: 1.6; word-break: break-all; white-space: pre-wrap; background: #f8fafc; border: 1px solid #eaecef; color: #4a515a;">
+                    <div style="padding: 18px; border-radius: 12px; margin: 14px 0; font-size: 14px; line-height: 1.6; word-break: break-all; white-space: pre-wrap; background: #f8fafc; border: 1px solid #eaecef; color: #4a515a; text-align: left;">
                         ${item.content}
                     </div>
                     <table class="detail-table">
