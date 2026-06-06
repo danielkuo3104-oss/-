@@ -352,7 +352,7 @@
                 });
         }
 
-        // 嚴格逐字狀態機解析器：保證處理內含引號、換行的多列複雜 CSV 結構
+        // 逐字狀態機解析器
         function parseCSV(text) {
             allRecords = [];
             let lines = [];
@@ -360,17 +360,16 @@
             let currentCell = '';
             let inQuotes = false;
 
-            // 逐字元狀態掃描
             for (let i = 0; i < text.length; i++) {
                 let c = text[i];
                 let nextC = text[i + 1];
 
                 if (inQuotes) {
                     if (c === '"') {
-                        if (nextC === '"') { // 處理轉義雙引號 ""
+                        if (nextC === '"') {
                             currentCell += '"';
                             i++;
-                        } else { // 離開引號狀態
+                        } else {
                             inQuotes = false;
                         }
                     } else {
@@ -383,7 +382,7 @@
                         currentRow.push(currentCell.trim());
                         currentCell = '';
                     } else if (c === '\r' || c === '\n') {
-                        if (c === '\r' && nextC === '\n') i++; // 處理 \r\n
+                        if (c === '\r' && nextC === '\n') i++;
                         currentRow.push(currentCell.trim());
                         lines.push(currentRow);
                         currentRow = [];
@@ -398,17 +397,14 @@
                 lines.push(currentRow);
             }
 
-            // 對應並抓取 A 到 K 欄 (至少需要有時間與分類欄位)
             for (let idx = 1; idx < lines.length; idx++) {
                 let row = lines[idx];
                 if (!row || row.length < 2 || !row[0]) continue;
 
-                // 欄位對應指定
                 let date = row[0] ? row[0].trim() : '未定義日期';
                 let rawType = row[1] ? row[1].trim() : '事件';
                 let summary = row[2] ? row[2].trim() : '無摘要';
                 
-                // 處理 D 到 H 欄（索引 3 到 7）的出席或相關人員
                 let attendeesArray = [];
                 for (let col = 3; col <= 7; col++) {
                     if (row[col] && row[col].trim() !== "") {
@@ -416,7 +412,6 @@
                     }
                 }
                 
-                // 檢查是否同時滿足指定的四個人
                 let targetPeople = ["郭丹騏", "洪健棋", "尹奕竤", "林易諒"];
                 let hasAllTargets = targetPeople.every(person => attendeesArray.includes(person));
                 let finalAttendees = hasAllTargets ? "全體室友" : attendeesArray.join(', ');
@@ -426,7 +421,6 @@
                 let remark = row[9] ? row[9].trim() : '';
                 let reporter = row[10] ? row[10].trim() : '無記錄人';
 
-                // 智慧判定分類與標籤名稱
                 let finalType = '事件';
                 let displayLabel = '重大事件';
                 
@@ -451,8 +445,8 @@
                 });
             }
             
-            // 按日期從新到舊排序
-            allRecords.sort((a, b) => new Date(b.date.replace(/\//g, '-')) - new Date(a.date.replace(/\//g, '-')));
+            // 🛠️ 關鍵修正：排序改為由舊到新（越下面越新）
+            allRecords.sort((a, b) => new Date(a.date.replace(/\//g, '-')) - new Date(b.date.replace(/\//g, '-')));
         }
 
         // 渲染左側時間軸
@@ -500,6 +494,7 @@
                 container.appendChild(itemDiv);
             });
 
+            // 預設自動選取時間軸最上面（此時是最舊）的那一條紀錄
             if (filtered[0]) {
                 selectItem(filtered[0]);
             }
