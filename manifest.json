@@ -3,8 +3,8 @@
   "short_name": "宿舍系統",
   "start_url": "index.html",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#7CB342",
+  "background_color": "#F9F9F8",
+  "theme_color": "#F9F9F8",
   "icons": [
     {
       "src": "icon-192.png",
