@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>大事紀與會議記錄 - 宿舍智慧管理系統</title>
+    <style>
+        :root {
+            --bg-color: #F9F9F8;
+            --primary-green: #437353;
+            --light-green: #e8f5e9;
+            --text-dark: #333333;
+            --text-gray: #666666;
+            --border-color: #e0e0e0;
+            --glass-bg: rgba(255, 255, 255, 0.7);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-dark);
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* 頂部導覽列 */
+        .header {
+            display: flex;
+            align-items: center;
+            padding: 16px;
+            background: #ffffff;
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .back-btn {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 8px;
+            margin-right: 12px;
+            color: var(--primary-green);
+        }
+        .header h1 {
+            font-size: 18px;
+            margin: 0;
+            flex-grow: 1;
+        }
+
+        /* 模式切換 Tabs */
+        .tab-container {
+            display: flex;
+            background: #ffffff;
+            padding: 8px 16px;
+            border-bottom: 1px solid var(--border-color);
+            gap: 10px;
+        }
+        .tab {
+            flex: 1;
+            text-align: center;
+            padding: 10px 0;
+            font-size: 14px;
+            font-weight: bold;
+            border-radius: 20px;
+            cursor: pointer;
+            border: 1px solid var(--border-color);
+            background: #f5f5f5;
+            color: var(--text-gray);
+            transition: all 0.2s ease;
+        }
+        .tab.active {
+            background: var(--primary-green);
+            color: #ffffff;
+            border-color: var(--primary-green);
+        }
+
+        /* 主要佈局 */
+        .main-container {
+            display: flex;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 16px;
+            gap: 20px;
+            height: calc(100vh - 130px);
+        }
+
+        /* 左側時間軸選單 */
+        .timeline-side {
+            flex: 1;
+            overflow-y: auto;
+            position: relative;
+            padding-left: 20px;
+            border-right: 1px solid var(--border-color);
+        }
+        /* 時間軸中軸線 */
+        .timeline-side::before {
+            content: '';
+            position: absolute;
+            left: 25px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: var(--border-color);
+            z-index: 1;
+        }
+
+        .timeline-item {
+            position: relative;
+            padding-left: 30px;
+            margin-bottom: 20px;
+            cursor: pointer;
+            z-index: 2;
+        }
+        /* 時間軸圓點 */
+        .timeline-dot {
+            position: absolute;
+            left: 0;
+            top: 4px;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #cbd1d6;
+            border: 2px solid #ffffff;
+            box-shadow: 0 0 0 2px #cbd1d6;
+            transition: all 0.2s ease;
+        }
+        .timeline-item.active .timeline-dot {
+            background: var(--primary-green);
+            box-shadow: 0 0 0 2px var(--primary-green);
+            transform: scale(1.2);
+        }
+
+        .timeline-date {
+            font-size: 12px;
+            color: var(--text-gray);
+            font-weight: bold;
+        }
+        .timeline-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-top: 4px;
+        }
+        
+        /* 標籤樣式 */
+        .badge {
+            display: inline-block;
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-weight: bold;
+            margin-left: 6px;
+        }
+        .badge-meeting { background: #e3f2fd; color: #1e88e5; }
+        .badge-event { background: #fff3e0; color: #fb8c00; }
+
+        /* 右側詳細內容展示區 */
+        .content-side {
+            flex: 2;
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 24px;
+            border: 1px solid var(--border-color);
+            overflow-y: auto;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+        }
+
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            color: var(--text-gray);
+        }
+
+        .detail-header {
+            border-bottom: 2px solid var(--light-green);
+            padding-bottom: 16px;
+            margin-bottom: 20px;
+        }
+        .detail-title {
+            font-size: 22px;
+            margin: 0 0 8px 0;
+            color: var(--primary-green);
+        }
+        .detail-meta {
+            font-size: 13px;
+            color: var(--text-gray);
+            display: flex;
+            gap: 15px;
+        }
+
+        .detail-body {
+            font-size: 15px;
+            line-height: 1.6;
+            white-space: pre-wrap; /* 保持換行 */
+        }
+
+        /* 手機板響應式優化 */
+        @media (max-width: 768px) {
+            .main-container {
+                flex-direction: column;
+                height: auto;
+            }
+            .timeline-side {
+                border-right: none;
+                border-bottom: 1px solid var(--border-color);
+                max-height: 250px;
+                padding-bottom: 10px;
+            }
+            .timeline-side::before {
+                left: 15px;
+            }
+            .timeline-item {
+                padding-left: 20px;
+            }
+            .content-side {
+                flex: none;
+                height: 400px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <button class="back-btn" onclick="window.location.href='index.html'">←</button>
+        <h1>宿舍大事紀與會議記錄</h1>
+    </div>
+
+    <div class="tab-container">
+        <div class="tab active" onclick="switchMode('all', this)">全部記錄</div>
+        <div class="tab" onclick="switchMode('會議', this)">會議記錄</div>
+        <div class="tab" onclick="switchMode('事件', this)">重大事件</div>
+    </div>
+
+    <div class="main-container">
+        <div class="timeline-side" id="timelineContainer">
+            </div>
+
+        <div class="content-side" id="contentContainer">
+            <div class="empty-state">
+                <h3>請選擇左側的時間軸事件查看詳情</h3>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 讀取你的 Google Sheets CSV 網址
+        const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQkqhXCPp4XiHKCEpI3pz4pzcu3sQreQ_qNRLger00ULCHFr9cTbXHMQqAfk7dLa_gUBAIBSJ5sZM4F/pub?gid=1386210207&single=true&output=csv";
+        
+        let allRecords = [];
+        let currentMode = 'all';
+
+        // 頁面加載時自動讀取資料
+        window.addEventListener('DOMContentLoaded', fetchRecords);
+
+        function fetchRecords() {
+            fetch(csvUrl)
+                .then(response => response.text())
+                .then(text => {
+                    parseCSV(text);
+                    renderTimeline();
+                })
+                .catch(err => {
+                    console.error("讀取資料失敗:", err);
+                    document.getElementById('timelineContainer').innerHTML = "<p style='color:red;padding:10px;'>資料加載失敗，請檢查網路或CSV發布設定。</p>";
+                });
+        }
+
+        // 簡易 CSV 解析器
+        function parseCSV(text) {
+            const lines = text.split('\n');
+            allRecords = [];
+            
+            // 假設 CSV 欄位順序為：時間、類別（會議/事件）、標題、詳細內容、記錄人（你可以根據實際欄位微調下方的 index）
+            // 這裡自動過濾掉第一行 Header
+            for (let i = 1; i < lines.length; i++) {
+                if (!lines[i].trim()) continue;
+                
+                // 處理可能包含逗號的 CSV 欄位規避
+                const row = parseCsvLine(lines[i]);
+                
+                if (row.length >= 4) {
+                    allRecords.push({
+                        id: i,
+                        date: row[0] ? row[0].trim() : '',
+                        type: row[1] ? row[1].trim() : '事件', // 會議 或 事件
+                        title: row[2] ? row[2].trim() : '',
+                        content: row[3] ? row[3].trim() : '',
+                        reporter: row[4] ? row[4].trim() : '全體室友'
+                    });
+                }
+            }
+            
+            // 依時間從新到舊排序（如果你的 CSV 本身就是新到舊，這行可以註解掉）
+            allRecords.sort((a, b) => new Date(b.date) - new Date(a.date));
+        }
+
+        // 標準 CSV 單行拆解防呆（避免內容裡有逗號導致破格）
+        function parseCsvLine(line) {
+            let arr = [];
+            let quote = false;
+            let str = '';
+            for (let i = 0; i < line.length; i++) {
+                let char = line[i];
+                if (char === '"') {
+                    quote = !quote;
+                } else if (char === ',' && !quote) {
+                    arr.push(str);
+                    str = '';
+                } else {
+                    str += char;
+                }
+            }
+            arr.push(str);
+            return arr;
+        }
+
+        // 渲染左側時間軸
+        function renderTimeline() {
+            const container = document.getElementById('timelineContainer');
+            container.innerHTML = '';
+
+            // 根據模式篩選
+            const filtered = allRecords.filter(item => {
+                if (currentMode === 'all') return true;
+                return item.type === currentMode;
+            });
+
+            if (filtered.length === 0) {
+                container.innerHTML = '<p style="color:var(--text-gray); padding:10px;">目前沒有此分類的記錄。</p>';
+                showEmptyState();
+                return;
+            }
+
+            filtered.forEach((item, index) => {
+                const badgeClass = item.type === '會議' ? 'badge-meeting' : 'badge-event';
+                
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'timeline-item';
+                itemDiv.id = `item-${item.id}`;
+                itemDiv.onclick = () => selectItem(item);
+
+                itemDiv.innerHTML = `
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-date">${item.date} <span class="badge ${badgeClass}">${item.type}</span></div>
+                    <div class="timeline-title">${item.title}</div>
+                `;
+                container.appendChild(itemDiv);
+            });
+
+            // 預設自動點擊選取第一個最新事件
+            const firstItem = filtered[0];
+            if (firstItem) {
+                selectItem(firstItem);
+            }
+        }
+
+        // 點擊左側，在右側顯示詳細內容
+        function selectItem(item) {
+            // 切換時間軸點擊高亮樣式
+            document.querySelectorAll('.timeline-item').forEach(el => el.classList.remove('active'));
+            const activeEl = document.getElementById(`item-${item.id}`);
+            if (activeEl) activeEl.classList.add('active');
+
+            // 渲染右側
+            const contentContainer = document.getElementById('contentContainer');
+            const badgeClass = item.type === '會議' ? 'badge-meeting' : 'badge-event';
+
+            contentContainer.innerHTML = `
+                <div class="detail-header">
+                    <h2 class="detail-title">${item.title}</h2>
+                    <div class="detail-meta">
+                        <span>日期：${item.date}</span>
+                        <span>類別：<span class="badge ${badgeClass}">${item.type}</span></span>
+                        <span>記錄人：${item.reporter}</span>
+                    </div>
+                </div>
+                <div class="detail-body">${item.content}</div>
+            `;
+        }
+
+        // 切換模式（全部 / 會議 / 事件）
+        function switchMode(mode, tabEl) {
+            currentMode = mode;
+            document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+            tabEl.classList.add('active');
+            renderTimeline();
+        }
+
+        function showEmptyState() {
+            document.getElementById('contentContainer').innerHTML = `
+                <div class="empty-state">
+                    <h3>沒有選取的項目</h3>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>
