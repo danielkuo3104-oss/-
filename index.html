@@ -456,7 +456,7 @@
             return cells;
         }
 
-        // 動態加載綜合公約法規庫
+        // 動態加載綜合公約法規庫（修正版：放寬版本日期偵測，相容初發、初訂、初編、增修）
         async function loadDynamicRules() {
             try {
                 const response = await fetchWithTimeout(urlRules, { timeout: 4000 });
@@ -480,23 +480,17 @@
                     const vMarker = cells[1] ? cells[1].trim() : "";     
                     const content = cells[2] ? cells[2].trim() : "";     
 
-                    let foundDate = "";
-                    let foundType = "";
+                    // 🔍 修正：改用精準的欄位索引抓取（E欄是索引4，F欄是索引5）
+                    const foundDate = cells[4] ? cells[4].trim() : "";
+                    const foundType = cells[5] ? cells[5].trim() : "";
                     
-                    cells.forEach(cell => {
-                        const trimmed = cell.trim();
-                        if (dateRegex.test(trimmed)) {
-                            foundDate = trimmed;
-                        } else if (trimmed === "初編" || trimmed === "增修") {
-                            foundType = trimmed;
-                        }
-                    });
-
-                    // 確保必定捕捉第一筆與後續修訂
-                    if (foundDate !== "" && foundType !== "") {
-                        globalRulesHistory.push({ date: foundDate, type: foundType });
+                    // 只要 E 欄有符合日期格式的填寫，就認定是一筆歷史紀錄
+                    if (foundDate !== "" && dateRegex.test(foundDate)) {
+                        const typeLabel = foundType !== "" ? foundType : "修訂";
+                        
+                        globalRulesHistory.push({ date: foundDate, type: typeLabel });
                         latestDate = foundDate;
-                        latestType = foundType;
+                        latestType = typeLabel;
                     }
 
                     if (content === "") continue;
