@@ -141,7 +141,7 @@
             transition: all 0.2s ease;
         }
         
-        /* 動態變色高亮邏輯 */
+        /* 動態變色高亮邏輯 (電腦版) */
         .timeline-item.active.type-meeting .timeline-dot {
             background: var(--meeting-color);
             box-shadow: 0 0 0 2px var(--meeting-color);
@@ -267,7 +267,7 @@
             border: 1px solid #fff59d;
         }
 
-        /* 手機板排版 */
+        /* 手機板排版與細節修正 */
         @media (max-width: 768px) {
             .main-container {
                 flex-direction: column;
@@ -283,12 +283,31 @@
                 left: 15px;
             }
             .timeline-item {
-                padding-left: 24px;
+                padding-left: 28px;
                 margin-bottom: 18px;
                 display: flex;
                 flex-direction: column-reverse;
                 gap: 4px;
             }
+            
+            /* 修正核心：讓手機版的圓圈完美垂直置中對齊軸線 */
+            .timeline-dot {
+                top: 50%;
+                left: 0;
+                transform: translateY(-50%);
+            }
+            
+            /* 手機版動態高亮放大修正（加入置中位移偏移量） */
+            .timeline-item.active.type-meeting .timeline-dot {
+                transform: translateY(-50%) scale(1.2);
+            }
+            .timeline-item.active.type-event .timeline-dot {
+                transform: translateY(-50%) scale(1.2);
+            }
+            .timeline-item.active.type-discipline .timeline-dot {
+                transform: translateY(-50%) scale(1.2);
+            }
+
             .timeline-date-row {
                 margin-top: 2px;
             }
@@ -445,7 +464,7 @@
                 });
             }
             
-            // 🛠️ 關鍵修正：排序改為由舊到新（越下面越新）
+            // 排序改為由舊到新
             allRecords.sort((a, b) => new Date(a.date.replace(/\//g, '-')) - new Date(b.date.replace(/\//g, '-')));
         }
 
@@ -494,7 +513,6 @@
                 container.appendChild(itemDiv);
             });
 
-            // 預設自動選取時間軸最上面（此時是最舊）的那一條紀錄
             if (filtered[0]) {
                 selectItem(filtered[0]);
             }
