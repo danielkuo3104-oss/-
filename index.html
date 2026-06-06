@@ -520,56 +520,69 @@
             }
         }
 
-        // 點擊歷史紀錄彈窗
-        function openRulesHistoryModal() {
-            try {
-                const overlay = document.getElementById('detailModal');
-                const title = document.getElementById('modalTitle');
-                const body = document.getElementById('modalBody');
-                
-                title.innerText = "宿舍綜合公約 歷史編修紀錄";
-                
-                if (!globalRulesHistory || globalRulesHistory.length === 0) {
-                    body.innerHTML = "<div class='loading'>暫無歷史版本紀錄。</div>";
-                    overlay.classList.add('active');
-                    return;
-                }
-
-                let uniqueHistory = new Map();
-                globalRulesHistory.forEach(item => {
-                    uniqueHistory.set(`${item.date}_${item.type}`, item);
-                });
-
-                let htmlContent = `<div class="modal-item-block">
-                    <p style="font-size: 12px; color: #8a929a; margin-bottom: 15px;">此公約歷經以下版本更動修訂，依時間由舊至新排列：</p>
-                    <table class="detail-table">
-                        <thead>
-                            <tr>
-                                <th>版本序</th>
-                                <th>更動日期</th>
-                                <th>修訂類別</th>
-                            </tr>
-                        </thead>
-                        <tbody>`;
-
-                let idx = 1;
-                uniqueHistory.forEach((val) => {
-                    htmlContent += `
-                        <tr>
-                            <td><span class="rent-month-badge" style="background:#edf3f7; color:#69779b;">第 ${idx} 版</span></td>
-                            <td style="font-family: monospace; font-weight: 600;">${val.date}</td>
-                            <td><span class="badge ${val.type === '初編' ? '初編' : '增修'}">${val.type}</span></td>
-                        </tr>`;
-                    idx++;
-                });
-
-                htmlContent += `</tbody></table></div>`;
-                body.innerHTML = htmlContent;
-                overlay.classList.add('active');
-            } catch (e) {
-                console.error("渲染歷史彈窗失敗:", e);
-            }
+        // 點擊歷史紀錄彈窗（維持原網頁配色樣式，僅修正資料解析與類別判斷）
+function openRulesHistoryModal() {
+    try {
+        const overlay = document.getElementById('detailModal');
+        const title = document.getElementById('modalTitle');
+        const body = document.getElementById('modalBody');
+        
+        title.innerText = "宿舍綜合公約 歷史編修紀錄";
+        
+        if (!globalRulesHistory || globalRulesHistory.length === 0) {
+            body.innerHTML = "<div class='loading'>暫無歷史版本紀錄。</div>";
+            overlay.classList.add('active');
+            return;
         }
+
+        // 確保精準過濾掉空日期，並比對試算表內的日期與變更類別
+        let uniqueHistory = new Map();
+        globalRulesHistory.forEach(item => {
+            if (item.date && item.date !== "") {
+                uniqueHistory.set(`${item.date}_${item.type}`, item);
+            }
+        });
+
+        if (uniqueHistory.size === 0) {
+            body.innerHTML = "<div class='loading'>暫無歷史版本紀錄。</div>";
+            overlay.classList.add('active');
+            return;
+        }
+
+        let htmlContent = `<div class="modal-item-block">
+            <p style="font-size: 12px; color: #8a929a; margin-bottom: 15px;">此公約歷經以下版本更動修訂，依時間由舊至新排列：</p>
+            <table class="detail-table">
+                <thead>
+                    <tr>
+                        <th>版本序</th>
+                        <th>更動日期</th>
+                        <th>修訂類別</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+
+        let idx = 1;
+        uniqueHistory.forEach((val) => {
+            // 自動適應包含「初」字（初發、初訂、初編）或「增修」（增修、初訂）的樣式標籤
+            const isInitial = val.type.includes("初") || val.type === '初編';
+            const badgeClass = isInitial ? '初編' : '增修';
+
+            htmlContent += `
+                <tr>
+                    <td><span class="rent-month-badge" style="background:#edf3f7; color:#69779b;">第 ${idx} 版</span></td>
+                    <td style="font-family: monospace; font-weight: 600;">${val.date}</td>
+                    <td><span class="badge ${badgeClass}">${val.type}</span></td>
+                </tr>`;
+            idx++;
+        });
+
+        htmlContent += `</tbody></table></div>`;
+        body.innerHTML = htmlContent;
+        overlay.classList.add('active');
+    } catch (e) {
+        console.error("渲染歷史彈窗失敗:", e);
+    }
+}
 
         function allToggleRentPanel() {
             const panel = document.getElementById('rentReceiptPanel');
