@@ -201,21 +201,36 @@
             .stats-grid { gap: 28px; }
             .stat-card { padding: 20px; border-radius: 18px; }
             .stat-value { font-size: 22px; }
-            .chart-header-row { flex-direction: row; align-items: center; justify-content: space-between; gap: 8px; }
+            /* 1. 修正：房租憑證的標題與按鈕改為上下排列，並縮減空隙 */
+            .chart-header-row { 
+                flex-direction: column; 
+                align-items: flex-start; 
+                gap: 2px; 
+            }
+            .chart-header-row .section-title {
+                margin-bottom: 10px; /* 拉近標題與下方展開按鈕的距離 */
+            }
+
             .chart-card { padding: 16px; border-radius: 18px; margin-top: 16px; }
             .chart-container { height: 280px; }
             .gray-section { padding: 16px; border-radius: 20px; margin-top: 40px; }
+            .rent-table th, .rent-table td { padding: 12px 8px; font-size: 12px; }
 
+            /* 2. 修正：宿舍綜合公約標題與按鈕放回同一列，並微調大小確保不打架 */
             .rules-header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 12px;
-                padding-bottom: 14px;
+                flex-direction: row;
+                align-items: center;
+                justify-content: space-between;
+                gap: 8px;
+                padding-bottom: 12px;
+            }
+            .rules-header .title {
+                font-size: 14px; /* 手機端標題微縮，確保有空間給按鈕 */
             }
             .rules-header .date {
-                align-self: flex-start;
-                padding: 5px 14px;
-                font-size: 11px;
+                align-self: auto;
+                padding: 4px 10px;
+                font-size: 10px; /* 按鈕微縮，整體更和諧 */
             }
         }
     </style>
