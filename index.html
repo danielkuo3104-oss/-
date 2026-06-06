@@ -29,7 +29,7 @@
         }
 
         .nav-tabs { display: flex; justify-content: center; background: #ffffff; border-bottom: 1px solid #e1e4e8; gap: 30px; padding: 0 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.02); }
-        .nav-link { padding: 16px 24px; font-size: 14px; font-weight: 600; color: #8a929a; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.25s ease; text-decoration: none; }
+        .nav-link { padding: 16px 24px; font-size: 14px; font-weight: 600; color: #8a929a; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.2s ease; text-decoration: none; }
         .nav-link.active { color: #69779b; border-bottom-color: #69779b; }
 
         /* 公告欄跑馬燈 */
@@ -122,34 +122,32 @@
         .chart-container { position: relative; height: 350px; width: 100%; }
         
         .gray-section { background: #e6ebf0; border-radius: 24px; padding: 24px; margin-top: 45px; border: 1px solid #d2dae2; }
-        .gray-section { background: #e6ebf0; border-radius: 24px; padding: 24px; margin-top: 45px; border: 1px solid #d2dae2; }
         .gray-title { color: #54606e; font-size: 15px; font-weight: 600; margin-bottom: 16px; letter-spacing: 0.5px; }
         .gray-card { background: #f5f8fa; border-radius: 16px; padding: 20px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.01); border: 1px solid #dbe2e8; }
         .meter-chart-spacer { margin-top: 25px; margin-bottom: 25px; }
 
-        /* 修正：預設調整為收合狀態 (collapsed) */
+        /* 房租憑證面板 RWD 動態收合與防擁擠滾動設計 */
         .rent-receipt-card { 
             background: #ffffff; border-radius: 20px; padding: 24px; 
             box-shadow: 0 8px 20px rgba(140, 149, 159, 0.08); border: 1px solid #e1e4e8;
             transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), padding 0.3s ease, opacity 0.3s ease, border-color 0.3s ease;
-            overflow: hidden; max-height: 1000px; opacity: 1;
+            overflow: hidden; max-height: 1200px; opacity: 1;
         }
         .rent-receipt-card.collapsed {
             max-height: 0 !important; padding-top: 0 !important; padding-bottom: 0 !important; border-color: transparent !important; opacity: 0; pointer-events: none;
         }
-        .rent-table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; color: #5a6168; }
-        .rent-table th { background: #f8fafc; color: #626973; font-weight: 600; padding: 12px; border-bottom: 2px solid #eaecef; }
-        .rent-table td { padding: 12px; border-bottom: 1px solid #f0f2f5; }
+        .rent-table-wrapper { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        .rent-table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; color: #5a6168; min-width: 650px; }
+        .rent-table th { background: #f8fafc; color: #626973; font-weight: 600; padding: 14px 12px; border-bottom: 2px solid #eaecef; }
+        .rent-table td { padding: 14px 12px; border-bottom: 1px solid #f0f2f5; vertical-align: middle; }
         .rent-table tr:hover { background-color: #f8fafc; }
-        .rent-month-badge { font-weight: 600; color: #69779b; background: #eef2f5; padding: 3px 8px; border-radius: 6px; }
-        .rent-receipt-card .receipt-link-btn { color: #527996; background: #edf3f7; border-color: #cedde7; }
-        .rent-receipt-card .receipt-link-btn:hover { background: #dbecf7; color: #3b5a70; }
+        .rent-month-badge { font-weight: 600; color: #69779b; background: #eef2f5; padding: 4px 10px; border-radius: 6px; }
 
         /* 宿舍綜合公約動態卡片樣式 */
-        .rules-card { background: #ffffff; border-radius: 20px; padding: 26px; box-shadow: 0 8px 20px rgba(140, 149, 159, 0.08); border: 1px solid #e1e4e8; margin-bottom: 15px; }
+        .rules-card { background: #ffffff; border-radius: 20px; padding: 26px; box-shadow: 0 8px 20px rgba(140, 149, 159, 0.08); border: 1px solid #e1e4e8; margin-top: 15px; margin-bottom: 25px; }
         .rules-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eaecef; padding-bottom: 12px; margin-bottom: 16px; }
         .rules-header .title { font-size: 15px; font-weight: 700; color: #69779b; }
-        .rules-header .date { font-size: 11px; color: #69779b; background: #edf3f7; padding: 4px 12px; border-radius: 20px; cursor: pointer; font-weight: 600; border: 1px solid #cedde7; transition: all 0.2s; }
+        .rules-header .date { font-size: 11px; color: #69779b; background: #edf3f7; padding: 4px 14px; border-radius: 20px; cursor: pointer; font-weight: 600; border: 1px solid #cedde7; transition: all 0.2s; }
         .rules-header .date:hover { background: #dbecf7; color: #3b5a70; }
         .rules-container { display: flex; flex-direction: column; gap: 6px; }
         
@@ -176,7 +174,7 @@
 
         .receipt-link-btn {
             display: inline-block; font-size: 11px; font-weight: 600; color: #527996; background: #edf3f7;
-            border: 1px solid #cedde7; padding: 3px 10px; border-radius: 6px; cursor: pointer; transition: all 0.2s;
+            border: 1px solid #cedde7; padding: 4px 12px; border-radius: 6px; cursor: pointer; transition: all 0.2s;
         }
         .receipt-link-btn:hover { background: #dbecf7; color: #3b5a70; }
         .receipt-group-box { display: flex; gap: 6px; }
@@ -206,20 +204,34 @@
         .duty-btn { width:100%; background:#6e916e; color:white; border:none; padding:13px; border-radius:12px; font-size:14px; font-weight:600; cursor:pointer; margin-top:20px; box-shadow: 0 4px 12px rgba(110, 145, 110, 0.15); transition: background 0.2s; }
         .duty-btn:hover { background:#5c7a5c; }
 
+        /* 行動裝置排版最佳化 */
         @media (max-width: 768px) {
             .header-banner { padding: 35px 20px 45px 20px; }
             .header-banner h1 { font-size: 22px; }
             .update-time-tag { bottom: -28px; right: 20px; font-size: 10px; padding: 3px 8px; }
             .main-container { padding: 0 16px; }
-            .section-title { margin: 38px 0 16px 0; font-size: 15px; }
+            .section-title { margin: 35px 0 14px 0; font-size: 15px; }
             .stats-grid { gap: 28px; }
             .stat-card { padding: 20px; border-radius: 18px; }
             .stat-value { font-size: 22px; }
-            .chart-header-row { flex-direction: column; align-items: flex-start; gap: 12px; }
+            .chart-header-row { flex-direction: row; align-items: center; justify-content: space-between; gap: 8px; }
             .chart-card { padding: 16px; border-radius: 18px; margin-top: 16px; }
             .chart-container { height: 280px; }
             .gray-section { padding: 16px; border-radius: 20px; margin-top: 40px; }
-            .rent-table th, .rent-table td { padding: 8px; font-size: 12px; }
+            .rent-table th, .rent-table td { padding: 12px 8px; font-size: 12px; }
+
+            /* 修正手機版公約標題與按鈕互相擠壓、疊字的問題 */
+            .rules-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+                padding-bottom: 14px;
+            }
+            .rules-header .date {
+                align-self: flex-start;
+                padding: 5px 14px;
+                font-size: 11px;
+            }
         }
     </style>
 </head>
@@ -254,7 +266,7 @@
         <div class="section-title">宿舍綜合公約</div>
         <div class="rules-card">
             <div class="rules-header">
-                <span class="title">生活公約與核心原則細則</span>
+                <span class="title">宿舍綜合公約</span>
                 <span class="date" id="rulesEditionDate" onclick="openRulesHistoryModal()">編修日期：載入中...</span>
             </div>
             <div class="rules-container" id="dynamicRulesBody">
@@ -314,7 +326,7 @@
         let trendChartInstance = null; 
         let dutyCountdownTimer = null;
         let globalBasePhotoUrl = ""; 
-        let globalRulesHistory = []; // 用於正確存放彈窗的歷史版本陣列
+        let globalRulesHistory = []; 
 
         function updateTimestamp() {
             const now = new Date();
@@ -401,33 +413,30 @@
             return cells;
         }
 
-        // 動態加載綜合公約法規庫 (精準修復歷史紀錄空欄位阻斷 Bug)
+        // 動態加載綜合公約法規庫 (精準解析非同步版本更動)
         async function loadDynamicRules() {
             try {
                 const response = await fetchWithTimeout(urlRules, { timeout: 4000 });
                 const csvText = await response.text();
                 if (csvText.includes("<!doctype html") || csvText.includes("<script")) return;
-        
+
                 const lines = csvText.replace(/\r/g, "").split("\n").map(l => l.trim()).filter(l => l);
                 if (lines.length < 2) return;
-        
+
                 let htmlHtml = "";
-                globalRulesHistory = []; // 重置全域紀錄
-                
+                globalRulesHistory = []; 
                 let latestDate = "2026/6/6";
                 let latestType = "初編";
-        
-                // 用來比對日期的正規表達式 (符合 yyyy/m/d 或 yyyy/mm/dd)
+
                 const dateRegex = /\d{4}\/\d{1,2}\/\d{1,2}/;
-        
+
                 for(let i = 1; i < lines.length; i++) {
                     const cells = parseCSVLine(lines[i]);
                     
                     const level = cells[0] ? cells[0].trim() : "";       
                     const vMarker = cells[1] ? cells[1].trim() : "";     
                     const content = cells[2] ? cells[2].trim() : "";     
-        
-                    // 💡 核心修正：不再綁定 cells[3] 或 cells[4]，直接遍歷整行，只要哪一格符合日期格式就撈出來
+
                     let foundDate = "";
                     let foundType = "";
                     
@@ -439,16 +448,15 @@
                             foundType = trimmed;
                         }
                     });
-        
-                    // 只要在這一行有同時找到日期與類別，就視為一筆有效的歷史紀錄
+
                     if (foundDate !== "" && foundType !== "") {
                         globalRulesHistory.push({ date: foundDate, type: foundType });
                         latestDate = foundDate;
                         latestType = foundType;
                     }
-        
+
                     if (content === "") continue;
-        
+
                     if (level === "總綱") {
                         htmlHtml += `<div class="rule-item rule-category-block">${content}</div>`;
                     } else if (level === "主法") {
@@ -458,17 +466,16 @@
                         htmlHtml += `<div class="rule-item rule-indent ${isBold}">${content}</div>`;
                     }
                 }
-        
+
                 document.getElementById('rulesEditionDate').innerText = `編修日期：${latestDate} (${latestType})`;
                 document.getElementById('dynamicRulesBody').innerHTML = htmlHtml;
-        
+
             } catch (e) {
                 console.error("宿舍公約規則讀取失敗:", e);
                 document.getElementById('dynamicRulesBody').innerHTML = `<div style="font-size:12px; color:#b54a4a;">⚠️ 動態法規庫聯機失敗，顯示唯讀快取。</div>`;
             }
         }
 
-        // 點擊歷史紀錄彈窗邏輯
         function openRulesHistoryModal() {
             const overlay = document.getElementById('detailModal');
             const title = document.getElementById('modalTitle');
@@ -481,13 +488,12 @@
                 overlay.classList.add('active');
                 return;
             }
-        
-            // 利用 Map 進行不重複過濾
+
             let uniqueHistory = new Map();
             globalRulesHistory.forEach(item => {
                 uniqueHistory.set(`${item.date}_${item.type}`, item);
             });
-        
+
             let htmlContent = `<div class="modal-item-block">
                 <p style="font-size: 12px; color: #8a929a; margin-bottom: 15px;">此公約歷經以下版本更動修訂，依時間由舊至新排列：</p>
                 <table class="detail-table">
@@ -499,7 +505,7 @@
                         </tr>
                     </thead>
                     <tbody>`;
-        
+
             let idx = 1;
             uniqueHistory.forEach((val) => {
                 htmlContent += `
@@ -510,10 +516,22 @@
                     </tr>`;
                 idx++;
             });
-        
+
             htmlContent += `</tbody></table></div>`;
             body.innerHTML = htmlContent;
             overlay.classList.add('active');
+        }
+
+        function allToggleRentPanel() {
+            const panel = document.getElementById('rentReceiptPanel');
+            const btn = document.getElementById('rentToggleBtn');
+            if (panel.classList.contains('collapsed')) {
+                panel.classList.remove('collapsed');
+                btn.innerText = '收合面板';
+            } else {
+                panel.classList.add('collapsed');
+                btn.innerText = '展開面板';
+            }
         }
 
         async function loadAnnouncementsPreview() {
@@ -759,26 +777,28 @@
                         <div class="chart-card meter-chart-spacer" style="background: #f4f6f8; border-color: #d2dae2;"><div class="chart-container" style="height: 220px;"><canvas id="meterChart"></canvas></div></div>
                     </div>
                     
-                    <div class="chart-header-row">
+                    <div class="chart-header-row" style="margin-top: 40px; margin-bottom: 5px;">
                         <div class="section-title">房租轉帳憑證紀錄</div>
                         <button class="collapse-toggle-btn" id="rentToggleBtn" onclick="allToggleRentPanel()">展開面板</button>
                     </div>
                     <div class="rent-receipt-card collapsed" id="rentReceiptPanel">
-                        <table class="rent-table">
-                            <thead>
-                                <tr>
-                                    <th>月份</th>
-                                    <th>內大 (${tenantNames["內大"]})</th>
-                                    <th>內小 (${tenantNames["內小"]})</th>
-                                    <th>中房 (${tenantNames["中"]})</th>
-                                    <th>外房 (${tenantNames["外"]})</th>
-                                    <th>轉帳予房東</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${rentTableRowsHtml}
-                            </tbody>
-                        </table>
+                        <div class="rent-table-wrapper">
+                            <table class="rent-table">
+                                <thead>
+                                    <tr>
+                                        <th>月份</th>
+                                        <th>內大 (${tenantNames["內大"]})</th>
+                                        <th>內小 (${tenantNames["內小"]})</th>
+                                        <th>中房 (${tenantNames["中"]})</th>
+                                        <th>外房 (${tenantNames["外"]})</th>
+                                        <th>轉帳予房東</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${rentTableRowsHtml}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>`;
 
                 trendChartInstance = new Chart(document.getElementById('trendChart').getContext('2d'), {
@@ -805,127 +825,6 @@
                 document.getElementById('mainContent').innerHTML = `<div class="loading" style="color: #b54a4a; text-align: left; max-width: 600px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">❌ 系統載入失敗。<br><br><span style="font-size:13px; color:#828a95; line-height: 1.5;">${error.message}</span></div>`;
             }
         }
-
-        // 房租面板收合控制器核心
-        function allToggleRentPanel() {
-            const panel = document.getElementById('rentReceiptPanel');
-            const btn = document.getElementById('rentToggleBtn');
-            if (panel.classList.contains('collapsed')) {
-                panel.classList.remove('collapsed');
-                btn.innerText = '收合面板';
-            } else {
-                panel.classList.add('collapsed');
-                btn.innerText = '展開面板';
-            }
-        }
-
-        function openRoomDetails(type) {
-            const overlay = document.getElementById('detailModal');
-            const title = document.getElementById('modalTitle');
-            const body = document.getElementById('modalBody');
-            let htmlContent = "";
-
-            if (globalParsedData.length === 0) return;
-            const lastIdx = globalParsedData.length - 1;
-            const latestItem = globalParsedData[lastIdx];
-            
-            let eleIdx = lastIdx; let waterIdx = lastIdx;
-            while(eleIdx > 0 && globalParsedData[eleIdx].eleTotal === 0) eleIdx--;
-            while(waterIdx > 0 && globalParsedData[waterIdx].water === 0) waterIdx--;
-
-            const eleItem = globalParsedData[eleIdx]; const waterItem = globalParsedData[waterIdx];
-
-            if (type === 'currentEle') {
-                title.innerText = `${eleItem.month} 電費分房明細`;
-                const receiptBtn = eleItem.eleReceipt ? `<div class="receipt-link-btn" onclick="openImageModal('${eleItem.eleReceipt}', '${eleItem.eleDate}', '${eleItem.month} 電費憑證')">查看憑證</div>` : "";
-                htmlContent = `<div class="modal-item-block"><div class="modal-month-title"><span>${eleItem.month} 實付分攤</span>${receiptBtn}</div><table class="detail-table"><thead><tr><th>房客</th><th>實付金額</th></tr></thead><tbody><tr><td>${tenantNames["內大"]}</td><td>NT$ ${eleItem.rooms["內大"].toLocaleString()}</td></tr><tr><td>${tenantNames["內小"]}</td><td>NT$ ${eleItem.rooms["內小"].toLocaleString()}</td></tr><tr><td>${tenantNames["中"]}</td><td>NT$ ${eleItem.rooms["中"].toLocaleString()}</td></tr><tr><td>${tenantNames["外"]}</td><td>NT$ ${eleItem.rooms["外"].toLocaleString()}</td></tr></tbody></table><div style="font-size: 11px; color: #437353; background: #ebf5ee; padding: 8px 10px; border-radius: 6px; margin-top: 12px; font-weight: 600;">* 經電表精算後，公基金已自動補貼分攤 NT$ ${eleItem.eleImpute} 元</div><div class="modal-row total-line"><span>當月電費總額</span><span style="color:#d97736;">NT$ ${eleItem.eleTotal.toLocaleString()}</span></div></div>`;
-            } else if (type === 'currentWater') {
-                title.innerText = `${waterItem.month} 水費明細摘要`;
-                const receiptBtn = waterItem.waterReceipt ? `<div class="receipt-link-btn" onclick="openImageModal('${waterItem.waterReceipt}', '${waterItem.waterDate}', '${waterItem.month} 水費憑證')">查看憑證</div>` : "";
-                htmlContent = `<div class="modal-item-block"><div class="modal-month-title"><span>${waterItem.month} 自來水費明細</span>${receiptBtn}</div><div class="modal-row"><span>全戶總水費</span><span>NT$ ${waterItem.water.toLocaleString()}</span></div><div class="modal-row"><span>每房實付 (4房均分)</span><span>NT$ ${waterItem.waterPerRoom.toLocaleString()}</span></div><div style="font-size: 11px; color: #437353; background: #ebf5ee; padding: 8px 10px; border-radius: 6px; margin-top: 12px; font-weight: 600;">* 餘數 NT$ ${waterItem.waterImpute} 已由公共基金自動補貼分攤</div></div>`;
-            } else if (type === 'currentSummary') {
-                title.innerText = `${latestItem.month} 水電加總摘要`;
-                htmlContent = `<div class="modal-item-block"><div class="modal-month-title">${latestItem.month} 實際結算加總</div><div class="modal-row"><span>總電費出帳金額</span><span>NT$ ${latestItem.eleTotal.toLocaleString()}</span></div><div class="modal-row"><span>總水費出帳金額</span><span>NT$ ${latestItem.water.toLocaleString()}</span></div><div class="modal-row total-line"><span>當月實際花費總計</span><span style="color:#6e916e;">NT$ ${latestItem.total.toLocaleString()}</span></div></div>`;
-            } else if (type === 'historyEle') {
-                title.innerText = "歷月電費總額紀錄";
-                globalParsedData.forEach(item => {
-                    if(item.eleTotal > 0) {
-                        const receiptBtn = item.eleReceipt ? `<div class="receipt-link-btn" onclick="openImageModal('${item.eleReceipt}', '${item.eleDate}', '${item.month} 電費憑證')">查看憑證</div>` : "";
-                        htmlContent += `<div class="modal-item-block" style="border-bottom: 1px dashed #eaecef; padding-bottom: 10px;"><div class="modal-month-title"><span>${item.month}</span>${receiptBtn}</div><div class="modal-row"><span>電費帳單總額</span><span>NT$ ${item.eleTotal.toLocaleString()}</span></div><div style="font-size: 11px; color: #437353; background: #ebf5ee; padding: 4px 8px; border-radius: 4px; display: inline-block; margin-top: 4px;">公基金補貼：NT$ ${item.eleImpute}</div></div>`;
-                    }
-                });
-            } else if (type === 'historyWater') {
-                title.innerText = "歷月水費明細紀錄";
-                globalParsedData.forEach(item => {
-                    if(item.water > 0) {
-                        const receiptBtn = item.waterReceipt ? `<div class="receipt-link-btn" onclick="openImageModal('${item.waterReceipt}', '${item.waterDate}', '${item.month} 水費憑證')">查看憑證</div>` : "";
-                        htmlContent += `<div class="modal-item-block" style="border-bottom: 1px dashed #eaecef; padding-bottom: 10px;"><div class="modal-month-title"><span>${item.month}</span>${receiptBtn}</div><div class="modal-row"><span>全戶總水費</span><span>NT$ ${item.water.toLocaleString()}</span></div><div class="modal-row"><span>每房實付 (均分)</span><span>NT$ ${item.waterPerRoom}</span></div></div>`;
-                    }
-                });
-            } else if (type === 'historySummary') {
-                title.innerText = "歷史水電帳單紀錄明細";
-                globalParsedData.forEach(item => {
-                    let receiptGroup = `<div class="receipt-group-box">`;
-                    if (item.waterReceipt) receiptGroup += `<div class="receipt-link-btn" onclick="openImageModal('${item.waterReceipt}', '${item.waterDate}', '${item.month} 水費憑證')">水費憑證</div>`;
-                    if (item.eleReceipt) receiptGroup += `<div class="receipt-link-btn" onclick="openImageModal('${item.eleReceipt}', '${item.eleDate}', '${item.month} 電費憑證')">電費憑證</div>`;
-                    receiptGroup += `</div>`;
-                    htmlContent += `<div class="modal-item-block" style="border-bottom: 1px dashed #eaecef; padding-bottom: 10px;"><div class="modal-month-title"><span>${item.month}</span>${receiptGroup}</div><div class="modal-row"><span>水費金額</span><span>NT$ ${item.water.toLocaleString()}</span></div><div class="modal-row"><span>電費金額</span><span>NT$ ${item.eleTotal.toLocaleString()}</span></div><div class="modal-row total-line"><span>當月支出小計</span><span style="color: #7b2cbf;">NT$ ${item.total.toLocaleString()}</span></div></div>`;
-                });
-            } else if (type === 'meter') {
-                title.innerText = "歷月電表抄錄與實用度數";
-                const basePhotoBtn = globalBasePhotoUrl ? `<div class="receipt-link-btn" onclick="openImageModal('${globalBasePhotoUrl}', '入住當日', '初始入住電表基準照片')">查看基準照片</div>` : "";
-                htmlContent = `<div style="background:#eef2f5; padding:14px; border-radius:12px; font-size:12px; color:#54606e; margin-bottom:15px; line-height:1.6; border: 1px solid #dbe2e8;"><div style="float: right; margin-top: -2px;">${basePhotoBtn}</div>初始入住電表基準值：<br>外: 7479.9 | 中: 3664.6 | 內大: 6337.0 | 內小: 4010.4</div>`;
-                    
-                globalParsedData.forEach(item => {
-                    const photoBtn = item.meterPhoto ? `<div class="receipt-link-btn" onclick="openImageModal('${item.meterPhoto}', '${item.meterDate}', '${item.month} 電表照片憑證')">電表照片</div>` : "";
-                    const recInBig   = item.recordMeters["內大"] !== "--" ? (parseFloat(item.recordMeters["內大"]) / 10).toFixed(1) : "--";
-                    const recInSmall = item.recordMeters["內小"] !== "--" ? (parseFloat(item.recordMeters["內小"]) / 10).toFixed(1) : "--";
-                    const recMid     = item.recordMeters["中"]   !== "--" ? (parseFloat(item.recordMeters["中"]) / 10).toFixed(1) : "--";
-                    const recOut     = item.recordMeters["外"]   !== "--" ? (parseFloat(item.recordMeters["外"]) / 10).toFixed(1) : "--";
-
-                    htmlContent += `<div class="modal-item-block" style="background:#f8fafc; padding:16px; border-radius:12px; margin-bottom:12px; border: 1px solid #eef2f5;"><div class="modal-month-title" style="color:#54606e; border-left-color:#7e8794; margin-bottom: 14px;"><span>${item.month} 電表抄錄</span>${photoBtn}</div><div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #f0f2f5;"><span>${tenantNames["外"]}</span><div style="display: flex; align-items: center; gap: 12px;"><span style="font-size: 13px; color: #8a929a; font-family: monospace; text-align: right; min-width: 60px;">${recOut}</span><div style="width: 1px; height: 14px; background: #cbd1d6;"></div><span style="font-size: 14px; font-weight: 700; color: #527996; min-width: 75px; text-align: right;">${item.deltaMeters["外"]} 度</span></div></div><div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #f0f2f5;"><span>${tenantNames["中"]}</span><div style="display: flex; align-items: center; gap: 12px;"><span style="font-size: 13px; color: #8a929a; font-family: monospace; text-align: right; min-width: 60px;">${recMid}</span><div style="width: 1px; height: 14px; background: #cbd1d6;"></div><span style="font-size: 14px; font-weight: 700; color: #527996; min-width: 75px; text-align: right;">${item.deltaMeters["長"] || item.deltaMeters["中"]} 度</span></div></div><div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #f0f2f5;"><span>${tenantNames["內大"]}</span><div style="display: flex; align-items: center; gap: 12px;"><span style="font-size: 13px; color: #8a929a; font-family: monospace; text-align: right; min-width: 60px;">${recInBig}</span><div style="width: 1px; height: 14px; background: #cbd1d6;"></div><span style="font-size: 14px; font-weight: 700; color: #527996; min-width: 75px; text-align: right;">${item.deltaMeters["內大"]} 度</span></div></div><div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #f0f2f5;"><span>${tenantNames["內小"]}</span><div style="display: flex; align-items: center; gap: 12px;"><span style="font-size: 13px; color: #8a929a; font-family: monospace; text-align: right; min-width: 60px;">${recInSmall}</span><div style="width: 1px; height: 14px; background: #cbd1d6;"></div><span style="font-size: 14px; font-weight: 700; color: #527996; min-width: 75px; text-align: right;">${item.deltaMeters["內小"]} 度</span></div></div><div class="modal-row total-line" style="border-color:#d2dae2; padding-top: 14px;"><span style="color:#4a515a; font-weight: 600;">全戶用電總計增加</span><span style="color:#527996; font-size: 16px; font-weight: 700;">${item.deltaMeters["總和"]} 度</span></div></div>`;
-                });
-            }
-
-            body.innerHTML = htmlContent;
-            overlay.classList.add('active');
-        }
-
-        function closeModal() { document.getElementById('detailModal').classList.remove('active'); }
-
-        function openImageModal(driveUrl, uploadDate, titleText) {
-            const imgModal = document.getElementById('imageModal');
-            const imgTitle = document.getElementById('imageModalTitle');
-            const dateDisplay = document.getElementById('receiptDateDisplay');
-            const imgDisplay = document.getElementById('receiptImageDisplay');
-            
-            let directImageUrl = driveUrl;
-            if (driveUrl && driveUrl.includes("drive.google.com")) {
-                const match = driveUrl.match(/\/file\/d\/([^\/]+)/) || driveUrl.match(/[?&]id=([^&]+)/);
-                if (match && match[1]) directImageUrl = `https://drive.google.com/thumbnail?id=${match[1]}&sz=w1000`;
-            }
-            
-            imgTitle.innerText = titleText;
-            dateDisplay.innerText = `上傳/抄錄日期：${uploadDate || "未記錄"}`;
-            imgDisplay.onerror = function() {
-                this.onerror = null;
-                this.src = "https://placehold.co/600x400/f4f5f7/b54a4a?text=載入失敗\\n請確認雲端資料夾權限";
-                alert("【圖片無法顯示】\n請確認儲存照片的 Google Drive 資料夾權限。");
-            };
-            imgDisplay.src = directImageUrl;
-            imgModal.classList.add('active');
-        }
-
-        function closeImageModal() {
-            const imgDisplay = document.getElementById('receiptImageDisplay');
-            imgDisplay.onerror = null; 
-            imgDisplay.src = ""; 
-            document.getElementById('imageModal').classList.remove('active');
-        }
-
-        updateTimestamp();
-        loadAnnouncementsPreview();
-        initDashboard();
     </script>
 </body>
 </html>
