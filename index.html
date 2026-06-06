@@ -11,6 +11,26 @@
             background: linear-gradient(135deg, #f4f5f7 0%, #eaecef 100%);
             margin: 0; padding: 0; min-height: 100vh; color: #4a515a;
         }
+
+        /* 懸停控制中心按鈕 */
+        .fab-btn {
+            position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px;
+            background: #69779b; color: white; border-radius: 50%;
+            font-size: 30px; border: none; box-shadow: 0 6px 20px rgba(105, 119, 155, 0.4);
+            cursor: pointer; z-index: 999; display: flex; align-items: center; justify-content: center;
+            transition: transform 0.3s ease, background 0.2s;
+        }
+        .fab-btn:hover { background: #586585; transform: scale(1.05); }
+        
+        /* 霧面彈出層 */
+        .menu-modal {
+            position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(8px); display: none; justify-content: center; align-items: center;
+            z-index: 2000;
+        }
+        .menu-modal.active { display: flex; }
+        .menu-options { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center; }
+        .menu-link { display: block; padding: 15px 40px; background: #69779b; color: white; text-decoration: none; border-radius: 12px; font-weight: 600; }
         .header-banner {
             background: linear-gradient(135deg, #69779b 0%, #8696b8 100%);
             color: white; padding: 45px 24px 65px 24px; text-align: left;
@@ -313,6 +333,22 @@
             <button class="duty-btn" onclick="closeDutyModal()">我瞭解了</button>
         </div>
     </div>
+
+    <button class="fab-btn" onclick="toggleMenu()">+</button>
+
+<div class="menu-modal" id="fabMenu" onclick="toggleMenu()">
+    <div class="menu-options" onclick="event.stopPropagation()">
+        <h3 style="margin-top:0;">控制中心</h3>
+        <a href="https://forms.gle/bPwvWaTSTz2esCPN6" class="menu-link" target="_blank">前往資訊登錄系統</a>
+        <button class="close-btn" style="background:#cbd1d6; margin-top:15px;" onclick="toggleMenu()">取消</button>
+    </div>
+</div>
+
+<script>
+    function toggleMenu() {
+        document.getElementById('fabMenu').classList.toggle('active');
+    }
+</script>
 
     <script>
         const urlPrimary = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQkqhXCPp4XiHKCEpI3pz4pzcu3sQreQ_qNRLger00ULCHFr9cTbXHMQqAfk7dLa_gUBAIBSJ5sZM4F/pub?gid=0&single=true&output=csv";
