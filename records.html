@@ -16,10 +16,10 @@
             
             /* 分類專用色 */
             --meeting-color: #388e3c;
-            --meeting-bg: #e8f5e9; /* 會議記錄：綠色 */
+            --meeting-bg: #e8f5e9; /* 一般會議：綠色 */
             
             --event-color: #1e88e5;
-            --event-bg: #e3f2fd;   /* 重大事件（大事記）：藍色 */
+            --event-bg: #e3f2fd;   /* 大事記：藍色 */
             
             --discipline-color: #d32f2f;
             --discipline-bg: #ffebee; /* 懲戒會議：紅色 */
@@ -170,7 +170,7 @@
             font-weight: bold;
         }
         
-        /* 時間軸這裡改為顯示「摘要」文字 */
+        /* 時間軸顯示摘要 */
         .timeline-summary {
             font-size: 14px;
             font-weight: 600;
@@ -216,16 +216,17 @@
             margin-bottom: 20px;
         }
         .detail-title {
-            font-size: 22px;
+            font-size: 20px;
             margin: 0 0 12px 0;
             color: #222222;
+            line-height: 1.4;
         }
         .detail-meta {
             font-size: 13px;
             color: var(--text-gray);
             display: flex;
             flex-wrap: wrap;
-            gap: 16px;
+            gap: 12px;
             line-height: 1.5;
         }
         .meta-block {
@@ -235,14 +236,38 @@
             color: #555555;
         }
 
+        .detail-section-title {
+            font-size: 14px;
+            font-weight: bold;
+            color: var(--text-gray);
+            margin: 20px 0 8px 0;
+            border-left: 3px solid var(--primary-green);
+            padding-left: 8px;
+        }
+
         .detail-body {
             font-size: 15px;
             line-height: 1.7;
             white-space: pre-wrap;
             color: #444444;
+            background: #fafafa;
+            padding: 14px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+        
+        .detail-remark {
+            font-size: 14px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            color: #666666;
+            background: #fffde7;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #fff59d;
         }
 
-        /* 手機板排版優化 */
+        /* 手機板排版 */
         @media (max-width: 768px) {
             .main-container {
                 flex-direction: column;
@@ -261,7 +286,7 @@
                 padding-left: 24px;
                 margin-bottom: 18px;
                 display: flex;
-                flex-direction: column-reverse; /* 摘要在上，日期與標籤移到下一行 */
+                flex-direction: column-reverse;
                 gap: 4px;
             }
             .timeline-date-row {
@@ -274,7 +299,7 @@
                 padding: 16px;
             }
             .detail-title {
-                font-size: 18px;
+                font-size: 16px;
             }
             .detail-meta {
                 flex-direction: column;
@@ -327,72 +352,106 @@
                 });
         }
 
-        // 核心修正：標準萬用 CSV 複雜文本狀態機解析器（完美解決 5 欄以上、內容換行與全半形逗號交織的問題）
+        // 嚴格逐字狀態機解析器：保證處理內含引號、換行的多列複雜 CSV 結構
         function parseCSV(text) {
             allRecords = [];
-            
-            // 使用正則匹配出真正獨立的 CSV 資料行（能跨越被雙引號包裹的儲存格內換行）
-            const matches = text.match(/("([^"]|"")*"|[^,\n\r]*)+(,|\r?\n?)/g);
-            if (!matches) return;
+            let lines = [];
+            let currentRow = [];
+            let currentCell = '';
+            let inQuotes = false;
 
-            let row = [];
-            let rowIdx = 1;
+            // 逐字元狀態掃描
+            for (let i = 0; i < text.length; i++) {
+                let c = text[i];
+                let nextC = text[i + 1];
 
-            matches.forEach(token => {
-                if (token === '') return;
-                
-                // 判斷最後一個字元是不是結尾符
-                const lastChar = token.slice(-1);
-                let cell = token;
-                
-                if (lastChar === ',' || lastChar === '\n' || lastChar === '\r') {
-                    cell = token.slice(0, -1);
-                }
-                
-                // 清理前後雙引號並還原雙引號轉義
-                cell = cell.trim();
-                if (cell.startsWith('"') && cell.endsWith('"')) {
-                    cell = cell.slice(1, -1);
-                }
-                cell = cell.replace(/""/g, '"');
-                
-                row.push(cell);
-                
-                // 當遇到換行結尾，代表這一整行（包含所有欄位）讀取完畢
-                if (lastChar === '\n' || lastChar === '\r' || token === matches[matches.length - 1]) {
-                    // 跳過第一行標題列 (Header)
-                    if (rowIdx > 1 && row.length >= 3 && row[0].trim() !== "") {
-                        const rawType = row[1] ? row[1].trim() : '事件';
-                        
-                        let finalType = '事件';
-                        let displayLabel = '重大事件';
-                        
-                        if (rawType.includes('懲戒')) {
-                            finalType = '懲戒'; 
-                            displayLabel = '懲戒會議';
-                        } else if (rawType.includes('會議') || rawType.includes('會')) {
-                            finalType = '會議'; 
-                            displayLabel = '會議記錄';
+                if (inQuotes) {
+                    if (c === '"') {
+                        if (nextC === '"') { // 處理轉義雙引號 ""
+                            currentCell += '"';
+                            i++;
+                        } else { // 離開引號狀態
+                            inQuotes = false;
                         }
-
-                        // 彈性對應欄位順序：0:日期, 1:類別, 2:標題, 3:摘要, 4:詳細內容, 5:記錄/出席人員
-                        allRecords.push({
-                            id: rowIdx,
-                            date: row[0] ? row[0].trim() : '未定義日期',
-                            type: finalType, 
-                            labelName: displayLabel, 
-                            title: row[2] ? row[2].trim() : '無標題',
-                            summary: row[3] ? row[3].trim() : '無摘要', // 新增的摘要欄位
-                            content: row[4] ? row[4].trim() : '無詳細內容',
-                            reporter: row[5] ? row[5].trim() : '全體室友' // 後續相關人員與記錄者
-                        });
+                    } else {
+                        currentCell += c;
                     }
-                    row = [];
-                    rowIdx++;
+                } else {
+                    if (c === '"') {
+                        inQuotes = true;
+                    } else if (c === ',') {
+                        currentRow.push(currentCell.trim());
+                        currentCell = '';
+                    } else if (c === '\r' || c === '\n') {
+                        if (c === '\r' && nextC === '\n') i++; // 處理 \r\n
+                        currentRow.push(currentCell.trim());
+                        lines.push(currentRow);
+                        currentRow = [];
+                        currentCell = '';
+                    } else {
+                        currentCell += c;
+                    }
                 }
-            });
+            }
+            if (currentCell || currentRow.length > 0) {
+                currentRow.push(currentCell.trim());
+                lines.push(currentRow);
+            }
+
+            // 對應並抓取 A 到 K 欄 (至少需要有時間與分類欄位)
+            for (let idx = 1; idx < lines.length; idx++) {
+                let row = lines[idx];
+                if (!row || row.length < 2 || !row[0]) continue;
+
+                // 欄位對應指定
+                let date = row[0] ? row[0].trim() : '未定義日期';
+                let rawType = row[1] ? row[1].trim() : '事件';
+                let summary = row[2] ? row[2].trim() : '無摘要';
+                
+                // 處理 D 到 H 欄（索引 3 到 7）的出席或相關人員
+                let attendeesArray = [];
+                for (let col = 3; col <= 7; col++) {
+                    if (row[col] && row[col].trim() !== "") {
+                        attendeesArray.push(row[col].trim());
+                    }
+                }
+                
+                // 檢查是否同時滿足指定的四個人
+                let targetPeople = ["郭丹騏", "洪健棋", "尹奕竤", "林易諒"];
+                let hasAllTargets = targetPeople.every(person => attendeesArray.includes(person));
+                let finalAttendees = hasAllTargets ? "全體室友" : attendeesArray.join(', ');
+                if (finalAttendees === "") finalAttendees = "無相關人員";
+
+                let content = row[8] ? row[8].trim() : '無詳細內容';
+                let remark = row[9] ? row[9].trim() : '';
+                let reporter = row[10] ? row[10].trim() : '無記錄人';
+
+                // 智慧判定分類與標籤名稱
+                let finalType = '事件';
+                let displayLabel = '重大事件';
+                
+                if (rawType.includes('懲戒')) {
+                    finalType = '懲戒'; 
+                    displayLabel = '懲戒會議';
+                } else if (rawType.includes('會議') || rawType.includes('會')) {
+                    finalType = '會議'; 
+                    displayLabel = '會議記錄';
+                }
+
+                allRecords.push({
+                    id: idx,
+                    date: date,
+                    type: finalType, 
+                    labelName: displayLabel, 
+                    summary: summary,
+                    attendees: finalAttendees,
+                    content: content,
+                    remark: remark,
+                    reporter: reporter
+                });
+            }
             
-            // 排序：從新到舊
+            // 按日期從新到舊排序
             allRecords.sort((a, b) => new Date(b.date.replace(/\//g, '-')) - new Date(a.date.replace(/\//g, '-')));
         }
 
@@ -430,7 +489,6 @@
                 itemDiv.id = `item-${item.id}`;
                 itemDiv.onclick = () => selectItem(item);
 
-                // 時間軸標題位置現在由精準的「item.summary 摘要」取代！手機版會自動移到下一行
                 itemDiv.innerHTML = `
                     <div class="timeline-dot"></div>
                     <div class="timeline-summary">${item.summary}</div>
@@ -447,7 +505,7 @@
             }
         }
 
-        // 點擊事件更新右側內容大面板
+        // 點擊事件更新右側詳細內容區
         function selectItem(item) {
             document.querySelectorAll('.timeline-item').forEach(el => el.classList.remove('active'));
             const activeEl = document.getElementById(`item-${item.id}`);
@@ -459,17 +517,27 @@
             if (item.type === '會議') badgeClass = 'badge-meeting';
             if (item.type === '懲戒') badgeClass = 'badge-discipline';
 
-            // 右側完整呈現：標題、摘要、日期、相關人員與詳細會議內文
+            let remarkHtml = '';
+            if (item.remark) {
+                remarkHtml = `
+                    <div class="detail-section-title">備註</div>
+                    <div class="detail-remark">${item.remark}</div>
+                `;
+            }
+
             contentContainer.innerHTML = `
                 <div class="detail-header">
-                    <h2 class="detail-title">${item.title}</h2>
+                    <h2 class="detail-title">${item.summary}</h2>
                     <div class="detail-meta">
-                        <span class="meta-block">📅 日期：${item.date}</span>
-                        <span class="meta-block">🏷️ 類別：<span class="badge ${badgeClass}">${item.labelName}</span></span>
-                        <span class="meta-block">👤 相關人員：${item.reporter}</span>
+                        <span class="meta-block">時間：${item.date}</span>
+                        <span class="meta-block">類別：<span class="badge ${badgeClass}">${item.labelName}</span></span>
+                        <span class="meta-block">相關人員：${item.attendees}</span>
+                        <span class="meta-block">紀錄人：${item.reporter}</span>
                     </div>
                 </div>
+                <div class="detail-section-title">詳細紀實</div>
                 <div class="detail-body">${item.content}</div>
+                ${remarkHtml}
             `;
         }
 
