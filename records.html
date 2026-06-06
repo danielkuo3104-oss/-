@@ -14,15 +14,15 @@
             --border-color: #e0e0e0;
             --glass-bg: rgba(255, 255, 255, 0.7);
             
-            /* 顏色對調優化（全面改為內斂的莫蘭迪色系） */
+            /* 分類專用色 */
             --meeting-color: #388e3c;
-            --meeting-bg: #e8f5e9; /* 會議記錄：綠色系 */
+            --meeting-bg: #e8f5e9; /* 會議記錄：綠色 */
             
             --event-color: #1e88e5;
-            --event-bg: #e3f2fd;   /* 重大事件：藍色系 */
+            --event-bg: #e3f2fd;   /* 重大事件（大事記）：藍色 */
             
             --discipline-color: #d32f2f;
-            --discipline-bg: #ffebee; /* 懲戒會議：紅色系 */
+            --discipline-bg: #ffebee; /* 懲戒會議：紅色 */
         }
 
         body {
@@ -127,7 +127,7 @@
             gap: 4px;
         }
         
-        /* 時間軸圓點基礎樣式 */
+        /* 時間軸圓點 */
         .timeline-dot {
             position: absolute;
             left: 0;
@@ -169,14 +169,16 @@
             color: var(--text-gray);
             font-weight: bold;
         }
-        .timeline-title {
+        
+        /* 時間軸這裡改為顯示「摘要」文字 */
+        .timeline-summary {
             font-size: 14px;
             font-weight: 600;
             color: var(--text-dark);
             line-height: 1.4;
         }
         
-        /* 標籤樣式優化 */
+        /* 標籤樣式 */
         .badge {
             display: inline-block;
             font-size: 10px;
@@ -223,7 +225,14 @@
             color: var(--text-gray);
             display: flex;
             flex-wrap: wrap;
-            gap: 20px;
+            gap: 16px;
+            line-height: 1.5;
+        }
+        .meta-block {
+            background: #f5f5f5;
+            padding: 4px 10px;
+            border-radius: 6px;
+            color: #555555;
         }
 
         .detail-body {
@@ -233,7 +242,7 @@
             color: #444444;
         }
 
-        /* 手機板響應式完全微調 */
+        /* 手機板排版優化 */
         @media (max-width: 768px) {
             .main-container {
                 flex-direction: column;
@@ -251,10 +260,8 @@
             .timeline-item {
                 padding-left: 24px;
                 margin-bottom: 18px;
-            }
-            .timeline-item {
                 display: flex;
-                flex-direction: column-reverse;
+                flex-direction: column-reverse; /* 摘要在上，日期與標籤移到下一行 */
                 gap: 4px;
             }
             .timeline-date-row {
@@ -320,64 +327,73 @@
                 });
         }
 
-        // CSV 欄位解析與智慧分類器
+        // 核心修正：標準萬用 CSV 複雜文本狀態機解析器（完美解決 5 欄以上、內容換行與全半形逗號交織的問題）
         function parseCSV(text) {
             allRecords = [];
-            const lines = text.split(/\r?\n/);
             
-            for (let i = 1; i < lines.length; i++) {
-                const line = lines[i].trim();
-                if (!line) continue;
+            // 使用正則匹配出真正獨立的 CSV 資料行（能跨越被雙引號包裹的儲存格內換行）
+            const matches = text.match(/("([^"]|"")*"|[^,\n\r]*)+(,|\r?\n?)/g);
+            if (!matches) return;
+
+            let row = [];
+            let rowIdx = 1;
+
+            matches.forEach(token => {
+                if (token === '') return;
                 
-                const row = parseCsvLine(line);
+                // 判斷最後一個字元是不是結尾符
+                const lastChar = token.slice(-1);
+                let cell = token;
                 
-                if (row.length >= 3) {
-                    const rawType = row[1] ? row[1].trim() : '事件';
-                    
-                    let finalType = '事件';
-                    let displayLabel = '重大事件';
-                    
-                    if (rawType.includes('懲戒')) {
-                        finalType = '懲戒'; 
-                        displayLabel = '懲戒會議';
-                    } else if (rawType.includes('會議') || rawType.includes('會')) {
-                        finalType = '會議'; 
-                        displayLabel = '會議記錄';
+                if (lastChar === ',' || lastChar === '\n' || lastChar === '\r') {
+                    cell = token.slice(0, -1);
+                }
+                
+                // 清理前後雙引號並還原雙引號轉義
+                cell = cell.trim();
+                if (cell.startsWith('"') && cell.endsWith('"')) {
+                    cell = cell.slice(1, -1);
+                }
+                cell = cell.replace(/""/g, '"');
+                
+                row.push(cell);
+                
+                // 當遇到換行結尾，代表這一整行（包含所有欄位）讀取完畢
+                if (lastChar === '\n' || lastChar === '\r' || token === matches[matches.length - 1]) {
+                    // 跳過第一行標題列 (Header)
+                    if (rowIdx > 1 && row.length >= 3 && row[0].trim() !== "") {
+                        const rawType = row[1] ? row[1].trim() : '事件';
+                        
+                        let finalType = '事件';
+                        let displayLabel = '重大事件';
+                        
+                        if (rawType.includes('懲戒')) {
+                            finalType = '懲戒'; 
+                            displayLabel = '懲戒會議';
+                        } else if (rawType.includes('會議') || rawType.includes('會')) {
+                            finalType = '會議'; 
+                            displayLabel = '會議記錄';
+                        }
+
+                        // 彈性對應欄位順序：0:日期, 1:類別, 2:標題, 3:摘要, 4:詳細內容, 5:記錄/出席人員
+                        allRecords.push({
+                            id: rowIdx,
+                            date: row[0] ? row[0].trim() : '未定義日期',
+                            type: finalType, 
+                            labelName: displayLabel, 
+                            title: row[2] ? row[2].trim() : '無標題',
+                            summary: row[3] ? row[3].trim() : '無摘要', // 新增的摘要欄位
+                            content: row[4] ? row[4].trim() : '無詳細內容',
+                            reporter: row[5] ? row[5].trim() : '全體室友' // 後續相關人員與記錄者
+                        });
                     }
-
-                    allRecords.push({
-                        id: i,
-                        date: row[0] ? row[0].trim() : '未定義日期',
-                        type: finalType, 
-                        labelName: displayLabel, 
-                        title: row[2] ? row[2].trim().replace(/^"|"$/g, '') : '無標題',
-                        content: row[3] ? row[3].trim().replace(/^"|"$/g, '').replace(/""/g, '"') : '無詳細內容',
-                        reporter: row[4] ? row[4].trim().replace(/^"|"$/g, '') : '全體室友'
-                    });
+                    row = [];
+                    rowIdx++;
                 }
-            }
+            });
             
+            // 排序：從新到舊
             allRecords.sort((a, b) => new Date(b.date.replace(/\//g, '-')) - new Date(a.date.replace(/\//g, '-')));
-        }
-
-        function parseCsvLine(line) {
-            let arr = [];
-            let quote = false;
-            let str = '';
-            for (let i = 0; i < line.length; i++) {
-                let char = line[i];
-                if (char === '"') {
-                    quote = !quote;
-                    str += char;
-                } else if ((char === ',' || char === '，') && !quote) { 
-                    arr.push(str);
-                    str = '';
-                } else {
-                    str += char;
-                }
-            }
-            arr.push(str);
-            return arr;
         }
 
         // 渲染左側時間軸
@@ -414,9 +430,10 @@
                 itemDiv.id = `item-${item.id}`;
                 itemDiv.onclick = () => selectItem(item);
 
+                // 時間軸標題位置現在由精準的「item.summary 摘要」取代！手機版會自動移到下一行
                 itemDiv.innerHTML = `
                     <div class="timeline-dot"></div>
-                    <div class="timeline-title">${item.title}</div>
+                    <div class="timeline-summary">${item.summary}</div>
                     <div class="timeline-date-row">
                         <span class="timeline-date">${item.date}</span>
                         <span class="badge ${badgeClass}">${item.labelName}</span>
@@ -430,7 +447,7 @@
             }
         }
 
-        // 點擊事件更新右側內容區
+        // 點擊事件更新右側內容大面板
         function selectItem(item) {
             document.querySelectorAll('.timeline-item').forEach(el => el.classList.remove('active'));
             const activeEl = document.getElementById(`item-${item.id}`);
@@ -442,13 +459,14 @@
             if (item.type === '會議') badgeClass = 'badge-meeting';
             if (item.type === '懲戒') badgeClass = 'badge-discipline';
 
+            // 右側完整呈現：標題、摘要、日期、相關人員與詳細會議內文
             contentContainer.innerHTML = `
                 <div class="detail-header">
                     <h2 class="detail-title">${item.title}</h2>
                     <div class="detail-meta">
-                        <span>日期：${item.date}</span>
-                        <span>類別：<span class="badge ${badgeClass}">${item.labelName}</span></span>
-                        <span>記錄人：${item.reporter}</span>
+                        <span class="meta-block">📅 日期：${item.date}</span>
+                        <span class="meta-block">🏷️ 類別：<span class="badge ${badgeClass}">${item.labelName}</span></span>
+                        <span class="meta-block">👤 相關人員：${item.reporter}</span>
                     </div>
                 </div>
                 <div class="detail-body">${item.content}</div>
