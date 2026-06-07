@@ -484,62 +484,63 @@
         }
 
         // 動態加載綜合公約法規庫（修正版：放寬版本日期偵測，相容初發、初訂、初編、增修）
-        async function loadDynamicRules() {
-            try {
-                const response = await fetchWithTimeout(urlRules, { timeout: 4000 });
-                const csvText = await response.text();
-                if (csvText.includes("<!doctype html") || csvText.includes("<script")) return;
+async function loadDynamicRules() {
+    try {
+        const response = await fetchWithTimeout(urlRules, { timeout: 4000 });
+        const csvText = await response.text();
+        if (csvText.includes("<!doctype html") || csvText.includes("<script")) return;
 
-                const lines = csvText.replace(/\r/g, "").split("\n").map(l => l.trim()).filter(l => l);
-                if (lines.length < 2) return;
+        const lines = csvText.replace(/\r/g, "").split("\n").map(l => l.trim()).filter(l => l);
+        if (lines.length < 2) return;
 
-                let htmlHtml = "";
-                globalRulesHistory = []; 
-                let latestDate = "2026/6/6";
-                let latestType = "初編";
+        let htmlHtml = "";
+        globalRulesHistory = []; 
+        let latestDate = "2026/6/6";
+        let latestType = "初編";
 
-                const dateRegex = /\d{4}\/\d{1,2}\/\d{1,2}/;
+        const dateRegex = /\d{4}\/\d{1,2}\/\d{1,2}/;
 
-                for(let i = 1; i < lines.length; i++) {
-                    const cells = parseCSVLine(lines[i]);
-                    
-                    const level = cells[0] ? cells[0].trim() : "";       
-                    const vMarker = cells[1] ? cells[1].trim() : "";     
-                    const content = cells[2] ? cells[2].trim() : "";     
+        for(let i = 1; i < lines.length; i++) {
+            const cells = parseCSVLine(lines[i]);
+            
+            const level = cells[0] ? cells[0].trim() : "";       
+            const vMarker = cells[1] ? cells[1].trim() : "";     
+            const content = cells[2] ? cells[2].trim() : "";     
 
-                    // 🔍 修正：改用精準的欄位索引抓取（E欄是索引4，F欄是索引5）
-                    const foundDate = cells[4] ? cells[4].trim() : "";
-                    const foundType = cells[5] ? cells[5].trim() : "";
-                    
-                    // 只要 E 欄有符合日期格式的填寫，就認定是一筆歷史紀錄
-                    if (foundDate !== "" && dateRegex.test(foundDate)) {
-                        const typeLabel = foundType !== "" ? foundType : "修訂";
-                        
-                        globalRulesHistory.push({ date: foundDate, type: typeLabel });
-                        latestDate = foundDate;
-                        latestType = typeLabel;
-                    }
+            // 🔍 修正：改用精準的欄位索引抓取（E欄是索引4，F欄是索引5）
+            const foundDate = cells[4] ? cells[4].trim() : "";
+            const foundType = cells[5] ? cells[5].trim() : "";
+            
+            // 只要 E 欄有符合日期格式的填寫，就認定是一筆歷史紀錄
+            if (foundDate !== "" && dateRegex.test(foundDate)) {
+                const typeLabel = foundType !== "" ? foundType : "修訂";
+                
+                globalRulesHistory.push({ date: foundDate, type: typeLabel });
+                latestDate = foundDate;
+                latestType = typeLabel;
+            }
 
-                    if (content === "") continue;
+            if (content === "") continue;
 
-                    if (level === "總綱") {
-                        htmlHtml += `<div class="rule-item rule-category-block">${content}</div>`;
-                    } else if (level === "主法") {
-                        htmlHtml += `<div class="rule-item rule-bold">${content}</div>`;
-                    } else if (level === "細則") {
-                        let isBold = (vMarker.toLowerCase() === 'v') ? "rule-bold" : "";
-                        htmlHtml += `<div class="rule-item rule-indent ${isBold}">${content}</div>`;
-                    }
-                }
-
-                document.getElementById('rulesEditionDate').innerText = `編修日期：${latestDate} (${latestType})`;
-                document.getElementById('dynamicRulesBody').innerHTML = htmlHtml;
-
-            } catch (e) {
-                console.error("宿舍公約規則讀取失敗:", e);
-                document.getElementById('dynamicRulesBody').innerHTML = `<div style="font-size:12px; color:#b54a4a;">⚠️ 動態法規庫聯機失敗，顯示唯讀快取。</div>`;
+            if (level === "總綱") {
+                htmlHtml += `<div class="rule-item rule-category-block">${content}</div>`;
+            } else if (level === "主法") {
+                // ✨【核心修正】：將主法獨立套用 rule-main-title 類別，使其字體放大並有獨立風格
+                htmlHtml += `<div class="rule-item rule-main-title">${content}</div>`;
+            } else if (level === "細則") {
+                let isBold = (vMarker.toLowerCase() === 'v') ? "rule-bold" : "";
+                htmlHtml += `<div class="rule-item rule-indent ${isBold}">${content}</div>`;
             }
         }
+
+        document.getElementById('rulesEditionDate').innerText = `編修日期：${latestDate} (${latestType})`;
+        document.getElementById('dynamicRulesBody').innerHTML = htmlHtml;
+
+    } catch (e) {
+        console.error("宿舍公約規則讀取失敗:", e);
+        document.getElementById('dynamicRulesBody').innerHTML = `<div style="font-size:12px; color:#b54a4a;">⚠️ 動態法規庫聯機失敗，顯示唯讀快取。</div>`;
+    }
+}
 
         // 點擊歷史紀錄彈窗（維持原網頁配色樣式，僅修正資料解析與類別判斷）
 function openRulesHistoryModal() {
