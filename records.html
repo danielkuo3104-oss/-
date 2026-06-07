@@ -22,7 +22,7 @@
             --event-bg: #e3f2fd;   /* 大事記：藍色 */
             
             --discipline-color: #d32f2f;
-            --discipline-bg: #ffebee; /* 懲戒會議：紅色 */
+            --discipline-bg: #ffebee; /* 處分會議：紅色 */
         }
 
         body {
@@ -443,9 +443,9 @@
                 let finalType = '事件';
                 let displayLabel = '重大事件';
                 
-                if (rawType.includes('懲戒')) {
-                    finalType = '懲戒'; 
-                    displayLabel = '懲戒會議';
+                if (rawType.includes('處分')) {
+                    finalType = '處分'; 
+                    displayLabel = '處分會議';
                 } else if (rawType.includes('會議') || rawType.includes('會')) {
                     finalType = '會議'; 
                     displayLabel = '會議記錄';
@@ -475,7 +475,7 @@
 
             const filtered = allRecords.filter(item => {
                 if (currentMode === 'all') return true;
-                if (currentMode === '會議') return (item.type === '會議' || item.type === '懲戒');
+                if (currentMode === '會議') return (item.type === '會議' || item.type === '處分');
                 return item.type === currentMode;
             });
 
@@ -492,7 +492,7 @@
                 if (item.type === '會議') {
                     badgeClass = 'badge-meeting';
                     typeClass = 'type-meeting';
-                } else if (item.type === '懲戒') {
+                } else if (item.type === '處分') {
                     badgeClass = 'badge-discipline';
                     typeClass = 'type-discipline';
                 }
@@ -528,7 +528,7 @@
             
             let badgeClass = 'badge-event';
             if (item.type === '會議') badgeClass = 'badge-meeting';
-            if (item.type === '懲戒') badgeClass = 'badge-discipline';
+            if (item.type === '處分') badgeClass = 'badge-discipline';
 
             let remarkHtml = '';
             if (item.remark) {
