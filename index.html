@@ -151,41 +151,19 @@
         .rent-month-badge { font-weight: 600; color: #69779b; background: #eef2f5; padding: 4px 10px; border-radius: 6px; }
 
         /* 宿舍綜合公約動態卡片樣式 */
-.rules-card { background: #ffffff; border-radius: 20px; padding: 26px; box-shadow: 0 8px 20px rgba(140, 149, 159, 0.08); border: 1px solid #e1e4e8; margin-top: 15px; margin-bottom: 25px; }
-.rules-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eaecef; padding-bottom: 12px; margin-bottom: 16px; }
-.rules-header .title { font-size: 15px; font-weight: 700; color: #69779b; }
-.rules-header .date { font-size: 11px; color: #69779b; background: #edf3f7; padding: 4px 14px; border-radius: 20px; cursor: pointer; font-weight: 600; border: 1px solid #cedde7; transition: all 0.2s; }
-.rules-header .date:hover { background: #dbecf7; color: #3b5a70; }
-.rules-container { display: flex; flex-direction: column; gap: 6px; }
-
-/* 規則層次感排版 */
-.rule-item { font-size: 13px; line-height: 1.8; padding: 6px 12px; border-radius: 8px; color: #4a515a; }
-.rule-category-block { background: #eef2f5; color: #54606e; font-weight: 700; font-size: 14px; margin-top: 14px; margin-bottom: 6px; border-left: 4px solid #69779b; border-radius: 0 8px 8px 0; }
-.rule-bold { font-weight: 700; color: #2d3238; }
-.rule-indent { padding-left: 24px; position: relative; }
-.rule-indent::before { content: "•"; position: absolute; left: 12px; color: #8696b8; }
-
-/* ✨ 全新新增：主法法條標題專用高質感樣式 */
-.rule-main-title {
-    font-size: 15px;              /* 字體放大，與一般細則(13px)產生明顯區隔 */
-    font-weight: 700;              /* 獨立極粗體 */
-    color: #3b4661;                /* 高級莫蘭迪深藍，彰顯主法權威感 */
-    margin-top: 20px;              /* 與上方的大區塊或前條法律留出舒適間距 */
-    margin-bottom: 8px;            /* 與下方的細則法條緊密貼合 */
-    border-bottom: 1px dashed #cedde7; /* 下方自帶一條優雅的莫蘭迪藍淺色虛線 */
-    padding-bottom: 6px;           /* 虛線與標題文字的留白比例 */
-    letter-spacing: 0.5px;         /* 微調字距提升閱讀質感 */
-}
-
-/* 📱 手機版 RWD 適應優化：防止窄螢幕過度擠壓 */
-@media (max-width: 768px) {
-    .rule-main-title {
-        font-size: 14px;
-        margin-top: 16px;
-        margin-bottom: 6px;
-        padding-bottom: 4px;
-    }
-}
+        .rules-card { background: #ffffff; border-radius: 20px; padding: 26px; box-shadow: 0 8px 20px rgba(140, 149, 159, 0.08); border: 1px solid #e1e4e8; margin-top: 15px; margin-bottom: 25px; }
+        .rules-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eaecef; padding-bottom: 12px; margin-bottom: 16px; }
+        .rules-header .title { font-size: 15px; font-weight: 700; color: #69779b; }
+        .rules-header .date { font-size: 11px; color: #69779b; background: #edf3f7; padding: 4px 14px; border-radius: 20px; cursor: pointer; font-weight: 600; border: 1px solid #cedde7; transition: all 0.2s; }
+        .rules-header .date:hover { background: #dbecf7; color: #3b5a70; }
+        .rules-container { display: flex; flex-direction: column; gap: 6px; }
+        
+        /* 規則層次感排版 */
+        .rule-item { font-size: 13px; line-height: 1.8; padding: 6px 12px; border-radius: 8px; color: #4a515a; }
+        .rule-category-block { background: #eef2f5; color: #54606e; font-weight: 700; font-size: 14px; margin-top: 14px; margin-bottom: 6px; border-left: 4px solid #69779b; border-radius: 0 8px 8px 0; }
+        .rule-bold { font-weight: 700; color: #2d3238; }
+        .rule-indent { padding-left: 24px; position: relative; }
+        .rule-indent::before { content: "•"; position: absolute; left: 12px; color: #8696b8; }
 
         .copyright { font-size: 11px; color: #9ba3ab; text-align: center; letter-spacing: 0.5px; margin-bottom: 40px; margin-top: 15px; }
 
