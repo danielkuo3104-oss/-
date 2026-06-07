@@ -89,13 +89,13 @@
         .stat-card.fund-balance .stat-value { color: #ffffff; font-size: 32px; }
         .stat-card.fund-balance .stat-sub { color: rgba(255, 255, 255, 0.6); }
 
-        /* 🟢 總收入專屬卡片 (加入點擊手勢) */
+        /* 🟢 總收入專屬卡片 */
         .stat-card.total-income { background: linear-gradient(135deg, #ffffff 0%, #edf4f0 100%); cursor: pointer; }
         .stat-card.total-income .stat-label { color: #556b5c; font-weight: 600; }
         .stat-card.total-income .stat-value { color: #437353; }
         .stat-card.total-income .stat-sub { color: #768a7d; }
 
-        /* 🟠 總支出專屬卡片 (加入點擊手勢) */
+        /* 🟠 總支出專屬卡片 */
         .stat-card.total-expense { background: linear-gradient(135deg, #ffffff 0%, #fdf5f2 100%); cursor: pointer; }
         .stat-card.total-expense .stat-label { color: #bc6c3a; font-weight: 600; }
         .stat-card.total-expense .stat-value { color: #bc6c3a; } 
@@ -124,8 +124,8 @@
 
         /* 表格與歷史清單 */
         .morandi-table-container { width: 100%; overflow-x: auto; background: #ffffff; border-radius: 20px; border: 1px solid #dcdfdc; margin-top: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.01); }
-        .morandi-table { width: 100%; border-collapse: collapse; font-size: 14px; text-align: left; }
-        .morandi-table th, .morandi-table td { padding: 16px 20px; border-bottom: 1px solid #f2f4f2; }
+        .morandi-table { width: 100%; border-collapse: collapse; font-size: 14px; text-align: left; table-layout: fixed; } /* ✨ 修正：固定寬度布局防止擠壓 */
+        .morandi-table th, .morandi-table td { padding: 16px 20px; border-bottom: 1px solid #f2f4f2; overflow: hidden; }
         .morandi-table th { background: #f5f7f5; color: #768a7d; font-weight: 600; }
         .morandi-table tr:last-child td { border-bottom: none; }
         
@@ -134,7 +134,7 @@
         
         .amt-income { color: #437353; font-weight: 600; }
         .amt-expense { color: #bc6c3a; font-weight: 600; }
-        .amt-neutral { color: #94a3b8; font-weight: 500; } /* ✨ 新增：核銷專用冷灰色樣式 */
+        .amt-neutral { color: #94a3b8; font-weight: 500; } 
         
         .td-date { color: #8fa095; font-size: 13px; font-weight: 500; }
         .td-category { font-weight: 500; color: #556b5c; }
@@ -160,7 +160,7 @@
         }
         .receipt-img-container img { width: 100%; height: auto; max-height: 52vh; object-fit: contain; display: block; }
 
-        /* 手機版優化 */
+        /* 📱 手機版全方位破版修正樣式優化 */
         @media (max-width: 768px) {
             .header-banner { padding: 35px 20px 45px 20px; }
             .header-banner h1 { font-size: 22px; }
@@ -172,7 +172,18 @@
             
             .hide-mobile { display: none !important; }
             .mobile-hint { display: block; }
-            .morandi-table th, .morandi-table td { padding: 14px 12px; font-size: 13px; }
+            
+            /* ✨【防破版排版修正】 */
+            .morandi-table { table-layout: auto; } /* 手機版還原自適應 */
+            .morandi-table th { white-space: nowrap; font-size: 12px; padding: 12px 8px; } /* 強制不折行、縮小字體 */
+            .morandi-table td { padding: 14px 8px; font-size: 13px; }
+            
+            /* 分配四欄在窄螢幕下的精確控制比例 */
+            .morandi-table th:nth-child(1), .morandi-table td:nth-child(1) { width: 28%; font-size: 11px; font-family: monospace; line-height: 1.2; } /* 縮小日期區 */
+            .morandi-table th:nth-child(2), .morandi-table td:nth-child(2) { width: 24%; } /* 金額變動 */
+            .morandi-table th:nth-child(3), .morandi-table td:nth-child(3) { width: 26%; } /* 當期結餘 */
+            .morandi-table th:nth-child(4), .morandi-table td:nth-child(4) { width: 22%; } /* 款項類別 */
+            
             .truncate-text { max-width: 100px; }
         }
     </style>
@@ -234,6 +245,7 @@
             <div class="receipt-img-container">
                 <img id="fundReceiptImageDisplay" src="" alt="憑證照片載入中...">
             </div>
+            <div id="reimburseAlertTag" style="display:none; color:#bc6c3a; font-size:12px; font-weight:600; margin-top:5px;">💡 本單據為管理人匯款發放證明</div>
             <button class="close-btn" onclick="closeFundImageModal()" style="background:#768a7d;">關閉照片</button>
         </div>
     </div>
@@ -303,7 +315,6 @@
                     const handlerVal = cells[handlerIdx] || "無";
                     const receiptVal = cells.length > receiptIdx ? cells[receiptIdx] : ""; 
 
-                    // ⚠️【記帳統計修正】：核銷項目不列入總計累加計算
                     if (categoryVal !== "核銷" && typeVal !== "-") {
                         if (typeVal === "收入") {
                             totalIncome += Math.abs(rawAmt);
@@ -322,7 +333,6 @@
 
                 window.currentFundData = [...fundHistory].reverse();
 
-                // ✨【最新變動防佔位邏輯】：遍歷陣列，自動跳過核銷列，抓取最新的一筆「常態變動」
                 let latestRecord = window.currentFundData[0]; 
                 for (let k = 0; k < window.currentFundData.length; k++) {
                     if (window.currentFundData[k].category !== "核銷" && window.currentFundData[k].type !== "-") {
@@ -331,7 +341,7 @@
                     }
                 }
 
-                const currentBalance = window.currentFundData[0].balance; // 結餘依然錨定在資料庫最新一列
+                const currentBalance = window.currentFundData[0].balance; 
                 const latestAmtSign = latestRecord.type === "收入" ? "+" : "-";
 
                 const displayArea = document.getElementById('fundDisplayArea');
@@ -385,7 +395,6 @@
                             </thead>
                             <tbody>
                                 ${window.currentFundData.map((f, index) => {
-                                    // ✨【冷灰化渲染核心】：判斷是否為核銷案
                                     const isReimburse = (f.category === "核銷" || f.type === "-");
                                     
                                     const amtClass = isReimburse ? "amt-neutral" : (f.type === "收入" ? "amt-income" : "amt-expense");
@@ -394,19 +403,25 @@
                                     const typeDisplay = isReimburse ? "-" : f.type;
                                     
                                     const receiptHtml = (f.receipt && f.receipt.includes("http"))
-                                        ? `<div class="receipt-btn" onclick="event.stopPropagation(); openFundImageModal('${f.receipt}', '${f.date}', '${f.category} 款項憑證')">👁️ 憑證</div>`
+                                        ? `<div class="receipt-btn" onclick="event.stopPropagation(); openFundImageModal('${f.receipt}', '${f.date}', '${f.category} 款項憑證', ${isReimburse})">👁️ 憑證</div>`
                                         : `<span class="no-receipt">無憑證</span>`;
+
+                                    // ✨【手機版優化】：如果是核銷項目，將繁雜的秒數過濾掉，防止手機排版擠壓
+                                    let displayDate = f.date;
+                                    if(window.innerWidth <= 768 && displayDate.length > 10) {
+                                        displayDate = displayDate.substring(5); // 截取掉年份，只保留 06/08 02:04
+                                    }
 
                                     return `
                                         <tr class="fund-row" onclick="openFundModal(${index})">
-                                            <td class="td-date">${f.date}</td>
+                                            <td class="td-date">${displayDate}</td>
                                             <td class="hide-mobile">
                                                 <span class="badge" style="background-color: ${isReimburse ? '#f1f5f9' : (f.type === '收入' ? '#edf2ee' : '#fff5f0')}; color: ${isReimburse ? '#94a3b8' : (f.type === '收入' ? '#437353' : '#bc6c3a')}; padding: 4px 10px; border-radius: 6px; font-weight:600; font-size:12px;">
                                                     ${typeDisplay}
                                                 </span>
                                             </td>
-                                            <td class="${amtClass}" style="font-size:15px;">${amtSign}${amtDisplay}</td>
-                                            <td style="font-weight: 600; color: #404742;">NT$ ${f.balance.toLocaleString()}</td>
+                                            <td class="${amtClass}" style="font-size:15px; white-space: nowrap;">${amtSign}${amtDisplay}</td>
+                                            <td style="font-weight: 600; color: #404742; white-space: nowrap;">NT$ ${f.balance.toLocaleString()}</td>
                                             <td class="td-category">${f.category}</td>
                                             <td class="hide-mobile"><span class="truncate-text" title="點擊查看完整內容">${f.desc || '無'}</span></td>
                                             <td class="hide-mobile" style="color:#8fa095; font-size:13px;">${f.handler}</td>
@@ -434,7 +449,7 @@
             const typeDisplay = isReimburse ? "-" : f.type;
 
             const receiptHtml = (f.receipt && f.receipt.includes("http"))
-                ? `<div class="receipt-btn" style="font-size: 13px; padding: 8px 16px; margin-top: 5px;" onclick="openFundImageModal('${f.receipt}', '${f.date}', '${f.category} 款項憑證')">👁️ 點擊查看相片憑證</div>`
+                ? `<div class="receipt-btn" style="font-size: 13px; padding: 8px 16px; margin-top: 5px;" onclick="openFundImageModal('${f.receipt}', '${f.date}', '${f.category} 款項憑證', ${isReimburse})">👁️ 點擊查看相片憑證</div>`
                 : `<span class="no-receipt" style="display:block; margin-top:10px;">此筆款項無附憑證</span>`;
 
             document.getElementById('modalTitle').innerText = `交易明細 (${f.date})`;
@@ -473,8 +488,6 @@
 
         function openFilterListModal(filterType) {
             document.getElementById('filterModalTitle').innerText = `歷年公基金「純${filterType}」明細清單`;
-            
-            // 篩選常態收支，剔除掉核銷對沖項目
             const filteredData = window.currentFundData.filter(f => f.type === filterType && f.category !== "核銷");
             
             let htmlContent = "";
@@ -507,11 +520,12 @@
             document.getElementById('detailModal').classList.remove('active'); 
         }
 
-        function openFundImageModal(driveUrl, uploadDate, titleText) {
+        function openFundImageModal(driveUrl, uploadDate, titleText, isReimburse = false) {
             const imgModal = document.getElementById('fundImageModal');
             const imgTitle = document.getElementById('fundImageModalTitle');
             const dateDisplay = document.getElementById('fundReceiptDateDisplay');
             const imgDisplay = document.getElementById('fundReceiptImageDisplay');
+            const alertTag = document.getElementById('reimburseAlertTag');
             
             let directImageUrl = driveUrl;
             if (driveUrl && driveUrl.includes("drive.google.com")) {
@@ -523,6 +537,13 @@
             
             imgTitle.innerText = titleText;
             dateDisplay.innerText = `入帳/上傳日期：${uploadDate || "未記錄"}`;
+            
+            // 💡 提示字優化：如果是核銷項目，顯示提示這張是你的匯款單據
+            if (isReimburse) {
+                alertTag.style.display = "block";
+            } else {
+                alertTag.style.display = "none";
+            }
             
             imgDisplay.onerror = function() {
                 this.onerror = null;
