@@ -215,11 +215,22 @@
 
 <div class="menu-modal" id="fabMenu" onclick="toggleMenu()">
     <div class="menu-options" onclick="event.stopPropagation()">
-        <h3 style="margin-top:0;">控制中心</h3>
+        <h3 style="margin-top:0; margin-bottom: 15px;">控制中心</h3>
+        
+        <a href="https://forms.gle/bPwvWaTSTz2esCPN6" class="menu-link" target="_blank" style="background: #e9ecef; color: #1a252f; font-weight: 700; border: 2px solid #1a252f; margin-bottom: 18px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+            前往資訊登錄系統
+        </a>
+
+        <hr style="border: 0; border-top: 1px dashed #cbd1d6; margin-bottom: 15px;">
+
         <a href="records.html" class="menu-link" style="background: #9ba3ab; color: #ffffff; font-weight: 600; margin-bottom: 10px;">
             大事紀與會議記錄
         </a>
-        <a href="https://forms.gle/bPwvWaTSTz2esCPN6" class="menu-link" target="_blank">前往資訊登錄系統</a>
+        
+        <a href="index.html" id="homeMenuLink" class="menu-link" style="background: #5a6168; color: #ffffff; font-weight: 600; margin-bottom: 10px; display: none;">
+            回到主頁
+        </a>
+
         <button class="close-btn" style="background: #cbd1d6; color: #5a6168; margin-top: 15px;" onclick="toggleMenu()">取消</button>
     </div>
 </div>
@@ -228,6 +239,19 @@
     function toggleMenu() {
         document.getElementById('fabMenu').classList.toggle('active');
     }
+
+    // 自動判斷是否在主頁，若不在主頁則顯示「回到主頁」按鈕
+    document.addEventListener("DOMContentLoaded", function() {
+        const currentPath = window.location.pathname;
+        const homeLink = document.getElementById('homeMenuLink');
+        
+        // 判斷目前的網址是否為主頁 (例如 index.html 或 根目錄 /)
+        const isHomePage = currentPath.endsWith('index.html') || currentPath.endsWith('/');
+        
+        if (!isHomePage && homeLink) {
+            homeLink.style.display = 'block'; // 或 'flex'，取決於您的 .menu-link 樣式
+        }
+    });
 </script>
 
     <script>
