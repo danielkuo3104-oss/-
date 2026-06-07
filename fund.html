@@ -134,6 +134,8 @@
         
         .amt-income { color: #437353; font-weight: 600; }
         .amt-expense { color: #bc6c3a; font-weight: 600; }
+        .amt-neutral { color: #94a3b8; font-weight: 500; } /* ✨ 新增：核銷專用冷灰色樣式 */
+        
         .td-date { color: #8fa095; font-size: 13px; font-weight: 500; }
         .td-category { font-weight: 500; color: #556b5c; }
         .copyright { font-size: 11px; color: #8fa095; text-align: center; letter-spacing: 0.5px; margin-top: 30px; }
@@ -144,8 +146,8 @@
         .modal-overlay.active { display:flex; }
         .modal-box { background:#ffffff; width:90%; max-width:480px; border-radius:24px; padding:32px; box-shadow:0 12px 30px rgba(0,0,0,0.2); max-height:85vh; overflow-y:auto; }
         .modal-title { font-size:18px; font-weight:700; color:#404742; margin-bottom:24px; border-bottom:1px solid #eaecef; padding-bottom:16px; text-align:center; }
-        .modal-row { display:flex; justify-content:space-between; align-items: center; padding:12px 0; font-size:14px; color:#5a6168; border-bottom:1px solid #f0f2f5; }
-        .modal-row:last-child { border-bottom: none; }
+        .modal-box .modal-row { display:flex; justify-content:space-between; align-items: center; padding:12px 0; font-size:14px; color:#5a6168; border-bottom:1px solid #f0f2f5; }
+        .modal-box .modal-row:last-child { border-bottom: none; }
         .close-btn { width:100%; background:#556b5c; color:white; border:none; padding:14px; border-radius:12px; font-size:14px; font-weight:600; cursor:pointer; margin-top:20px; transition:background 0.2s; }
         .close-btn:hover { background:#435448; }
 
@@ -293,7 +295,7 @@
                     if(!cells[dateIdx] || cells[dateIdx] === "" || cells[dateIdx].includes("日期")) continue;
 
                     const dateVal = cells[dateIdx];
-                    const typeVal = cells[typeIdx] || "未指定"; 
+                    const typeVal = cells[typeIdx] || "未指定";    
                     const rawAmt = parseFloat(cells[amountIdx]) || 0;
                     const balanceVal = parseFloat(cells[balanceIdx]) || 0;
                     const categoryVal = cells[categoryIdx] || "未分類";
@@ -301,10 +303,13 @@
                     const handlerVal = cells[handlerIdx] || "無";
                     const receiptVal = cells.length > receiptIdx ? cells[receiptIdx] : ""; 
 
-                    if (typeVal === "收入") {
-                        totalIncome += Math.abs(rawAmt);
-                    } else if (typeVal === "支出") {
-                        totalExpense += Math.abs(rawAmt);
+                    // ⚠️【記帳統計修正】：核銷項目不列入總計累加計算
+                    if (categoryVal !== "核銷" && typeVal !== "-") {
+                        if (typeVal === "收入") {
+                            totalIncome += Math.abs(rawAmt);
+                        } else if (typeVal === "支出") {
+                            totalExpense += Math.abs(rawAmt);
+                        }
                     }
 
                     fundHistory.push({
@@ -317,8 +322,16 @@
 
                 window.currentFundData = [...fundHistory].reverse();
 
-                const latestRecord = window.currentFundData[0];
-                const currentBalance = latestRecord.balance; 
+                // ✨【最新變動防佔位邏輯】：遍歷陣列，自動跳過核銷列，抓取最新的一筆「常態變動」
+                let latestRecord = window.currentFundData[0]; 
+                for (let k = 0; k < window.currentFundData.length; k++) {
+                    if (window.currentFundData[k].category !== "核銷" && window.currentFundData[k].type !== "-") {
+                        latestRecord = window.currentFundData[k];
+                        break;
+                    }
+                }
+
+                const currentBalance = window.currentFundData[0].balance; // 結餘依然錨定在資料庫最新一列
                 const latestAmtSign = latestRecord.type === "收入" ? "+" : "-";
 
                 const displayArea = document.getElementById('fundDisplayArea');
@@ -372,8 +385,14 @@
                             </thead>
                             <tbody>
                                 ${window.currentFundData.map((f, index) => {
-                                    const amtClass = f.type === "收入" ? "amt-income" : "amt-expense";
-                                    const amtSign = f.type === "收入" ? "+" : "-";
+                                    // ✨【冷灰化渲染核心】：判斷是否為核銷案
+                                    const isReimburse = (f.category === "核銷" || f.type === "-");
+                                    
+                                    const amtClass = isReimburse ? "amt-neutral" : (f.type === "收入" ? "amt-income" : "amt-expense");
+                                    const amtSign = isReimburse ? "" : (f.type === "收入" ? "+" : "-");
+                                    const amtDisplay = isReimburse ? "-" : Math.abs(f.amount).toLocaleString();
+                                    const typeDisplay = isReimburse ? "-" : f.type;
+                                    
                                     const receiptHtml = (f.receipt && f.receipt.includes("http"))
                                         ? `<div class="receipt-btn" onclick="event.stopPropagation(); openFundImageModal('${f.receipt}', '${f.date}', '${f.category} 款項憑證')">👁️ 憑證</div>`
                                         : `<span class="no-receipt">無憑證</span>`;
@@ -381,8 +400,12 @@
                                     return `
                                         <tr class="fund-row" onclick="openFundModal(${index})">
                                             <td class="td-date">${f.date}</td>
-                                            <td class="hide-mobile"><span class="badge" style="background-color: ${f.type === '收入' ? '#edf2ee' : '#fff5f0'}; color: ${f.type === '收入' ? '#437353' : '#bc6c3a'}; padding: 4px 10px; border-radius: 6px; font-weight:600; font-size:12px;">${f.type}</span></td>
-                                            <td class="${amtClass}" style="font-size:15px;">${amtSign}${Math.abs(f.amount).toLocaleString()}</td>
+                                            <td class="hide-mobile">
+                                                <span class="badge" style="background-color: ${isReimburse ? '#f1f5f9' : (f.type === '收入' ? '#edf2ee' : '#fff5f0')}; color: ${isReimburse ? '#94a3b8' : (f.type === '收入' ? '#437353' : '#bc6c3a')}; padding: 4px 10px; border-radius: 6px; font-weight:600; font-size:12px;">
+                                                    ${typeDisplay}
+                                                </span>
+                                            </td>
+                                            <td class="${amtClass}" style="font-size:15px;">${amtSign}${amtDisplay}</td>
                                             <td style="font-weight: 600; color: #404742;">NT$ ${f.balance.toLocaleString()}</td>
                                             <td class="td-category">${f.category}</td>
                                             <td class="hide-mobile"><span class="truncate-text" title="點擊查看完整內容">${f.desc || '無'}</span></td>
@@ -404,8 +427,12 @@
             const f = window.currentFundData[idx];
             if(!f) return;
 
-            const amtClass = f.type === "收入" ? "amt-income" : "amt-expense";
-            const amtSign = f.type === "收入" ? "+" : "-";
+            const isReimburse = (f.category === "核銷" || f.type === "-");
+            const amtClass = isReimburse ? "amt-neutral" : (f.type === "收入" ? "amt-income" : "amt-expense");
+            const amtSign = isReimburse ? "" : (f.type === "收入" ? "+" : "-");
+            const amtDisplay = isReimburse ? "-" : Math.abs(f.amount).toLocaleString();
+            const typeDisplay = isReimburse ? "-" : f.type;
+
             const receiptHtml = (f.receipt && f.receipt.includes("http"))
                 ? `<div class="receipt-btn" style="font-size: 13px; padding: 8px 16px; margin-top: 5px;" onclick="openFundImageModal('${f.receipt}', '${f.date}', '${f.category} 款項憑證')">👁️ 點擊查看相片憑證</div>`
                 : `<span class="no-receipt" style="display:block; margin-top:10px;">此筆款項無附憑證</span>`;
@@ -415,7 +442,7 @@
                 <div class="modal-item-block">
                     <div class="modal-row">
                         <span style="color:#8fa095; font-weight:500;">收支類型</span>
-                        <span class="badge" style="background-color: ${f.type === '收入' ? '#edf2ee' : '#fff5f0'}; color: ${f.type === '收入' ? '#437353' : '#bc6c3a'}; padding: 4px 12px; border-radius: 6px; font-weight:700;">${f.type}</span>
+                        <span class="badge" style="background-color: ${isReimburse ? '#f1f5f9' : (f.type === '收入' ? '#edf2ee' : '#fff5f0')}; color: ${isReimburse ? '#94a3b8' : (f.type === '收入' ? '#437353' : '#bc6c3a')}; padding: 4px 12px; border-radius: 6px; font-weight:700;">${typeDisplay}</span>
                     </div>
                     <div class="modal-row">
                         <span style="color:#8fa095; font-weight:500;">款項類別</span>
@@ -423,7 +450,7 @@
                     </div>
                     <div class="modal-row">
                         <span style="color:#8fa095; font-weight:500;">金額變動</span>
-                        <span class="${amtClass}" style="font-size: 18px; font-weight: 700;">${amtSign}${Math.abs(f.amount).toLocaleString()}</span>
+                        <span class="${amtClass}" style="font-size: 18px; font-weight: 700;">${amtSign}${amtDisplay}</span>
                     </div>
                     <div class="modal-row">
                         <span style="color:#8fa095; font-weight:500;">當期結餘</span>
@@ -444,12 +471,11 @@
             document.getElementById('detailModal').classList.add('active');
         }
 
-        // 💡 全新實作：點擊總收/支卡片，彈出對應的精簡版篩選清單
         function openFilterListModal(filterType) {
             document.getElementById('filterModalTitle').innerText = `歷年公基金「純${filterType}」明細清單`;
             
-            // 篩選出符合的資料
-            const filteredData = window.currentFundData.filter(f => f.type === filterType);
+            // 篩選常態收支，剔除掉核銷對沖項目
+            const filteredData = window.currentFundData.filter(f => f.type === filterType && f.category !== "核銷");
             
             let htmlContent = "";
             if (filteredData.length === 0) {
@@ -458,7 +484,6 @@
                 filteredData.forEach(f => {
                     const amtClass = f.type === "收入" ? "amt-income" : "amt-expense";
                     const amtSign = f.type === "收入" ? "+" : "-";
-                    // 日期精簡為 YYYY/MM/DD
                     const cleanDate = f.date.split(" ")[0];
 
                     htmlContent += `
