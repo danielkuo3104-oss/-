@@ -106,13 +106,13 @@
             border-right: 1px solid var(--border-color);
         }
         
-        /* 💻 電腦版垂直軸線：精確計算頭尾 */
+        /* 💻 電腦版垂直軸線 */
         .timeline-side::before {
             content: '';
             position: absolute;
             left: 25px;
-            top: 26px; /* 起點精確對準首個元件的第一列中心 */
-            bottom: 26px; /* 終點精確切齊最後一個元件的第一列中心 */
+            top: 26px; 
+            bottom: 26px; 
             width: 2px;
             background: var(--border-color);
             z-index: 1;
@@ -132,8 +132,8 @@
         /* 💻 電腦版時間軸圓點定位 */
         .timeline-dot {
             position: absolute;
-            left: -30px; /* 移回父層的 Padding 區間內 */
-            top: 4px;    /* 完美對齊第一列文字中心 */
+            left: -30px; 
+            top: 4px;    
             width: 10px;
             height: 10px;
             border-radius: 50%;
@@ -165,7 +165,7 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            position: relative; /* 建立圓點的絕對錨定基準 */
+            position: relative; 
         }
 
         .timeline-date {
@@ -281,7 +281,7 @@
             font-weight: 500;
         }
 
-        /* 📱 手機板排版與軸線防撞終極修正 */
+        /* 📱 手機板全新排版與軸線防撞終極修正 */
         @media (max-width: 768px) {
             .main-container {
                 flex-direction: column;
@@ -294,46 +294,40 @@
                 padding-bottom: 15px;
             }
             
-            /* ✨【手機版中軸線防漏修正】：精準將軸線限縮在首尾兩列的「中心點」，永不向外溢出斷線 */
+            /* ✨【手機版中軸線防漏修正】：精準限制軸線在第一個圓圈與最後一個圓圈的中央，絕不溢出斷線 */
             .timeline-side::before {
                 left: 15px;
-                top: 14px;     /* 首個項目的日期欄視覺中心點 */
-                bottom: 14px;  /* 末個項目的日期欄視覺中心點 */
+                top: 15px;     /* 首個項目的頂部置中起點 */
+                bottom: 60px;  /* 💡 修正：配合取消 column-reverse，將軸線終點往上提拉，精準停在最後一列的圓圈中心 */
             }
             
             .timeline-item {
                 padding-left: 28px;
                 margin-bottom: 18px;
                 display: flex;
-                flex-direction: column-reverse; /* 日期翻轉至最下方 */
+                flex-direction: column; /* 💡 修正：放棄反轉，回歸標準靠上結構，解決 Safari 渲染手震 Bug */
                 gap: 4px;
             }
 
             .timeline-date-row {
-                margin-top: 2px;
+                margin-top: 0px;
                 display: flex;
                 align-items: center;
-                height: 18px; /* 鎖死高度，確保內部圓圈能進行無誤差的絕對置中 */
+                height: 18px; 
             }
 
-            /* ✨【手機版圓點完美置中修正】：將點死死定位在 .timeline-date-row 的垂直中心線上 */
+            /* ✨【手機版圓點完美置中修正】：完美錨定在頂部的日期行高中心 */
             .timeline-dot {
-                left: -28px;                  /* 頂回左側軸線的 X 座標位置（15px） */
-                top: 50%;                     /* 垂直向下偏移半個容器高度 */
-                transform: translateY(-50%);  /* 精準向上回彈自身半個高度，達成完全置中 */
+                left: -28px;                  
+                top: 4px; /* 💡 修正：跟隨常態頂部對齊，徹底卡死在第一行，不再受摘要行數多寡影響 */
+                transform: none; 
                 bottom: unset;
             }
             
-            /* ✨【手機版動態高亮放大修正】：保留 TranslateY 垂直定位的同時進行縮放，避免位移破版 */
-            .timeline-item.active.type-meeting .timeline-dot {
-                transform: translateY(-50%) scale(1.2);
-            }
-            .timeline-item.active.type-event .timeline-dot {
-                transform: translateY(-50%) scale(1.2);
-            }
-            .timeline-item.active.type-discipline .timeline-dot {
-                transform: translateY(-50%) scale(1.2);
-            }
+            /* ✨【手機版動態高亮放大】：單純放大，徹底擺脫位移干擾 */
+            .timeline-item.active.type-meeting .timeline-dot { transform: scale(1.2); }
+            .timeline-item.active.type-event .timeline-dot { transform: scale(1.2); }
+            .timeline-item.active.type-discipline .timeline-dot { transform: scale(1.2); }
 
             .content-side {
                 flex: none;
@@ -341,13 +335,8 @@
                 min-height: 350px;
                 padding: 16px;
             }
-            .detail-title {
-                font-size: 16px;
-            }
-            .detail-meta {
-                flex-direction: column;
-                gap: 6px;
-            }
+            .detail-title { font-size: 16px; }
+            .detail-meta { flex-direction: column; gap: 6px; }
         }
     </style>
 </head>
@@ -375,7 +364,7 @@
     </div>
 
     <div class="footer-copyright">
-        © 2026 GUO DANIEL. ALL RIGHTS RESERVED. <span style="color:#b0b5b0; margin:0 6px;">|</span> <span style="background:#edf2ee; color:#437353; padding:2px 8px; border-radius:4px; font-weight:600;">v1.0.3 (修正版)</span>
+        © 2026 GUO DANIEL. ALL RIGHTS RESERVED. <span style="color:#b0b5b0; margin:0 6px;">|</span> <span style="background:#edf2ee; color:#437353; padding:2px 8px; border-radius:4px; font-weight:600;">v1.0.4</span>
     </div>
 
     <script>
@@ -387,8 +376,6 @@
         window.addEventListener('DOMContentLoaded', fetchRecords);
 
         function fetchRecords() {
-            // ✨【終極防手機舊快取地雷】：在 URL 後方灌入動態微秒戳記 (?_cb=12345678)
-            // 這樣手機瀏覽器會判定這是一次全新的下載，絕不讀取手機內部的髒快取歷史！
             const antiCacheUrl = csvUrlBase + "&_cb=" + new Date().getTime();
             
             fetch(antiCacheUrl)
@@ -500,7 +487,7 @@
             allRecords.sort((a, b) => new Date(a.date.replace(/\//g, '-')) - new Date(b.date.replace(/\//g, '-')));
         }
 
-        // ✨【核心功能重構】：重新編排 DOM 渲染樹，將圓點強行內嵌進入日期列中
+        // ✨【DOM 結構最終優化】：圓點內嵌在日期列首位，且日期列回歸常態排列在上方
         function renderTimeline() {
             const container = document.getElementById('timelineContainer');
             container.innerHTML = '';
@@ -534,14 +521,14 @@
                 itemDiv.id = `item-${item.id}`;
                 itemDiv.onclick = () => selectItem(item);
 
-                // 💡【核心改動】：拔除最外層的圓點，直接將 <div class="timeline-dot"></div> 嵌入 timeline-date-row 的首位！
+                // 💡【結構回歸正軌】：先日期列（內含圓點），再摘要標題。徹底拔除導致手震的 column-reverse
                 itemDiv.innerHTML = `
-                    <div class="timeline-summary">${item.summary}</div>
                     <div class="timeline-date-row">
                         <div class="timeline-dot"></div> 
                         <span class="timeline-date">${item.date}</span>
                         <span class="badge ${badgeClass}">${item.labelName}</span>
                     </div>
+                    <div class="timeline-summary" style="margin-top: 2px;">${item.summary}</div>
                 `;
                 container.appendChild(itemDiv);
             });
