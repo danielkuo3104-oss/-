@@ -106,13 +106,13 @@
             border-right: 1px solid var(--border-color);
         }
         
-        /* 💻 電腦版軸線錨定 */
+        /* 💻 電腦版垂直軸線：精確計算頭尾 */
         .timeline-side::before {
             content: '';
             position: absolute;
             left: 25px;
-            top: 26px; /* 完美對準第一個電腦版圓點 */
-            bottom: 26px; /* 完美切齊最後一個電腦版圓點，不往下穿透過頭 */
+            top: 26px; /* 起點精確對準首個元件的第一列中心 */
+            bottom: 26px; /* 終點精確切齊最後一個元件的第一列中心 */
             width: 2px;
             background: var(--border-color);
             z-index: 1;
@@ -129,11 +129,11 @@
             gap: 4px;
         }
         
-        /* 時間軸圓點 */
+        /* 💻 電腦版時間軸圓點定位 */
         .timeline-dot {
             position: absolute;
-            left: 0;
-            top: 4px; /* 電腦版維持靠上置中 */
+            left: -30px; /* 移回父層的 Padding 區間內 */
+            top: 4px;    /* 完美對齊第一列文字中心 */
             width: 10px;
             height: 10px;
             border-radius: 50%;
@@ -141,9 +141,10 @@
             border: 2px solid #ffffff;
             box-shadow: 0 0 0 2px #cbd1d6;
             transition: all 0.2s ease;
+            z-index: 5;
         }
         
-        /* 動態變色高亮邏輯 (電腦版) */
+        /* 動態變色高亮邏輯 */
         .timeline-item.active.type-meeting .timeline-dot {
             background: var(--meeting-color);
             box-shadow: 0 0 0 2px var(--meeting-color);
@@ -164,6 +165,7 @@
             display: flex;
             align-items: center;
             gap: 8px;
+            position: relative; /* 建立圓點的絕對錨定基準 */
         }
 
         .timeline-date {
@@ -269,7 +271,7 @@
             border: 1px solid #fff59d;
         }
 
-        /* 📱 手機板排版與中軸防震、完美置中修正 */
+        /* 📱 手機板全新排版與軸線防撞終極修正 */
         @media (max-width: 768px) {
             .main-container {
                 flex-direction: column;
@@ -282,46 +284,47 @@
                 padding-bottom: 15px;
             }
             
-            /* ✨【手機版軸線修正】：將中軸線精準限縮在第一個與最後一個元件的圓圈中心點 */
+            /* ✨【手機版中軸線防漏修正】：精準將軸線限縮在首尾兩列的「中心點」，永不向外溢出斷線 */
             .timeline-side::before {
                 left: 15px;
-                top: 24px;     /* 從第一個元件的日期文字高度中心點開始繪製，絕不往上溢出斷線 */
-                bottom: 24px;  /* 在最後一個元件的標題文字高度中心點精準結束，絕不往下多穿透出來 */
+                top: 14px;     /* 首個項目的日期欄視覺中心點 */
+                bottom: 14px;  /* 末個項目的日期欄視覺中心點 */
             }
             
             .timeline-item {
                 padding-left: 28px;
                 margin-bottom: 18px;
                 display: flex;
-                flex-direction: column-reverse;
+                flex-direction: column-reverse; /* 日期翻轉至最下方 */
                 gap: 4px;
-            }
-
-            /* ✨【手機版圓圈置中核心】：因為 column-reverse 導致文字行高變動，必須針對個別行做對齊 */
-            .timeline-dot {
-                top: unset;
-                bottom: 4px;   /* 💡 強制與最底部的 timeline-date-row（也就是日期跟標籤那一列）的視覺中心對齊 */
-                left: 0;
-                transform: none; /* 清除舊有的位移干擾 */
-            }
-            
-            /* ✨【手機版動態高亮放大修正】：移除舊有 TranslateY 的高度位移干擾，原地單純 Scale 放大 */
-            .timeline-item.active.type-meeting .timeline-dot {
-                transform: scale(1.2);
-            }
-            .timeline-item.active.type-event .timeline-dot {
-                transform: scale(1.2);
-            }
-            .timeline-item.active.type-discipline .timeline-dot {
-                transform: scale(1.2);
             }
 
             .timeline-date-row {
                 margin-top: 2px;
                 display: flex;
                 align-items: center;
-                height: 18px; /* 固定日期行高，讓圓點錨定時精準置中 */
+                height: 18px; /* 鎖死高度，確保內部圓圈能進行無誤差的絕對置中 */
             }
+
+            /* ✨【手機版圓點完美置中修正】：將點死死定位在 .timeline-date-row 的垂直中心線上 */
+            .timeline-dot {
+                left: -28px;                  /* 頂回左側軸線的 X 座標位置（15px） */
+                top: 50%;                     /* 垂直向下偏移半個容器高度 */
+                transform: translateY(-50%);  /* 精準向上回彈自身半個高度，達成完全置中 */
+                bottom: unset;
+            }
+            
+            /* ✨【手機版動態高亮放大修正】：保留 TranslateY 垂直定位的同時進行縮放，避免位移破版 */
+            .timeline-item.active.type-meeting .timeline-dot {
+                transform: translateY(-50%) scale(1.2);
+            }
+            .timeline-item.active.type-event .timeline-dot {
+                transform: translateY(-50%) scale(1.2);
+            }
+            .timeline-item.active.type-discipline .timeline-dot {
+                transform: translateY(-50%) scale(1.2);
+            }
+
             .content-side {
                 flex: none;
                 height: calc(100vh - 450px);
@@ -479,7 +482,7 @@
             allRecords.sort((a, b) => new Date(a.date.replace(/\//g, '-')) - new Date(b.date.replace(/\//g, '-')));
         }
 
-        // 渲染左側時間軸
+        // ✨【核心功能重構】：重新編排 DOM 渲染樹，將圓點強行內嵌進入日期列中
         function renderTimeline() {
             const container = document.getElementById('timelineContainer');
             container.innerHTML = '';
@@ -513,10 +516,11 @@
                 itemDiv.id = `item-${item.id}`;
                 itemDiv.onclick = () => selectItem(item);
 
+                // 💡【核心改動】：拔除最外層的圓點，直接將 <div class="timeline-dot"></div> 嵌入 timeline-date-row 的首位！
                 itemDiv.innerHTML = `
-                    <div class="timeline-dot"></div>
                     <div class="timeline-summary">${item.summary}</div>
                     <div class="timeline-date-row">
+                        <div class="timeline-dot"></div> 
                         <span class="timeline-date">${item.date}</span>
                         <span class="badge ${badgeClass}">${item.labelName}</span>
                     </div>
