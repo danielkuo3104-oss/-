@@ -152,7 +152,7 @@
 
     <div class="footer-info">
         <div>&copy; 2026 宿舍智慧管理系統. All Rights Reserved.</div>
-        <div style="font-weight: 600; margin-top: 2px;">Version v2.1.4.VT</div>
+        <div style="font-weight: 600; margin-top: 2px;">Version v2.1.5.VT</div>
     </div>
 </div>
 
@@ -214,8 +214,7 @@
 </div>
 
 <script>
-    //  正確的寫法：填入帶有 /exec 的實體網頁應用程式網址
-const GAS_URL = "https://script.google.com/macros/s/AKfycbzbq0DSikkyPn3Olm641E1_lKWJL33M4qMDtzqUWbsWY_btLu286DuM6Cb-nd7U0ZY8/exec"; 
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbzbq0DSikkyPn3Olm641E1_lKWJL33M4qMDtzqUWbsWY_btLu286DuM6Cb-nd7U0ZY8/exec"; 
     
     let allVotesCache = [];
     let currentSelectedVote = null;
@@ -241,10 +240,8 @@ const GAS_URL = "https://script.google.com/macros/s/AKfycbzbq0DSikkyPn3Olm641E1_
         if (document.getElementById("panel-core").style.display === "block" || 
             document.getElementById("panel-auth").style.display === "block") return;
 
-        fetch(GAS_URL + "?_ts=" + new Date().getTime(), {
-            method: "GET",
-            mode: "cors"
-        })
+        // 🚀 終極相容連線：拿掉 mode 與 ts，用標準最原生的純淨 fetch 連接
+        fetch(GAS_URL)
         .then(res => res.json())
         .then(data => {
             allVotesCache = data.votes || [];
@@ -441,7 +438,7 @@ const GAS_URL = "https://script.google.com/macros/s/AKfycbzbq0DSikkyPn3Olm641E1_
 
     function executeSubmitPost(choicesArr) {
         const payload = { action: "submitVote", voteCode: currentSelectedVote.code, token: verifiedToken, choices: choicesArr };
-        fetch(GAS_URL, { method: "POST", body: JSON.stringify(payload), mode: "cors" })
+        fetch(GAS_URL, { method: "POST", body: JSON.stringify(payload) })
         .then(res => res.json())
         .then(res => {
             if (res.status === "success") {
@@ -491,7 +488,7 @@ const GAS_URL = "https://script.google.com/macros/s/AKfycbzbq0DSikkyPn3Olm641E1_
         }
         const payload = { action: "createVote", type: type, description: desc, startDelay: startDelay, duration: duration, options: optionsArr };
         if (!confirm("確定要發起此投票案嗎？")) return;
-        fetch(GAS_URL, { method: "POST", body: JSON.stringify(payload), mode: "cors" })
+        fetch(GAS_URL, { method: "POST", body: JSON.stringify(payload) })
         .then(res => res.json())
         .then(res => {
             if (res.status === "success") {
@@ -505,7 +502,7 @@ const GAS_URL = "https://script.google.com/macros/s/AKfycbzbq0DSikkyPn3Olm641E1_
     }
 
     function directAccess(voteCode) {
-        fetch(GAS_URL + "?_ts=" + new Date().getTime(), { mode: "cors" }).then(res => res.json()).then(data => {
+        fetch(GAS_URL).then(res => res.json()).then(data => {
             currentSelectedVote = (data.votes || []).find(v => v.code === voteCode);
             if (!currentSelectedVote) { alert("該投票案已關閉！"); fetchActiveVotes(); return; }
             document.getElementById("global-home-btn").style.display = "none";
