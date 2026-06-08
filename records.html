@@ -281,7 +281,7 @@
             font-weight: 500;
         }
 
-        /* 📱 手機板全新排版與軸線「完全捨棄」優化 */
+        /* 📱 手機板排版與黏字、手震防禦終極修正 */
         @media (max-width: 768px) {
             .main-container {
                 flex-direction: column;
@@ -292,16 +292,16 @@
                 border-bottom: 1px solid var(--border-color);
                 max-height: 280px;
                 padding-bottom: 15px;
-                padding-left: 10px; /* 💡 捨棄鉛直線，內縮還給畫面更多空間 */
+                padding-left: 10px; 
             }
             
-            /* 🚫【手機版鉛直線全面捨去】：徹底拔除線條，避免任何手震、斷線、未置中問題 */
+            /* 🚫 鉛直線全面捨去 */
             .timeline-side::before {
                 display: none !important;
             }
             
             .timeline-item {
-                padding-left: 18px; /* 縮小左側圓點占位間距 */
+                padding-left: 24px; /* ✨ 修正：稍微加寬內縮，給予圓點更充裕的擺放空間 */
                 margin-bottom: 16px;
                 display: flex;
                 flex-direction: column; 
@@ -315,9 +315,9 @@
                 height: 18px; 
             }
 
-            /* ✨【手機版圓點排版】：讓小圓圈緊貼左側起點，當成純粹的列表點飾（Bullet Point） */
+            /* ✨【黏字破版修正】：將圓點 X 軸座標往左微調至 -20px，完美拉開與日期文字的間距 */
             .timeline-dot {
-                left: -16px;                  
+                left: -20px;                  
                 top: 4px; 
                 transform: none; 
                 bottom: unset;
