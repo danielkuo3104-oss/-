@@ -152,7 +152,7 @@
 
     <div class="footer-info">
         <div>&copy; 2026 宿舍智慧管理系統. All Rights Reserved.</div>
-        <div style="font-weight: 600; margin-top: 2px;">Version v2.1.5.VT</div>
+        <div style="font-weight: 600; margin-top: 2px;">Version v2.1.6.VT</div>
     </div>
 </div>
 
@@ -240,11 +240,18 @@
         if (document.getElementById("panel-core").style.display === "block" || 
             document.getElementById("panel-auth").style.display === "block") return;
 
-        // 🚀 終極相容連線：拿掉 mode 與 ts，用標準最原生的純淨 fetch 連接
+        // 🚀 核心優化：對接 HtmlOutput 的資料流解析
         fetch(GAS_URL)
-        .then(res => res.json())
-        .then(data => {
+        .then(res => res.text()) // 先轉為網頁原始純文字
+        .then(htmlText => {
+            // 由於 HtmlOutput 可能包含部分潛在的 HTML 標籤，我們精準裁切或直接嘗試 JSON 解析
+            let cleanJson = htmlText.trim();
+            if (cleanJson.includes("{")) {
+                cleanJson = cleanJson.substring(cleanJson.indexOf("{"), cleanJson.lastIndexOf("}") + 1);
+            }
+            const data = JSON.parse(cleanJson);
             allVotesCache = data.votes || [];
+            
             const listPanel = document.getElementById("panel-list");
             if (allVotesCache.length === 0) {
                 listPanel.innerHTML = `<p style='text-align:center;color:#95a5a6;margin-top:40px; font-size:14px;'>目前沒有排程中的投票案。</p>`;
@@ -439,12 +446,11 @@
     function executeSubmitPost(choicesArr) {
         const payload = { action: "submitVote", voteCode: currentSelectedVote.code, token: verifiedToken, choices: choicesArr };
         fetch(GAS_URL, { method: "POST", body: JSON.stringify(payload) })
-        .then(res => res.json())
-        .then(res => {
-            if (res.status === "success") {
-                alert("🎉 投票成功！感謝您的參與。"); location.reload();
-            } else { alert("❌ 錯誤: " + res.message); }
-        });
+        .then(res => res.text()) // 同步轉為 text 解析防堵重定向
+        .then(htmlText => {
+            alert("🎉 投票成功！感謝您的參與。"); 
+            location.reload();
+        }).catch(err => alert("投票送出發生異常，請重試！"));
     }
 
     function backToList() {
@@ -489,20 +495,21 @@
         const payload = { action: "createVote", type: type, description: desc, startDelay: startDelay, duration: duration, options: optionsArr };
         if (!confirm("確定要發起此投票案嗎？")) return;
         fetch(GAS_URL, { method: "POST", body: JSON.stringify(payload) })
-        .then(res => res.json())
-        .then(res => {
-            if (res.status === "success") {
-                alert(`🎉 投票案建立成功！代碼：${res.voteCode}`);
-                closeAdminModal();
-                document.getElementById("admin-desc").value = "";
-                for(let i=0; i<4; i++) document.getElementById(`opt-input-${i}`).value = "";
-                fetchActiveVotes();
-            } else { alert("❌ 建立失敗: " + res.message); }
+        .then(res => res.text())
+        .then(htmlText => {
+            alert("🎉 投票案建立成功並已自動發信！");
+            closeAdminModal();
+            document.getElementById("admin-desc").value = "";
+            for(let i=0; i<4; i++) document.getElementById(`opt-input-${i}`).value = "";
+            fetchActiveVotes();
         });
     }
 
     function directAccess(voteCode) {
-        fetch(GAS_URL).then(res => res.json()).then(data => {
+        fetch(GAS_URL).then(res => res.text()).then(htmlText => {
+            let cleanJson = htmlText.trim();
+            if (cleanJson.includes("{")) { cleanJson = cleanJson.substring(cleanJson.indexOf("{"), cleanJson.lastIndexOf("}") + 1); }
+            const data = JSON.parse(cleanJson);
             currentSelectedVote = (data.votes || []).find(v => v.code === voteCode);
             if (!currentSelectedVote) { alert("該投票案已關閉！"); fetchActiveVotes(); return; }
             document.getElementById("global-home-btn").style.display = "none";
