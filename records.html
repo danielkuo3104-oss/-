@@ -281,7 +281,7 @@
             font-weight: 500;
         }
 
-        /* 📱 手機板全新排版與軸線防撞終極修正 */
+        /* 📱 手機板全新排版與軸線「完全捨棄」優化 */
         @media (max-width: 768px) {
             .main-container {
                 flex-direction: column;
@@ -292,20 +292,19 @@
                 border-bottom: 1px solid var(--border-color);
                 max-height: 280px;
                 padding-bottom: 15px;
+                padding-left: 10px; /* 💡 捨棄鉛直線，內縮還給畫面更多空間 */
             }
             
-            /* ✨【手機版中軸線防漏修正】：精準限制軸線在第一個圓圈與最後一個圓圈的中央，絕不溢出斷線 */
+            /* 🚫【手機版鉛直線全面捨去】：徹底拔除線條，避免任何手震、斷線、未置中問題 */
             .timeline-side::before {
-                left: 15px;
-                top: 15px;     /* 首個項目的頂部置中起點 */
-                bottom: 60px;  /* 💡 修正：配合取消 column-reverse，將軸線終點往上提拉，精準停在最後一列的圓圈中心 */
+                display: none !important;
             }
             
             .timeline-item {
-                padding-left: 28px;
-                margin-bottom: 18px;
+                padding-left: 18px; /* 縮小左側圓點占位間距 */
+                margin-bottom: 16px;
                 display: flex;
-                flex-direction: column; /* 💡 修正：放棄反轉，回歸標準靠上結構，解決 Safari 渲染手震 Bug */
+                flex-direction: column; 
                 gap: 4px;
             }
 
@@ -316,18 +315,17 @@
                 height: 18px; 
             }
 
-            /* ✨【手機版圓點完美置中修正】：完美錨定在頂部的日期行高中心 */
+            /* ✨【手機版圓點排版】：讓小圓圈緊貼左側起點，當成純粹的列表點飾（Bullet Point） */
             .timeline-dot {
-                left: -28px;                  
-                top: 4px; /* 💡 修正：跟隨常態頂部對齊，徹底卡死在第一行，不再受摘要行數多寡影響 */
+                left: -16px;                  
+                top: 4px; 
                 transform: none; 
                 bottom: unset;
             }
             
-            /* ✨【手機版動態高亮放大】：單純放大，徹底擺脫位移干擾 */
-            .timeline-item.active.type-meeting .timeline-dot { transform: scale(1.2); }
-            .timeline-item.active.type-event .timeline-dot { transform: scale(1.2); }
-            .timeline-item.active.type-discipline .timeline-dot { transform: scale(1.2); }
+            .timeline-item.active.type-meeting .timeline-dot { transform: scale(1.1); }
+            .timeline-item.active.type-event .timeline-dot { transform: scale(1.1); }
+            .timeline-item.active.type-discipline .timeline-dot { transform: scale(1.1); }
 
             .content-side {
                 flex: none;
@@ -364,7 +362,7 @@
     </div>
 
     <div class="footer-copyright">
-        © 2026 GUO DANIEL. ALL RIGHTS RESERVED. <span style="color:#b0b5b0; margin:0 6px;">|</span> <span style="background:#edf2ee; color:#437353; padding:2px 8px; border-radius:4px; font-weight:600;">v1.0.4</span>
+        © 2026 GUO DANIEL. ALL RIGHTS RESERVED. <span style="color:#b0b5b0; margin:0 6px;">|</span> <span style="background:#edf2ee; color:#437353; padding:2px 8px; border-radius:4px; font-weight:600;">v1.0.5</span>
     </div>
 
     <script>
@@ -375,6 +373,7 @@
 
         window.addEventListener('DOMContentLoaded', fetchRecords);
 
+        // 動態時間防快取
         function fetchRecords() {
             const antiCacheUrl = csvUrlBase + "&_cb=" + new Date().getTime();
             
@@ -487,7 +486,6 @@
             allRecords.sort((a, b) => new Date(a.date.replace(/\//g, '-')) - new Date(b.date.replace(/\//g, '-')));
         }
 
-        // ✨【DOM 結構最終優化】：圓點內嵌在日期列首位，且日期列回歸常態排列在上方
         function renderTimeline() {
             const container = document.getElementById('timelineContainer');
             container.innerHTML = '';
@@ -521,7 +519,6 @@
                 itemDiv.id = `item-${item.id}`;
                 itemDiv.onclick = () => selectItem(item);
 
-                // 💡【結構回歸正軌】：先日期列（內含圓點），再摘要標題。徹底拔除導致手震的 column-reverse
                 itemDiv.innerHTML = `
                     <div class="timeline-date-row">
                         <div class="timeline-dot"></div> 
