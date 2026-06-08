@@ -18,18 +18,24 @@
             padding: 30px; padding-bottom: 20px; box-sizing: border-box; min-height: 70vh;
             position: relative; display: flex; flex-direction: column;
         }
-        .main-content {
-            flex: 1; /* 讓內容推擠，確保版權宣告永遠貼在卡片底部 */
-        }
-        h2 { text-align: center; margin-top: 10px; color: #333; font-size: 22px; }
+        .main-content { flex: 1; }
+        h2 { text-align: center; margin-top: 15px; color: #333; font-size: 22px; }
         
-        /* 退出鍵 (返回按鈕) 樣式 */
+        /* 退出與返回按鈕樣式 */
         .exit-btn {
             position: absolute; top: 25px; right: 25px; background: #cbd1d6;
             color: #5a6168; border: none; padding: 6px 14px; font-size: 13px;
             font-weight: 600; border-radius: 12px; cursor: pointer; transition: all 0.1s;
         }
         .exit-btn:hover { background: #b0b7bd; }
+
+        /* 常駐左上角回系統主頁按鈕 */
+        .home-back-btn {
+            position: absolute; top: 25px; left: 25px; background: #9ba3ab;
+            color: white; border: none; padding: 6px 12px; font-size: 12px;
+            font-weight: 600; border-radius: 12px; cursor: pointer; text-decoration: none;
+        }
+        .home-back-btn:hover { background: #7e878f; }
 
         /* 投票列表樣式 */
         .vote-list-item {
@@ -53,7 +59,6 @@
         }
         .btn-prime:active { transform: translateY(2px); border-bottom-width: 3px; }
 
-        /* 投票主戰場 UI */
         .info-header { display: flex; justify-content: space-between; margin-bottom: 15px; margin-top: 15px; }
         .info-tag { background: #e2e8f0; padding: 6px 12px; border-radius: 12px; font-size: 14px; font-weight: 600; }
         .timer-banner { text-align: center; color: #e05252; font-weight: bold; font-size: 16px; margin-bottom: 15px; }
@@ -88,7 +93,6 @@
         }
         .admin-fab:active { transform: translateY(2px); border-bottom-width: 2px; }
 
-        /* 彈出視窗遮罩背景 */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.4); display: none; align-items: center;
@@ -100,7 +104,6 @@
         }
         .modal-box h3 { margin-top: 0; color: #333; text-align: center; }
         
-        /* 表單輸入樣式 */
         .form-group { margin-bottom: 15px; }
         .form-group label { display: block; font-weight: 600; margin-bottom: 5px; font-size: 14px; }
         .form-control {
@@ -108,7 +111,6 @@
             font-size: 15px; box-sizing: border-box;
         }
 
-        /* 🔒 專屬設計：底部版權與版本號資訊欄位 */
         .footer-info {
             margin-top: 40px; text-align: center; font-size: 11px; color: #a0aab5;
             letter-spacing: 0.5px; line-height: 1.5; border-top: 1px solid #f1f3f5; padding-top: 15px;
@@ -118,8 +120,10 @@
 <body>
 
 <div class="container">
+    <a href="index.html" class="home-back-btn" id="global-home-btn">首頁</a>
+
     <div class="main-content">
-        <h2>宿舍智慧管理系統投票中心</h2>
+        <h2 style="margin-top: 25px;">宿舍智慧管理系統投票中心</h2>
         <hr style="border:0; border-top: 1px dashed #cbd1d6; margin: 15px 0;">
 
         <div id="panel-list">
@@ -145,9 +149,7 @@
             <div class="desc-box" id="text-description">投票說明載入中...</div>
             
             <div id="vote-interface-slot"></div>
-            
             <canvas id="resultChart" style="display: none; max-width: 100%; margin-top: 20px;"></canvas>
-            
             <button class="btn-prime" id="submit-block-btn" style="margin-top: 30px; display: none;" onclick="confirmAndSubmitChoices()">確認送出投票</button>
         </div>
     </div>
@@ -216,7 +218,8 @@
 </div>
 
 <script>
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbw4EmqIXabZYdCqYMCwA_IZyQ0fZG7kFALeAJeotR9NYGxWeRErmUQZLnMRqYC3BEY/exec"; 
+    // ⚠️ 牽線關鍵：請確保此網址與你最新部署的 GAS 網址完全一致
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbzbq0DSikkyPn3Olm641E1_lKWJL33M4qMDtzqUWbsWY_btLu286DuM6Cb-nd7U0ZY8/exec"; 
     
     let allVotesCache = [];
     let currentSelectedVote = null;
@@ -269,13 +272,15 @@
                 });
                 listPanel.innerHTML = html;
             }).catch(err => {
-                document.getElementById("panel-list").innerHTML = `<p style='text-align:center;color:#e05252;font-size:14px;'>連線失敗，請檢查 GAS_URL 是否設定正確！</p>`;
+                // 🚀 修復：連線失敗時，左上角的「首頁」返回按鈕依舊保留在最外層，不被覆蓋
+                document.getElementById("panel-list").innerHTML = `<p style='text-align:center;color:#e05252;font-size:14px;margin-top:40px;font-weight:600;'>連線失敗，請檢查 GAS_URL 是否設定正確！</p>`;
             });
     }
 
     function handleItemRoute(idx) {
         currentSelectedVote = allVotesCache[idx];
-        if (currentSelectedVote.status === "Refused" || currentSelectedVote.status === "已結束") {
+        document.getElementById("global-home-btn").style.display = "none"; // 隱藏左上首頁鍵
+        if (currentSelectedVote.status === "已結束") {
             document.getElementById("panel-list").style.display = "none";
             showVotingResult();
         } else {
@@ -373,8 +378,7 @@
                 display.innerText = `距離結束還有 ${runSec} 秒`;
                 toggleInputsLock(false);
             }
-        }
-        updateTimer();
+        } updateTimer();
         countdownInterval = setInterval(updateTimer, 1000);
     }
 
@@ -388,8 +392,7 @@
         const type = currentSelectedVote.code.substring(0, 2); 
         const slot = document.getElementById("vote-interface-slot");
         const submitBtn = document.getElementById("submit-block-btn");
-        slot.innerHTML = "";
-        selectedIndices = [];
+        slot.innerHTML = ""; selectedIndices = [];
         
         if (type === "YN") {
             submitBtn.style.display = "none";
@@ -400,8 +403,7 @@
             if (hasAbstain) {
                 html += `<div class="circle-btn btn-abstain" onclick="submitDirectYN(2, '棄權')">棄權</div>`;
             }
-            html += `</div>`;
-            slot.innerHTML = html;
+            html += `</div>`; slot.innerHTML = html;
         } else if (type === "SS" || type === "MS") {
             submitBtn.style.display = "block";
             currentSelectedVote.options.forEach((opt, idx) => {
@@ -431,35 +433,22 @@
     }
 
     function submitDirectYN(choiceIdx, choiceText) {
-        if (confirm(`您確定投下【${choiceText}】嗎？送出後即無法更改。`)) {
-            executeSubmitPost([choiceIdx]);
-        }
+        if (confirm(`您確定投下【${choiceText}】嗎？送出後即無法更改。`)) { executeSubmitPost([choiceIdx]); }
     }
 
     function confirmAndSubmitChoices() {
         if (selectedIndices.length === 0) { alert("請至少選擇一個選項！"); return; }
-        if (confirm("您確定要送出目前的投票選擇嗎？")) {
-            executeSubmitPost(selectedIndices);
-        }
+        if (confirm("您確定要送出目前的投票選擇嗎？")) { executeSubmitPost(selectedIndices); }
     }
 
     function executeSubmitPost(choicesArr) {
-        const payload = {
-            action: "submitVote",
-            voteCode: currentSelectedVote.code,
-            token: verifiedToken,
-            choices: choicesArr
-        };
-
+        const payload = { action: "submitVote", voteCode: currentSelectedVote.code, token: verifiedToken, choices: choicesArr };
         fetch(GAS_URL, { method: "POST", body: JSON.stringify(payload) })
         .then(res => res.json())
         .then(res => {
             if (res.status === "success") {
-                alert("🎉 投票成功！感謝您的參與。");
-                location.reload();
-            } else {
-                alert("❌ 錯誤: " + res.message);
-            }
+                alert("🎉 投票成功！感謝您的參與。"); location.reload();
+            } else { alert("❌ 錯誤: " + res.message); }
         });
     }
 
@@ -469,6 +458,7 @@
         document.getElementById("panel-auth").style.display = "none";
         document.getElementById("resultChart").style.display = "none";
         document.getElementById("panel-list").style.display = "block";
+        document.getElementById("global-home-btn").style.display = "block"; // 帶回左上首頁鍵
         document.getElementById("input-token").value = ""; 
         fetchActiveVotes();
     }
@@ -520,6 +510,7 @@
         fetch(GAS_URL).then(res => res.json()).then(data => {
             currentSelectedVote = (data.votes || []).find(v => v.code === voteCode);
             if (!currentSelectedVote) { alert("該投票案已關閉！"); fetchActiveVotes(); return; }
+            document.getElementById("global-home-btn").style.display = "none";
             if (currentSelectedVote.status === "已結束") { showVotingResult(); } 
             else { document.getElementById("panel-list").style.display = "none"; startVoteInterface(); }
         });
