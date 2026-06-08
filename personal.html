@@ -14,24 +14,24 @@
         }
 
         /* 懸停控制中心按鈕 */
-.fab-btn {
-    position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px;
-    background: #69779b; color: white; border-radius: 50%;
-    font-size: 30px; border: none; box-shadow: 0 6px 20px rgba(105, 119, 155, 0.4);
-    cursor: pointer; z-index: 999; display: flex; align-items: center; justify-content: center;
-    transition: transform 0.3s ease, background 0.2s;
-}
-.fab-btn:hover { background: #586585; transform: scale(1.05); }
+        .fab-btn {
+            position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px;
+            background: #69779b; color: white; border-radius: 50%;
+            font-size: 30px; border: none; box-shadow: 0 6px 20px rgba(105, 119, 155, 0.4);
+            cursor: pointer; z-index: 999; display: flex; align-items: center; justify-content: center;
+            transition: transform 0.3s ease, background 0.2s;
+        }
+        .fab-btn:hover { background: #586585; transform: scale(1.05); }
 
-/* 霧面彈出層 */
-.menu-modal {
-    position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(255, 255, 255, 0.8);
-    backdrop-filter: blur(8px); display: none; justify-content: center; align-items: center;
-    z-index: 2000;
-}
-.menu-modal.active { display: flex; }
-.menu-options { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center; }
-.menu-link { display: block; padding: 15px 40px; background: #69779b; color: white; text-decoration: none; border-radius: 12px; font-weight: 600; }
+        /* 霧面彈出層 */
+        .menu-modal {
+            position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(8px); display: none; justify-content: center; align-items: center;
+            z-index: 2000;
+        }
+        .menu-modal.active { display: flex; }
+        .menu-options { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center; }
+        .menu-link { display: block; padding: 15px 40px; background: #69779b; color: white; text-decoration: none; border-radius: 12px; font-weight: 600; }
         .header-banner {
             background: linear-gradient(135deg, #69779b 0%, #8696b8 100%);
             color: white; padding: 45px 24px 65px 24px; text-align: left;
@@ -101,7 +101,7 @@
         .stat-card.current-ele { background: linear-gradient(135deg, #ffffff 0%, #fdf6f0 100%); border: 1px solid rgba(217, 119, 54, 0.15); }
         .stat-card.current-ele .stat-value { color: #d97736; }
 
-        /* 🪙 平均用電度數專用莫蘭迪高級灰色系卡片樣式 */
+        /* 🔒 平均用電度數專用莫蘭迪高級灰色系卡片樣式 */
         .stat-card.current-meter { background: linear-gradient(135deg, #ffffff 0%, #f2f4f7 100%); border: 1px solid rgba(138, 146, 154, 0.25); }
         .stat-card.current-meter .stat-value { color: #5a616a; }
 
@@ -143,7 +143,9 @@
         .summary-item-value { font-size: 16px; font-weight: 700; }
         .summary-item-total { border-left: 1px dashed #cbd1d6; padding-left: 20px; }
 
-        .copyright { font-size: 11px; color: #9ba3ab; text-align: center; letter-spacing: 0.5px; margin-top: 30px; }
+        /* 頁尾版權與換行版本號樣式區 */
+        .copyright { font-size: 11px; color: #9ba3ab; text-align: center; letter-spacing: 0.5px; margin-top: 30px; line-height: 1.8; }
+        .version-tag { display: inline-block; background: #edf2ee; color: #437353; padding: 1px 8px; border-radius: 4px; font-weight: 600; font-size: 10.5px; margin-top: 4px; border: 1px solid #d0ded4; }
 
         /* 彈出視窗樣式 */
         .modal-overlay { position: fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.4); display:none; justify-content:center; align-items:center; z-index:1000; backdrop-filter: blur(4px); }
@@ -183,7 +185,7 @@
     <div class="header-banner">
         <div class="header-container">
             <h1>宿舍智慧管理系統</h1>
-            <p>新竹市東區建功一路47巷五樓（孟竹國宅）</p>
+            <p>新竹市東區建功一路47巷五五樓（孟竹國宅）</p>
             <div class="update-time-tag" id="updateTimeDisplay">資料更新：同步中...</div>
         </div>
     </div>
@@ -200,7 +202,11 @@
         <div id="personalDisplayArea">
             <div class="loading">加載最新房客數據中...</div>
         </div>
-        <div class="copyright">© 2026 GUO DANIEL. ALL RIGHTS RESERVED.</div>
+        
+        <div class="copyright">
+            © 2026 GUO DANIEL. ALL RIGHTS RESERVED.<br>
+            <span class="version-tag">v2.1.2.P</span>
+        </div>
     </div>
 
     <div class="modal-overlay" id="detailModal" onclick="closeModal()">
@@ -240,16 +246,12 @@
         document.getElementById('fabMenu').classList.toggle('active');
     }
 
-    // 自動判斷是否在主頁，若不在主頁則顯示「回到主頁」按鈕
     document.addEventListener("DOMContentLoaded", function() {
         const currentPath = window.location.pathname;
         const homeLink = document.getElementById('homeMenuLink');
-        
-        // 判斷目前的網址是否為主頁 (例如 index.html 或 根目錄 /)
         const isHomePage = currentPath.endsWith('index.html') || currentPath.endsWith('/');
-        
         if (!isHomePage && homeLink) {
-            homeLink.style.display = 'block'; // 或 'flex'，取決於您的 .menu-link 樣式
+            homeLink.style.display = 'block';
         }
     });
 </script>
@@ -567,7 +569,7 @@
             }
             
             let html = "";
-            let meterSum = 0; // 用於加總用電度數
+            let meterSum = 0; 
 
             globalParsedData.forEach(item => {
                 let val = 0;
@@ -584,14 +586,13 @@
                     displayStr = `NT$ ${val.toLocaleString()}`;
                 } else if(type === 'meter') {
                     val = item.deltaMeters[roomKey] || 0;
-                    meterSum += val; // 累加度數
+                    meterSum += val; 
                     displayStr = `${val} 度`;
                 }
 
                 html += `<div class="modal-row"><span class="modal-row-label">${item.month}</span><span class="modal-row-value">${displayStr}</span></div>`;
             });
 
-            // 如果點選的是電表抄錄，在底部加入加總度數列
             if (type === 'meter') {
                 html += `<div class="modal-row-summary"><span class="modal-row-label">歷月總用電度數累計</span><span class="modal-row-value" style="color: #5a616a;">${Number(meterSum.toFixed(1))} 度</span></div>`;
             }
