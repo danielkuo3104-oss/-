@@ -271,7 +271,17 @@
             border: 1px solid #fff59d;
         }
 
-        /* 📱 手機板全新排版與軸線防撞終極修正 */
+        /* 底部足部區 */
+        .footer-copyright {
+            font-size: 11px;
+            color: var(--text-gray);
+            text-align: center;
+            padding: 15px 0 25px 0;
+            letter-spacing: 0.5px;
+            font-weight: 500;
+        }
+
+        /* 📱 手機板排版與軸線防撞終極修正 */
         @media (max-width: 768px) {
             .main-container {
                 flex-direction: column;
@@ -364,8 +374,12 @@
         </div>
     </div>
 
+    <div class="footer-copyright">
+        © 2026 GUO DANIEL. ALL RIGHTS RESERVED. <span style="color:#b0b5b0; margin:0 6px;">|</span> <span style="background:#edf2ee; color:#437353; padding:2px 8px; border-radius:4px; font-weight:600;">v1.0.3 (修正版)</span>
+    </div>
+
     <script>
-        const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQkqhXCPp4XiHKCEpI3pz4pzcu3sQreQ_qNRLger00ULCHFr9cTbXHMQqAfk7dLa_gUBAIBSJ5sZM4F/pub?gid=1386210207&single=true&output=csv";
+        const csvUrlBase = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQkqhXCPp4XiHKCEpI3pz4pzcu3sQreQ_qNRLger00ULCHFr9cTbXHMQqAfk7dLa_gUBAIBSJ5sZM4F/pub?gid=1386210207&single=true&output=csv";
         
         let allRecords = [];
         let currentMode = 'all';
@@ -373,7 +387,11 @@
         window.addEventListener('DOMContentLoaded', fetchRecords);
 
         function fetchRecords() {
-            fetch(csvUrl)
+            // ✨【終極防手機舊快取地雷】：在 URL 後方灌入動態微秒戳記 (?_cb=12345678)
+            // 這樣手機瀏覽器會判定這是一次全新的下載，絕不讀取手機內部的髒快取歷史！
+            const antiCacheUrl = csvUrlBase + "&_cb=" + new Date().getTime();
+            
+            fetch(antiCacheUrl)
                 .then(response => response.text())
                 .then(text => {
                     parseCSV(text);
