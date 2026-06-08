@@ -165,7 +165,9 @@
         .rule-indent { padding-left: 24px; position: relative; }
         .rule-indent::before { content: "•"; position: absolute; left: 12px; color: #8696b8; }
 
-        .copyright { font-size: 11px; color: #9ba3ab; text-align: center; letter-spacing: 0.5px; margin-bottom: 40px; margin-top: 15px; }
+        /* 頁尾版權與換行版本號樣式區 */
+        .copyright { font-size: 11px; color: #9ba3ab; text-align: center; letter-spacing: 0.5px; margin-top: 30px; line-height: 1.8; }
+        .version-tag { display: inline-block; background: #edf2ee; color: #437353; padding: 1px 8px; border-radius: 4px; font-weight: 600; font-size: 10.5px; margin-top: 4px; border: 1px solid #d0ded4; }
 
         /* 彈出視窗樣式 */
         .modal-overlay { position: fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.4); display:none; justify-content:center; align-items:center; z-index:1000; backdrop-filter: blur(4px); }
@@ -300,7 +302,10 @@
                 <div class="loading" style="padding: 10px 0;">公約內容法規載入中...</div>
             </div>
         </div>
-        <div class="copyright">© 2026 GUO DANIEL. ALL RIGHTS RESERVED.</div>
+        <div class="copyright">
+    © 2026 GUO DANIEL. ALL RIGHTS RESERVED.<br>
+    <span class="version-tag">v2.1.6</span>
+</div>
     </div>
 
     <div class="modal-overlay" id="detailModal" onclick="closeModal()">
