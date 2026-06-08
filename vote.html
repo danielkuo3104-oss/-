@@ -19,7 +19,7 @@
             position: relative; display: flex; flex-direction: column;
         }
         .main-content { flex: 1; }
-        h2 { text-align: center; margin-top: 15px; color: #333; font-size: 22px; }
+        h2 { text-align: center; margin-top: 25px; color: #333; font-size: 22px; }
         
         /* 退出與返回按鈕樣式 */
         .exit-btn {
@@ -29,11 +29,12 @@
         }
         .exit-btn:hover { background: #b0b7bd; }
 
-        /* 常駐左上角回系統主頁按鈕 */
+        /* 常駐左上角回系統主頁按鈕 (強制提高層級防覆蓋) */
         .home-back-btn {
             position: absolute; top: 25px; left: 25px; background: #9ba3ab;
             color: white; border: none; padding: 6px 12px; font-size: 12px;
             font-weight: 600; border-radius: 12px; cursor: pointer; text-decoration: none;
+            z-index: 10; display: block !important;
         }
         .home-back-btn:hover { background: #7e878f; }
 
@@ -123,7 +124,7 @@
     <a href="index.html" class="home-back-btn" id="global-home-btn">首頁</a>
 
     <div class="main-content">
-        <h2 style="margin-top: 25px;">宿舍智慧管理系統投票中心</h2>
+        <h2>宿舍智慧管理系統投票中心</h2>
         <hr style="border:0; border-top: 1px dashed #cbd1d6; margin: 15px 0;">
 
         <div id="panel-list">
@@ -218,7 +219,6 @@
 </div>
 
 <script>
-    // ⚠️ 牽線關鍵：請確保此網址與你最新部署的 GAS 網址完全一致
     const GAS_URL = "https://script.google.com/macros/s/AKfycbzbq0DSikkyPn3Olm641E1_lKWJL33M4qMDtzqUWbsWY_btLu286DuM6Cb-nd7U0ZY8/exec"; 
     
     let allVotesCache = [];
@@ -245,7 +245,8 @@
         if (document.getElementById("panel-core").style.display === "block" || 
             document.getElementById("panel-auth").style.display === "block") return;
 
-        fetch(GAS_URL)
+        // 🚀 關鍵加註：在網址後方加上時間戳記，徹底擊碎瀏覽器與 Vercel 的快取黑洞
+        fetch(GAS_URL + "?_ts=" + new Date().getTime())
             .then(res => res.json())
             .then(data => {
                 allVotesCache = data.votes || [];
@@ -272,14 +273,13 @@
                 });
                 listPanel.innerHTML = html;
             }).catch(err => {
-                // 🚀 修復：連線失敗時，左上角的「首頁」返回按鈕依舊保留在最外層，不被覆蓋
                 document.getElementById("panel-list").innerHTML = `<p style='text-align:center;color:#e05252;font-size:14px;margin-top:40px;font-weight:600;'>連線失敗，請檢查 GAS_URL 是否設定正確！</p>`;
             });
     }
 
     function handleItemRoute(idx) {
         currentSelectedVote = allVotesCache[idx];
-        document.getElementById("global-home-btn").style.display = "none"; // 隱藏左上首頁鍵
+        document.getElementById("global-home-btn").style.display = "none"; 
         if (currentSelectedVote.status === "已結束") {
             document.getElementById("panel-list").style.display = "none";
             showVotingResult();
@@ -436,6 +436,7 @@
         if (confirm(`您確定投下【${choiceText}】嗎？送出後即無法更改。`)) { executeSubmitPost([choiceIdx]); }
     }
 
+    // 修正表單資料發送加上快取排除
     function confirmAndSubmitChoices() {
         if (selectedIndices.length === 0) { alert("請至少選擇一個選項！"); return; }
         if (confirm("您確定要送出目前的投票選擇嗎？")) { executeSubmitPost(selectedIndices); }
@@ -458,7 +459,7 @@
         document.getElementById("panel-auth").style.display = "none";
         document.getElementById("resultChart").style.display = "none";
         document.getElementById("panel-list").style.display = "block";
-        document.getElementById("global-home-btn").style.display = "block"; // 帶回左上首頁鍵
+        document.getElementById("global-home-btn").style.display = "block"; 
         document.getElementById("input-token").value = ""; 
         fetchActiveVotes();
     }
