@@ -369,27 +369,27 @@
 
 <div class="menu-modal" id="fabMenu" onclick="toggleMenu()">
     <div class="menu-options" onclick="event.stopPropagation()">
-        <h3 style="margin-top:0; margin-bottom: 15px;">控制中心</h3>
+        <h3 style="margin-top:0; margin-bottom: 15px; color: #4a515a;">輔助中心</h3>
         
-        <a href="https://forms.gle/bPwvWaTSTz2esCPN6" class="menu-link" target="_blank" style="background: #7A94A6; color: #ffffff; font-weight: 700; border: 1px solid #5A7385; margin-bottom: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); text-shadow: 0 1px 2px rgba(0,0,0,0.1);">
+        <a href="https://forms.gle/bPwvWaTSTz2esCPN6" class="menu-link" target="_blank" style="background: #7A94A6; color: #ffffff; font-weight: 700; border: 2px solid #5A7385; border-bottom: 5px solid #485E6D; margin-bottom: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.05); text-shadow: 0 1px 2px rgba(0,0,0,0.1); border-radius: 16px;">
             前往資訊登錄系統
         </a>
 
-        <a href="vote.html" class="menu-link" style="background: #6E8B74; color: #ffffff; font-weight: 700; border: 1px solid #546A58; margin-bottom: 18px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); text-shadow: 0 1px 2px rgba(0,0,0,0.1);">
-            ⚡ 進入即時投票系統
+        <a href="vote.html" class="menu-link" style="background: #8FA494; color: #ffffff; font-weight: 700; border: 2px solid #6E8573; border-bottom: 5px solid #5C7261; margin-bottom: 18px; box-shadow: 0 4px 8px rgba(0,0,0,0.05); text-shadow: 0 1px 2px rgba(0,0,0,0.1); border-radius: 16px;">
+            進入即時投票系統
         </a>
 
         <hr style="border: 0; border-top: 1px dashed #cbd1d6; margin-bottom: 15px;">
 
-        <a href="records.html" class="menu-link" style="background: #9ba3ab; color: #ffffff; font-weight: 600; margin-bottom: 10px;">
+        <a href="records.html" class="menu-link" style="background: #9ba3ab; color: #ffffff; font-weight: 600; border: 2px solid #7e878f; margin-bottom: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); border-radius: 16px;">
             大事紀與會議記錄
         </a>
         
-        <a href="index.html" id="homeMenuLink" class="menu-link" style="background: #5a6168; color: #ffffff; font-weight: 600; margin-bottom: 10px; display: none;">
+        <a href="index.html" id="homeMenuLink" class="menu-link" style="background: #5a6168; color: #ffffff; font-weight: 600; border: 2px solid #43494f; margin-bottom: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); border-radius: 16px; display: none;">
             回到主頁
         </a>
 
-        <button class="close-btn" style="background: #cbd1d6; color: #5a6168; margin-top: 15px;" onclick="toggleMenu()">取消</button>
+        <button class="close-btn" style="background: #cbd1d6; color: #5a6168; border: none; border-radius: 16px; margin-top: 15px;" onclick="toggleMenu()">取消</button>
     </div>
 </div>
 
@@ -398,16 +398,14 @@
         document.getElementById('fabMenu').classList.toggle('active');
     }
 
-    // 自動判斷是否在主頁，若不在主頁則顯示「回到主頁」按鈕
     document.addEventListener("DOMContentLoaded", function() {
         const currentPath = window.location.pathname;
         const homeLink = document.getElementById('homeMenuLink');
         
-        // 判斷目前的網址是否為主頁 (例如 index.html 或 根目錄 /)
         const isHomePage = currentPath.endsWith('index.html') || currentPath.endsWith('/');
         
         if (!isHomePage && homeLink) {
-            homeLink.style.display = 'block'; // 或 'flex'，取決於您的 .menu-link 樣式
+            homeLink.style.display = 'block'; // 保持原本 CSS 對 .menu-link 的 display 設定
         }
     });
 </script>
