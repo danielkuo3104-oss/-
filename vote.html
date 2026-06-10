@@ -133,7 +133,6 @@
         }
         .admin-fab:active { transform: translateY(2px); border-bottom-width: 2px; }
 
-        /* 🚀 鋼鐵鎖定：將彈窗改回最正宗的全螢幕 fixed 遮罩層佈局，絕不在頁尾炸開 */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.5); display: none; align-items: center;
@@ -208,7 +207,7 @@
 
     <div class="footer-info">
         <div>&copy; 2026 宿舍智慧管理系統. All Rights Reserved.</div>
-        <div style="font-weight: 600; margin-top: 2px;">Version v3.6.5.VT</div>
+        <div style="font-weight: 600; margin-top: 2px;">Version v3.7.0.VT</div>
     </div>
 </div>
 
@@ -271,8 +270,8 @@
 </div>
 
 <script>
-    // 🚀 核心交代：請務必在此填入你上一輪發布新版本拿到的 exec 網址！
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbx4U_nCu7S8Tf3hc40D-aP6N9MxdeTDoj3vs5vjBnHNE5Jkokir74WzBMtlav5fzUX1/exec"; 
+    // 🚀 核心交代：請務必填入你重新建立防碰撞全新部署拿到的 URL 網址
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbzbq0DSikkyPn3Olm641E1_lKWJL33M4qMDtzqUWbsWY_btLu286DuM6Cb-nd7U0ZY8/exec"; 
     
     let allVotesCache = [];
     let currentSelectedVote = null;
@@ -298,7 +297,7 @@
         }
     };
 
-    // 🚀 智慧排序核心：群組分類（進行中>未開始>已結束） + 組內降冪（時間最新最靠前）
+    // 🚀 群組分流 ＋ 降冪排序（時間越近、越新發起的越靠上面）
     function renderListUI(data) {
         allVotesCache = data.votes || [];
         const listPanel = document.getElementById("panel-list");
@@ -354,18 +353,19 @@
     function directAccessJsonp(voteCode, token) {
         const directCallbackName = "VOTE_DIRECT_" + Math.floor(Math.random() * 10000000);
         window[directCallbackName] = function(data) {
+            // 🚀 第一、輸入錯代碼或安全碼，拋錯並提供「大綠色返回公告欄主頁」功能
             if (data.tokenCheck && !data.tokenCheck.valid) {
                 alert(data.tokenCheck.message);
                 document.getElementById("main-voting-box").innerHTML = `
                     <div style='text-align:center; padding: 60px 20px;'>
                         <p style='color:#e05252; font-size:16px; font-weight:600; margin-bottom:30px; line-height:1.5;'>${data.tokenCheck.message}</p>
-                        <button class="btn-prime" onclick="location.href='index.html'" style="max-width:240px; margin: 0 auto;">返回投票中心首頁</button>
+                        <button class="btn-prime" onclick="backToMainHomeList()" style="max-width:240px; margin: 0 auto;">返回投票中心公告欄</button>
                     </div>`;
                 return;
             }
 
             currentSelectedVote = (data.votes || []).find(v => v.code === voteCode);
-            if (!currentSelectedVote) { alert("該投票案已關閉！"); fetchActiveVotes(); return; }
+            if (!currentSelectedVote) { alert("該投票案已關閉！"); backToMainHomeList(); return; }
             document.getElementById("global-home-btn").style.display = "none";
             if (currentSelectedVote.status === "已結束") { showVotingResult(); } 
             else { document.getElementById("panel-list").style.display = "none"; startVoteInterface(); }
@@ -378,6 +378,16 @@
         script.id = directCallbackName + "_script";
         script.src = GAS_URL + "?callback=" + directCallbackName + "&voteCode=" + voteCode + "&token=" + token + "&_ts=" + new Date().getTime();
         document.body.appendChild(script);
+    }
+
+    // 🚀 核心優化：點擊返回主頁直接刷新回到公告欄名單，而不跳離網頁
+    function backToMainHomeList() {
+        if (countdownInterval) clearInterval(countdownInterval);
+        // 洗乾淨網址參數
+        if (window.history && window.history.replaceState) {
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+        window.location.reload();
     }
 
     function handleItemRoute(idx) {
@@ -449,9 +459,11 @@
             });
 
             let html = `<div style="font-size: 14px; font-weight: bold; color: #4a515a; margin-bottom: 15px; margin-top:20px;">票數紀錄統計區：</div>`;
-            currentSelectedVote.options.forEach((opt, idx) => {
+            // 🚀 第三與第四點大修正：完整跑滿 4 個長度間距，完美調出單選/多選題的全部 4 個選項數據！
+            for (let idx = 0; idx < 4; idx++) {
+                const opt = currentSelectedVote.options[idx];
                 if (opt && opt.trim() !== "") {
-                    const count = scores[idx];
+                    const count = scores[idx] || 0;
                     const isWinner = (count === maxScore && maxScore > 0);
                     const activeClass = isWinner ? "winner" : "";
                     const cleanDisplayOpt = limitTextLength(opt);
@@ -462,7 +474,7 @@
                             <span>${count} 票</span>
                         </div>`;
                 }
-            });
+            }
             slot.innerHTML = html;
         }
     }
@@ -541,12 +553,14 @@
             html += `</div>`; slot.innerHTML = html;
         } else if (type === "SS" || type === "MS") {
             submitBtn.style.display = "block";
-            currentSelectedVote.options.forEach((opt, idx) => {
+            // 🚀 修正：投票介面同樣跑滿 4 格，確保完整顯示 4 個選項
+            for (let idx = 0; idx < 4; idx++) {
+                const opt = currentSelectedVote.options[idx];
                 if (opt && opt.trim() !== "") {
                     const displayOpt = limitTextLength(opt);
                     slot.innerHTML += `<div class="option-strip" id="strip-${idx}" onclick="handleStripSelect(${idx}, '${type}')">${displayOpt}</div>`;
                 }
-            });
+            }
         }
     }
 
@@ -592,29 +606,15 @@
         .then(res => {
             if (res.status === "success") {
                 alert("🎉 投票成功！感謝您的參與。"); 
-                if (window.history && window.history.replaceState) {
-                    window.history.replaceState({}, document.title, window.location.pathname);
-                }
-                verifiedToken = "";
-                voterName = "住宿生";
-                backToList();
+                backToMainHomeList(); // 投完票直接主動重載並抹除網址列參數回到公告欄
             } else { alert("❌ 錯誤: " + res.message); }
         });
     }
 
     function backToList() {
-        if (countdownInterval) clearInterval(countdownInterval);
-        document.getElementById("panel-core").style.display = "none";
-        document.getElementById("panel-auth").style.display = "none";
-        document.getElementById("core-voting-header").style.display = "none";
-        document.getElementById("core-closed-header").style.display = "none";
-        document.getElementById("panel-list").style.display = "block";
-        document.getElementById("global-home-btn").style.display = "block"; 
-        document.getElementById("input-token").value = ""; 
-        fetchActiveVotes();
+        backToMainHomeList(); // 點擊返回鍵時也改為強制重整公告欄列表
     }
 
-    // 🚀 控制彈窗系統正常啟動與關閉
     function openAdminModal() { document.getElementById("adminModal").style.display = "flex"; }
     function closeAdminModal() { document.getElementById("adminModal").style.display = "none"; }
     
@@ -653,7 +653,7 @@
                 closeAdminModal();
                 document.getElementById("admin-desc").value = "";
                 for(let i=0; i<4; i++) document.getElementById("opt-input-" + i).value = "";
-                fetchActiveVotes();
+                backToMainHomeList();
             } else { alert("❌ 建立失敗: " + res.message); }
         });
     }
