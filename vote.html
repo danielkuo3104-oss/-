@@ -152,7 +152,7 @@
 
     <div class="footer-info">
         <div>&copy; 2026 宿舍智慧管理系統. All Rights Reserved.</div>
-        <div style="font-weight: 600; margin-top: 2px;">Version v2.6.5.VT</div>
+        <div style="font-weight: 600; margin-top: 2px;">Version v2.9.6.VT</div>
     </div>
 </div>
 
@@ -262,7 +262,6 @@
         listPanel.innerHTML = html;
     }
 
-    // 🚀 【多裝置平行防撞大絕招】：生成當前要求隨機一次性暗號
     function fetchActiveVotes() {
         if (document.getElementById("panel-core").style.display === "block" || 
             document.getElementById("panel-auth").style.display === "block") return;
@@ -271,7 +270,7 @@
         
         window[uniqueCallbackName] = function(data) {
             renderListUI(data);
-            document.getElementById(uniqueCallbackName + "_script").remove(); // 用完瞬間卸載
+            document.getElementById(uniqueCallbackName + "_script").remove(); 
             delete window[uniqueCallbackName]; 
         };
 
@@ -317,6 +316,7 @@
         }
     }
 
+    // 開票圖表渲染
     function showVotingResult() {
         document.getElementById("panel-core").style.display = "block";
         document.getElementById("tag-code").innerText = `代碼: ${currentSelectedVote.code}`;
@@ -441,6 +441,24 @@
         }
     }
 
+    function handleStripSelect(idx, type) {
+        if (type === "SS") {
+            selectedIndices = [idx];
+            const allStrips = document.querySelectorAll(".option-strip");
+            allStrips.forEach(s => s.classList.remove("selected"));
+            document.getElementById(`strip-${idx}`).classList.add("selected");
+        } else {
+            const findIdx = selectedIndices.indexOf(idx);
+            if (findIdx === -1) {
+                selectedIndices.push(idx);
+                document.getElementById(`strip-${idx}`).classList.add("selected");
+            } else {
+                selectedIndices.splice(findIdx, 1);
+                document.getElementById(`strip-${idx}`).classList.remove("selected");
+            }
+        }
+    }
+
     function submitDirectYN(choiceIdx, choiceText) {
         if (confirm(`您確定投下【${choiceText}】嗎？送出後即無法更改。`)) { executeSubmitPost([choiceIdx]); }
     }
@@ -450,13 +468,25 @@
         if (confirm("您確定要送出目前的投票選擇嗎？")) { executeSubmitPost(selectedIndices); }
     }
 
+    // 🚀 核心體驗優化：投票成功後洗掉網址列參數並順暢滑回列表首頁
     function executeSubmitPost(choicesArr) {
         const payload = { action: "submitVote", voteCode: currentSelectedVote.code, token: verifiedToken, choices: choicesArr };
         fetch(GAS_URL, { method: "POST", body: JSON.stringify(payload) })
         .then(res => res.json())
         .then(res => {
             if (res.status === "success") {
-                alert("🎉 投票成功！感謝您的參與。"); location.reload();
+                alert("🎉 投票成功！感謝您的參與。"); 
+                
+                // 1. 🌟 神級優化：利用 HTML5 History API 悄悄把網址上的 ?voteCode=...&token=... 參數抹除乾淨
+                if (window.history && window.history.replaceState) {
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                }
+                
+                // 2. 🌟 順暢歸航：重設變數並主動調用 backToList() 帶領房客返回首頁公告欄列表
+                verifiedToken = "";
+                voterName = "住宿生";
+                backToList();
+                
             } else { alert("❌ 錯誤: " + res.message); }
         });
     }
