@@ -152,7 +152,7 @@
 
     <div class="footer-info">
         <div>&copy; 2026 宿舍智慧管理系統. All Rights Reserved.</div>
-        <div style="font-weight: 600; margin-top: 2px;">Version v2.5.1.VT</div>
+        <div style="font-weight: 600; margin-top: 2px;">Version v2.6.0.VT</div>
     </div>
 </div>
 
@@ -164,7 +164,7 @@
         <hr style="border:0; border-top: 1px dashed #cbd1d6; margin-bottom: 15px;">
         <div class="form-group">
             <label>1. 投票說明 (目的)</label>
-            <input type="text" id="admin-desc" class="form-control" placeholder="example：今晚點心吃哪家？">
+            <input type="text" id="admin-desc" class="form-control" placeholder="例如：今晚點心吃哪家？">
         </div>
         <div class="form-group">
             <label>2. 投票類型</label>
@@ -229,47 +229,80 @@
         if (urlParams.get('voteCode') && urlParams.get('token')) {
             voterName = urlParams.get('name') || "住宿生";
             verifiedToken = urlParams.get('token').toUpperCase();
-            directAccess(urlParams.get('voteCode'));
+            directAccessJsonp(urlParams.get('voteCode'));
         } else {
             fetchActiveVotes();
             setInterval(fetchActiveVotes, 5000);
         }
     };
 
-    // 🚀 使用純淨不帶變動參數的標準 Fetch，並強加 cache: "no-store" 防快取撞車
+    // 🚀 【多裝置防撞 JSONP 核心渲染渲染】
+    function renderListUI(data) {
+        allVotesCache = data.votes || [];
+        const listPanel = document.getElementById("panel-list");
+        if (allVotesCache.length === 0) {
+            listPanel.innerHTML = `<p style='text-align:center;color:#95a5a6;margin-top:40px; font-size:14px;'>目前沒有排程中的投票案。</p>`;
+            return;
+        }
+        let html = `<p style="font-size:14px; color:#7f8c8d; margin-bottom:15px; text-align:center;">即時投票系統公告欄：</p>`;
+        allVotesCache.forEach((v, idx) => {
+            let badgeClass = "status-closed";
+            let badgeText = "已結束結果";
+            if (v.status === "進行中") { badgeClass = "status-running"; badgeText = "正在進行"; }
+            if (v.status === "尚未開始") { badgeClass = "status-upcoming"; badgeText = "即將開始"; }
+
+            html += `
+                <div class="vote-list-item" onclick="handleItemRoute(${idx})">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                        <strong style="color:#333;">代碼: ${v.code}</strong>
+                        <span class="status-badge ${badgeClass}">${badgeText}</span>
+                    </div>
+                    <div style="font-size:15px; color:#555; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${v.description}</div>
+                </div>`;
+        });
+        listPanel.innerHTML = html;
+    }
+
     function fetchActiveVotes() {
         if (document.getElementById("panel-core").style.display === "block" || 
             document.getElementById("panel-auth").style.display === "block") return;
 
-        fetch(GAS_URL, { cache: "no-store" })
-        .then(res => res.json())
-        .then(data => {
-            allVotesCache = data.votes || [];
-            const listPanel = document.getElementById("panel-list");
-            if (allVotesCache.length === 0) {
-                listPanel.innerHTML = `<p style='text-align:center;color:#95a5a6;margin-top:40px; font-size:14px;'>目前沒有排程中的投票案。</p>`;
-                return;
-            }
-            let html = `<p style="font-size:14px; color:#7f8c8d; margin-bottom:15px; text-align:center;">即時投票系統公告欄：</p>`;
-            allVotesCache.forEach((v, idx) => {
-                let badgeClass = "status-closed";
-                let badgeText = "已結束結果";
-                if (v.status === "進行中") { badgeClass = "status-running"; badgeText = "正在進行"; }
-                if (v.status === "尚未開始") { badgeClass = "status-upcoming"; badgeText = "即將開始"; }
+        // 生成每個裝置獨立的一次性暗號函式，完全解決轉址重合相撞的問題
+        const uniqueCallbackName = "VOTE_CB_" + Math.floor(Math.random() * 10000000);
+        
+        window[uniqueCallbackName] = function(data) {
+            renderListUI(data);
+            document.getElementById(uniqueCallbackName + "_script").remove(); // 用完即拆防殘留
+            delete window[uniqueCallbackName]; 
+        };
 
-                html += `
-                    <div class="vote-list-item" onclick="handleItemRoute(${idx})">
-                        <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
-                            <strong style="color:#333;">代碼: ${v.code}</strong>
-                            <span class="status-badge ${badgeClass}">${badgeText}</span>
-                        </div>
-                        <div style="font-size:15px; color:#555; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${v.description}</div>
-                    </div>`;
-            });
-            listPanel.innerHTML = html;
-        }).catch(err => {
-            document.getElementById("panel-list").innerHTML = `<p style='text-align:center;color:#e05252;font-size:14px;margin-top:40px;font-weight:600;'>連線失敗，請檢查 GAS_URL 是否設定正確！</p>`;
-        });
+        const script = document.createElement("script");
+        script.id = uniqueCallbackName + "_script";
+        script.src = GAS_URL + "?callback=" + uniqueCallbackName + "&_ts=" + new Date().getTime();
+        script.onerror = function() {
+            document.getElementById("panel-list").innerHTML = `<p style='text-align:center;color:#e05252;font-size:14px;margin-top:40px;font-weight:600;'>連線失敗，請確認 GAS 後端網址是否發布！</p>`;
+        };
+        document.body.appendChild(script);
+    }
+
+    function directAccessJsonp(voteCode) {
+        const directCallbackName = "VOTE_DIRECT_" + Math.floor(Math.random() * 10000000);
+        
+        window[directCallbackName] = function(data) {
+            currentSelectedVote = (data.votes || []).find(v => v.code === voteCode);
+            if (!currentSelectedVote) { alert("該投票案已關閉！"); fetchActiveVotes(); return; }
+            document.getElementById("global-home-btn").style.display = "none";
+            if (currentSelectedVote.status === "已結束") { showVotingResult(); } 
+            else { document.getElementById("panel-list").style.display = "none"; startVoteInterface(); }
+            
+            document.getElementById(directCallbackName + "_script").remove();
+            delete window[directCallbackName];
+        };
+
+        const script = document.createElement("script");
+        script.id = directCallbackName + "_script";
+        script.src = GAS_URL + "?callback=" + directCallbackName + "&_ts=" + new Date().getTime();
+        document.body.appendChild(script);
     }
 
     function handleItemRoute(idx) {
@@ -341,6 +374,7 @@
         startVoteInterface();
     }
 
+    // 主投票介面
     function startVoteInterface() {
         document.getElementById("panel-core").style.display = "block";
         document.getElementById("resultChart").style.display = "none"; 
@@ -436,6 +470,7 @@
         if (confirm("您確定要送出目前的投票選擇嗎？")) { executeSubmitPost(selectedIndices); }
     }
 
+    // 🚀 POST 提交時因為是傳送單向指令，維持標準模式即可
     function executeSubmitPost(choicesArr) {
         const payload = { action: "submitVote", voteCode: currentSelectedVote.code, token: verifiedToken, choices: choicesArr };
         fetch(GAS_URL, { method: "POST", body: JSON.stringify(payload) })
@@ -498,16 +533,6 @@
                 for(let i=0; i<4; i++) document.getElementById("opt-input-" + i).value = "";
                 fetchActiveVotes();
             } else { alert("❌ 建立失敗: " + res.message); }
-        });
-    }
-
-    function directAccess(voteCode) {
-        fetch(GAS_URL, { cache: "no-store" }).then(res => res.json()).then(data => {
-            currentSelectedVote = (data.votes || []).find(v => v.code === voteCode);
-            if (!currentSelectedVote) { alert("該投票案已關閉！"); fetchActiveVotes(); return; }
-            document.getElementById("global-home-btn").style.display = "none";
-            if (currentSelectedVote.status === "已結束") { showVotingResult(); } 
-            else { document.getElementById("panel-list").style.display = "none"; startVoteInterface(); }
         });
     }
 </script>
