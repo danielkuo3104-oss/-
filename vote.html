@@ -152,7 +152,7 @@
 
     <div class="footer-info">
         <div>&copy; 2026 宿舍智慧管理系統. All Rights Reserved.</div>
-        <div style="font-weight: 600; margin-top: 2px;">Version v2.4.0.VT</div>
+        <div style="font-weight: 600; margin-top: 2px;">Version v2.4.1.VT</div>
     </div>
 </div>
 
@@ -214,7 +214,6 @@
 </div>
 
 <script>
-    // 🚀 正牌的 Web App 網頁應用程式執行網址（帶有 /exec）
     const GAS_URL = "https://script.google.com/macros/s/AKfycbzbq0DSikkyPn3Olm641E1_lKWJL33M4qMDtzqUWbsWY_btLu286DuM6Cb-nd7U0ZY8/exec"; 
     
     let allVotesCache = [];
@@ -230,7 +229,6 @@
         if (urlParams.get('voteCode') && urlParams.get('token')) {
             voterName = urlParams.get('name') || "住宿生";
             verifiedToken = urlParams.get('token').toUpperCase();
-            // 直接由信箱入口進入時，也改用 JSONP 繞過 CORS 政策
             directAccessJsonp(urlParams.get('voteCode'));
         } else {
             fetchActiveVotes();
@@ -238,9 +236,8 @@
         }
     };
 
-    // 🚀 【JSONP 全域接收回呼函式】
-    // 這一步是重中之重，Google 回傳的包裹會主動來觸發這個函式，完全不看 CORS 標頭！
-    function handleGASResponse(data) {
+    // 渲染主列表資料
+    function renderListUI(data) {
         allVotesCache = data.votes || [];
         const listPanel = document.getElementById("panel-list");
         if (allVotesCache.length === 0) {
@@ -264,23 +261,25 @@
                 </div>`;
         });
         listPanel.innerHTML = html;
-        
-        // 抹除殘留標籤
-        const oldScript = document.getElementById("gas-jsonp-script");
-        if (oldScript) oldScript.remove();
     }
 
     function fetchActiveVotes() {
         if (document.getElementById("panel-core").style.display === "block" || 
             document.getElementById("panel-auth").style.display === "block") return;
 
-        const oldScript = document.getElementById("gas-jsonp-script");
-        if (oldScript) oldScript.remove();
+        // 🚀 【多裝置防撞大絕招】：生成當前請求專屬的隨機 Callback 名字
+        const uniqueCallbackName = "GAS_CB_" + Math.floor(Math.random() * 10000000);
+        
+        // 將這個唯一的函式動態掛載到全域 window 上
+        window[uniqueCallbackName] = function(data) {
+            renderListUI(data);
+            document.getElementById(uniqueCallbackName + "_script").remove(); // 用完立刻拔掉標籤
+            delete window[uniqueCallbackName]; // 記憶體釋放
+        };
 
-        // 🚀 建立不被 CORS 限制的外部腳本載入管道
         const script = document.createElement("script");
-        script.id = "gas-jsonp-script";
-        script.src = GAS_URL + "?callback=handleGASResponse&_ts=" + new Date().getTime();
+        script.id = uniqueCallbackName + "_script";
+        script.src = GAS_URL + "?callback=" + uniqueCallbackName + "&_ts=" + new Date().getTime();
         script.onerror = function() {
             document.getElementById("panel-list").innerHTML = `<p style='text-align:center;color:#e05252;font-size:14px;margin-top:40px;font-weight:600;'>連線失敗，請確認 GAS 後端網址是否發布！</p>`;
         };
@@ -288,24 +287,22 @@
     }
 
     function directAccessJsonp(voteCode) {
-        window.handleDirectAccessResponse = function(data) {
+        const directCallbackName = "GAS_DIRECT_" + Math.floor(Math.random() * 10000000);
+        
+        window[directCallbackName] = function(data) {
             currentSelectedVote = (data.votes || []).find(v => v.code === voteCode);
             if (!currentSelectedVote) { alert("該投票案已關閉！"); fetchActiveVotes(); return; }
             document.getElementById("global-home-btn").style.display = "none";
             if (currentSelectedVote.status === "已結束") { showVotingResult(); } 
             else { document.getElementById("panel-list").style.display = "none"; startVoteInterface(); }
             
-            const dScript = document.getElementById("gas-direct-script");
-            if (dScript) dScript.remove();
-            delete window.handleDirectAccessResponse;
+            document.getElementById(directCallbackName + "_script").remove();
+            delete window[directCallbackName];
         };
 
-        const oldScript = document.getElementById("gas-direct-script");
-        if (oldScript) oldScript.remove();
-
         const script = document.createElement("script");
-        script.id = "gas-direct-script";
-        script.src = GAS_URL + "?callback=handleDirectAccessResponse&_ts=" + new Date().getTime();
+        script.id = directCallbackName + "_script";
+        script.src = GAS_URL + "?callback=" + directCallbackName + "&_ts=" + new Date().getTime();
         document.body.appendChild(script);
     }
 
@@ -388,6 +385,7 @@
         renderVoteSlot();
     }
 
+    // 倒數與開票
     function setupCountdown() {
         if (countdownInterval) clearInterval(countdownInterval);
         const startTime = new Date(currentSelectedVote.startTime).getTime();
@@ -464,7 +462,6 @@
         }
     }
 
-    // 發送 POST 提交資料時維持標準模式
     function submitDirectYN(choiceIdx, choiceText) {
         if (confirm(`您確定投下【${choiceText}】嗎？送出後即無法更改。`)) { executeSubmitPost([choiceIdx]); }
     }
