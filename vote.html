@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>宿舍智慧管理系統 - 投票中心</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body {
             font-family: 'PingFang TC', sans-serif;
@@ -59,13 +58,14 @@
         .info-header { display: flex; justify-content: space-between; margin-bottom: 15px; margin-top: 15px; }
         .info-tag { background: #e2e8f0; padding: 6px 12px; border-radius: 12px; font-size: 14px; font-weight: 600; }
         .timer-banner { text-align: center; color: #e05252; font-weight: bold; font-size: 16px; margin-bottom: 15px; }
-        .desc-box { background: #f1f3f5; border-radius: 20px; padding: 25px; text-align: center; font-size: 16px; line-height: 1.6; margin-bottom: 30px; border: 1px solid #e2e8f0; }
+        .desc-box { background: #f1f3f5; border-radius: 20px; padding: 25px; text-align: center; font-size: 16px; line-height: 1.6; margin-bottom: 30px; border: 1px solid #e2e8f0; position: relative;}
 
+        /* 🚀 圓圈按鈕修正：強制正圓且拿掉陰影 */
         .yn-container { display: flex; flex-direction: column; align-items: center; gap: 20px; }
         .circle-btn {
-            width: 130px; height: 130px; border-radius: 50%; font-size: 22px; font-weight: bold;
+            width: 120px; height: 120px; border-radius: 50%; font-size: 22px; font-weight: bold;
             display: flex; align-items: center; justify-content: center; cursor: pointer;
-            box-shadow: 0 6px 12px rgba(0,0,0,0.06); transition: transform 0.1s;
+            box-sizing: border-box; transition: transform 0.1s; -webkit-backface-visibility: hidden;
         }
         .btn-yes { background: #c2e0c6; color: #2e5c33; border: 3px solid #99cca0; border-bottom: 7px solid #73a67a; }
         .btn-no { background: #f7cbd0; color: #7a2e35; border: 3px solid #efa1aa; border-bottom: 7px solid #cc7a84; }
@@ -78,6 +78,34 @@
         }
         .option-strip.selected {
             background: #8FA494; color: white; border-color: #6E8573; border-bottom-width: 2px; margin-top: 3px;
+        }
+
+        /* 🚀 復刻草圖：開票結果全新 UI */
+        .result-title-box { display: flex; justify-content: space-between; margin-bottom: 15px; }
+        .result-big-card {
+            width: 100%; border-radius: 20px; padding: 45px 20px; text-align: center;
+            font-size: 42px; font-weight: 900; letter-spacing: 4px; box-sizing: border-box; margin-bottom: 25px;
+        }
+        .res-card-yes { background-color: #c2e0c6; color: #2e5c33; border: 2px solid #99cca0; }
+        .res-card-no { background-color: #f7cbd0; color: #7a2e35; border: 2px solid #efa1aa; }
+        .res-card-none { background-color: #e2e8f0; color: #4a515a; border: 2px solid #cbd1d6; }
+
+        .result-dot-row { display: flex; justify-content: center; gap: 15px; margin-bottom: 20px; }
+        .result-dot-legend { display: flex; flex-direction: column; align-items: center; gap: 8px; font-size: 13px; font-weight: bold; }
+        .dot-indicator { width: 30px; height: 30px; border-radius: 50%; display: inline-block; }
+
+        .strip-result-item {
+            display: flex; justify-content: space-between; align-items: center;
+            background: #f1f3f5; border: 2px solid #cbd1d6; border-radius: 14px;
+            padding: 16px 20px; margin-bottom: 12px; font-size: 16px; font-weight: bold;
+        }
+        .strip-result-item.winner {
+            background: #FCEFCE; border-color: #E5B25D; color: #8A651A;
+        }
+
+        .type-pill-badge {
+            position: absolute; top: -12px; left: 20px; background: #6E8573; color: white;
+            padding: 3px 12px; border-radius: 10px; font-size: 12px; font-weight: bold;
         }
 
         .admin-fab {
@@ -137,22 +165,37 @@
 
         <div id="panel-core" style="display: none;">
             <button class="exit-btn" onclick="backToList()">退出</button>
-            <div class="info-header">
-                <div class="info-tag" id="tag-code">代碼: --</div>
-                <div class="info-tag" id="tag-name">投票人: --</div>
+            
+            <div id="core-voting-header" style="display:none;">
+                <div class="info-header">
+                    <div class="info-tag" id="tag-code">代碼: --</div>
+                    <div class="info-tag" id="tag-name">投票人: --</div>
+                </div>
+                <div class="timer-banner" id="timer-display">距離結束還有 -- 秒</div>
             </div>
-            <div class="timer-banner" id="timer-display">距離結束還有 -- 秒</div>
-            <div class="desc-box" id="text-description">投票說明載入中...</div>
+
+            <div id="core-closed-header" style="display:none; margin-top:15px;">
+                <div class="result-title-box">
+                    <div class="info-tag" id="res-tag-code">投票代碼</div>
+                    <div class="info-tag" style="background:#cbd1d6;">狀態：已結束</div>
+                </div>
+                <div style="font-size:14px; font-weight:bold; margin-bottom:15px;" id="res-tag-date">投票日期：----/--/--</div>
+            </div>
+
+            <div class="desc-box">
+                <div class="type-pill-badge" id="type-pill-label">[單選題]</div>
+                <div id="text-description">投票說明載入中...</div>
+            </div>
             
             <div id="vote-interface-slot"></div>
-            <canvas id="resultChart" style="display: none; max-width: 100%; margin-top: 20px;"></canvas>
+            
             <button class="btn-prime" id="submit-block-btn" style="margin-top: 30px; display: none;" onclick="confirmAndSubmitChoices()">確認送出投票</button>
         </div>
     </div>
 
     <div class="footer-info">
         <div>&copy; 2026 宿舍智慧管理系統. All Rights Reserved.</div>
-        <div style="font-weight: 600; margin-top: 2px;">Version v2.9.6.VT</div>
+        <div style="font-weight: 600; margin-top: 2px;">Version v3.0.0.VT</div>
     </div>
 </div>
 
@@ -170,8 +213,8 @@
             <label>2. 投票類型</label>
             <select id="admin-type" class="form-control" onchange="handleTypeFlowChange()">
                 <option value="YN">同意 / 不同意</option>
-                <option value="SS">單項選擇</option>
-                <option value="MS">多項選擇</option>
+                <option value="SS">單項選擇 (單選)</option>
+                <option value="MS">多項選擇 (多選)</option>
             </select>
         </div>
         <div class="form-group">
@@ -192,7 +235,7 @@
                 <option value="1">1 分鐘</option>
                 <option value="3">3 分鐘</option>
                 <option value="5">5 分鐘</option>
-            </select>
+                <option value="10">10 分鐘</option> </select>
         </div>
         <div id="admin-dynamic-flow-zone" style="margin-top: 15px; padding-top: 10px; border-top: 1px dashed #e2e8f0;">
             <div class="form-group" id="flow-yn-option">
@@ -222,7 +265,6 @@
     let verifiedToken = "";
     let selectedIndices = []; 
     let countdownInterval = null;
-    let myChartInstance = null;
 
     window.onload = function() {
         const urlParams = new URLSearchParams(window.location.search);
@@ -236,6 +278,7 @@
         }
     };
 
+    // 🚀 核心修改：智慧重組排序（正在進行中 > 即將開始 > 已結束）
     function renderListUI(data) {
         allVotesCache = data.votes || [];
         const listPanel = document.getElementById("panel-list");
@@ -243,10 +286,20 @@
             listPanel.innerHTML = `<p style='text-align:center;color:#95a5a6;margin-top:40px; font-size:14px;'>目前沒有排程中的投票案。</p>`;
             return;
         }
+
+        // 智慧分類分流器
+        const runningList = allVotesCache.filter(v => v.status === "進行中");
+        const upcomingList = allVotesCache.filter(v => v.status === "尚未開始");
+        const closedList = allVotesCache.filter(v => v.status === "已結束");
+        
+        // 依照黃金順序重組陣列
+        const sortedVotes = [...runningList, ...upcomingList, ...closedList];
+        allVotesCache = sortedVotes; 
+
         let html = `<p style="font-size:14px; color:#7f8c8d; margin-bottom:15px; text-align:center;">即時投票系統公告欄：</p>`;
-        allVotesCache.forEach((v, idx) => {
+        sortedVotes.forEach((v, idx) => {
             let badgeClass = "status-closed";
-            let badgeText = "已結束結果";
+            let badgeText = "已結束"; // 🚀 修正文字：已結束結果 -> 已結束
             if (v.status === "進行中") { badgeClass = "status-running"; badgeText = "正在進行"; }
             if (v.status === "尚未開始") { badgeClass = "status-upcoming"; badgeText = "即將開始"; }
 
@@ -267,7 +320,6 @@
             document.getElementById("panel-auth").style.display === "block") return;
 
         const uniqueCallbackName = "VOTE_CB_" + Math.floor(Math.random() * 10000000);
-        
         window[uniqueCallbackName] = function(data) {
             renderListUI(data);
             document.getElementById(uniqueCallbackName + "_script").remove(); 
@@ -277,15 +329,11 @@
         const script = document.createElement("script");
         script.id = uniqueCallbackName + "_script";
         script.src = GAS_URL + "?callback=" + uniqueCallbackName + "&_ts=" + new Date().getTime();
-        script.onerror = function() {
-            document.getElementById("panel-list").innerHTML = `<p style='text-align:center;color:#e05252;font-size:14px;margin-top:40px;font-weight:600;'>連線失敗，請確認 GAS 後端網址是否發布！</p>`;
-        };
         document.body.appendChild(script);
     }
 
     function directAccessJsonp(voteCode) {
         const directCallbackName = "VOTE_DIRECT_" + Math.floor(Math.random() * 10000000);
-        
         window[directCallbackName] = function(data) {
             currentSelectedVote = (data.votes || []).find(v => v.code === voteCode);
             if (!currentSelectedVote) { alert("該投票案已關閉！"); fetchActiveVotes(); return; }
@@ -299,7 +347,7 @@
 
         const script = document.createElement("script");
         script.id = directCallbackName + "_script";
-        script.src = GAS_URL + "?callback=" + directCallbackName + "&_ts=" + new Date().getTime();
+        script.src = GAS_URL + "?callback=directCallbackName&_ts=" + new Date().getTime();
         document.body.appendChild(script);
     }
 
@@ -316,53 +364,74 @@
         }
     }
 
-    // 開票圖表渲染
+    // 🚀 【復刻手繪圖：客製化高質感開票 UI】
     function showVotingResult() {
         document.getElementById("panel-core").style.display = "block";
-        document.getElementById("tag-code").innerText = `代碼: ${currentSelectedVote.code}`;
-        document.getElementById("tag-name").innerText = `狀態: 已截止`;
-        document.getElementById("timer-display").innerText = "📊 最終投票開票結果";
+        document.getElementById("core-voting-header").style.display = "none";
+        document.getElementById("core-closed-header").style.display = "block";
+        
+        // 寫入基礎資訊
+        document.getElementById("res-tag-code").innerText = `投票代碼：${currentSelectedVote.code}`;
+        const dObj = new Date(currentSelectedVote.startTime);
+        document.getElementById("res-tag-date").innerText = `投票日期：${dObj.getFullYear()}/${String(dObj.getMonth()+1).padStart(2,'0')}/${String(dObj.getDate()).padStart(2,'0')}`;
         document.getElementById("text-description").innerText = currentSelectedVote.description;
         
-        document.getElementById("vote-interface-slot").innerHTML = "";
+        const type = currentSelectedVote.code.substring(0, 2);
+        document.getElementById("type-pill-label").innerText = type === "YN" ? "[同意表決案]" : type === "SS" ? "[單選題]" : "[多選題]";
+
+        const slot = document.getElementById("vote-interface-slot");
+        slot.innerHTML = "";
         document.getElementById("submit-block-btn").style.display = "none";
-        
-        const canvas = document.getElementById("resultChart");
-        canvas.style.display = "block";
 
-        let labels = [];
-        let counts = [];
-        currentSelectedVote.options.forEach((opt, idx) => {
-            if (opt && opt.trim() !== "") {
-                labels.push(opt);
-                counts.push(currentSelectedVote.scores ? currentSelectedVote.scores[idx] : 0);
-            }
-        });
+        const scores = currentSelectedVote.scores || [0, 0, 0, 0];
 
-        if (myChartInstance) myChartInstance.destroy();
+        if (type === "YN") {
+            // 🚀 同意不同意客製化判定 (過半數 3 票判定)
+            const yesVotes = scores[0];
+            const noVotes = scores[1];
+            const abstainVotes = scores[2] || 0;
+            
+            let conclusionClass = "res-card-none";
+            let conclusionText = "無共識";
+            
+            if (yesVotes >= 3) { conclusionClass = "res-card-yes"; conclusionText = "同意"; }
+            else if (noVotes >= 3) { conclusionClass = "res-card-no"; conclusionText = "不同意"; }
 
-        const ctx = canvas.getContext('2d');
-        myChartInstance = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: '最終得票數',
-                    data: counts,
-                    backgroundColor: 'rgba(143, 164, 148, 0.7)',
-                    borderColor: 'rgba(110, 133, 115, 1)',
-                    borderWidth: 2,
-                    borderRadius: 8
-                }]
-            },
-            options: {
-                responsive: true,
-                scales: {
-                    y: { beginAtZero: true, ticks: { stepSize: 1 } }
-                },
-                plugins: { legend: { display: false } }
-            }
-        });
+            let html = `
+                <div class="result-big-card ${conclusionClass}">${conclusionText}</div>
+                <div class="result-dot-row">
+                    <div class="result-dot-legend"><span class="dot-indicator" style="background:#c2e0c6; border:1px solid #99cca0;"></span>同意: ${yesVotes}票</div>
+                    <div class="result-dot-legend"><span class="dot-indicator" style="background:#f7cbd0; border:1px solid #efa1aa;"></span>不同意: ${noVotes}票</div>
+                    <div class="result-dot-legend"><span class="dot-indicator" style="background:#cbd1d6; border:1px solid #b0b7bd;"></span>未投票/棄權: ${abstainVotes}票</div>
+                </div>
+            `;
+            slot.innerHTML = html;
+        } else {
+            // 🚀 單選/多選客製化判定 (找出最高票並渲染黃金莫蘭迪色條)
+            let maxScore = -1;
+            currentSelectedVote.options.forEach((opt, idx) => {
+                if (opt && opt.trim() !== "") {
+                    if (scores[idx] > maxScore) maxScore = scores[idx];
+                }
+            });
+
+            let html = `<div style="margin-top:20px;">`;
+            currentSelectedVote.options.forEach((opt, idx) => {
+                if (opt && opt.trim() !== "") {
+                    const count = scores[idx];
+                    const isWinner = (count === maxScore && maxScore > 0);
+                    const activeClass = isWinner ? "winner" : "";
+                    
+                    html += `
+                        <div class="strip-result-item ${activeClass}">
+                            <span>${opt}</span>
+                            <span>${count} 票</span>
+                        </div>`;
+                }
+            });
+            html += `</div>`;
+            slot.innerHTML = html;
+        }
     }
 
     function verifyAndEnterVote() {
@@ -375,10 +444,16 @@
 
     function startVoteInterface() {
         document.getElementById("panel-core").style.display = "block";
-        document.getElementById("resultChart").style.display = "none"; 
+        document.getElementById("core-voting-header").style.display = "block";
+        document.getElementById("core-closed-header").style.display = "none";
+        
         document.getElementById("tag-code").innerText = `代碼: ${currentSelectedVote.code}`;
         document.getElementById("tag-name").innerText = `投票人: ${voterName}`;
         document.getElementById("text-description").innerText = currentSelectedVote.description;
+        
+        const type = currentSelectedVote.code.substring(0, 2);
+        document.getElementById("type-pill-label").innerText = type === "YN" ? "[同意表決案]" : type === "SS" ? "[單選題]" : "[多選題]";
+        
         setupCountdown();
         renderVoteSlot();
     }
@@ -468,7 +543,6 @@
         if (confirm("您確定要送出目前的投票選擇嗎？")) { executeSubmitPost(selectedIndices); }
     }
 
-    // 🚀 核心體驗優化：投票成功後洗掉網址列參數並順暢滑回列表首頁
     function executeSubmitPost(choicesArr) {
         const payload = { action: "submitVote", voteCode: currentSelectedVote.code, token: verifiedToken, choices: choicesArr };
         fetch(GAS_URL, { method: "POST", body: JSON.stringify(payload) })
@@ -476,17 +550,12 @@
         .then(res => {
             if (res.status === "success") {
                 alert("🎉 投票成功！感謝您的參與。"); 
-                
-                // 1. 🌟 神級優化：利用 HTML5 History API 悄悄把網址上的 ?voteCode=...&token=... 參數抹除乾淨
                 if (window.history && window.history.replaceState) {
                     window.history.replaceState({}, document.title, window.location.pathname);
                 }
-                
-                // 2. 🌟 順暢歸航：重設變數並主動調用 backToList() 帶領房客返回首頁公告欄列表
                 verifiedToken = "";
                 voterName = "住宿生";
                 backToList();
-                
             } else { alert("❌ 錯誤: " + res.message); }
         });
     }
@@ -495,7 +564,8 @@
         if (countdownInterval) clearInterval(countdownInterval);
         document.getElementById("panel-core").style.display = "none";
         document.getElementById("panel-auth").style.display = "none";
-        document.getElementById("resultChart").style.display = "none";
+        document.getElementById("core-voting-header").style.display = "none";
+        document.getElementById("core-closed-header").style.display = "none";
         document.getElementById("panel-list").style.display = "block";
         document.getElementById("global-home-btn").style.display = "block"; 
         document.getElementById("input-token").value = ""; 
