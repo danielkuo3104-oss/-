@@ -59,12 +59,12 @@
         .info-tag { background: #e2e8f0; padding: 6px 12px; border-radius: 12px; font-size: 14px; font-weight: 600; }
         .timer-banner { text-align: center; color: #e05252; font-weight: bold; font-size: 16px; margin-bottom: 15px; }
         
-        /* 🚀 分離排版：投票機制獨立標籤，不壓在說明卡片上 */
+        /* 🚀 投票機制獨立標籤 */
         .mechanism-badge-row { margin-bottom: 10px; display: flex; gap: 8px; }
         .mechanism-pill { background: #6E8573; color: white; padding: 4px 12px; border-radius: 10px; font-size: 12px; font-weight: bold; display: inline-block; }
         .desc-box { background: #f1f3f5; border-radius: 20px; padding: 25px; text-align: center; font-size: 16px; line-height: 1.6; margin-bottom: 25px; border: 1px solid #e2e8f0; }
 
-        /* 🚀 圓圈投票介面：正圓且拿掉陰影 */
+        /* 🚀 正圓形表決按鈕 */
         .yn-container { display: flex; flex-direction: column; align-items: center; gap: 20px; }
         .circle-btn {
             width: 120px; height: 120px; border-radius: 50%; font-size: 22px; font-weight: bold;
@@ -84,7 +84,7 @@
             background: #8FA494; color: white; border-color: #6E8573; border-bottom-width: 2px; margin-top: 3px;
         }
 
-        /* 🚀 復刻草圖左側：4個正圓圈開票計票視覺 UI */
+        /* 🚀 4正圓圈開票計票視覺 UI */
         .result-title-box { display: flex; justify-content: space-between; margin-bottom: 15px; }
         .result-circles-row { display: flex; justify-content: space-between; align-items: center; margin: 30px 0; gap: 8px; }
         
@@ -92,7 +92,6 @@
             flex: 1; aspect-ratio: 1 / 1; border-radius: 50%; display: flex; flex-direction: column;
             align-items: center; justify-content: center; font-weight: bold; box-sizing: border-box; text-align: center;
         }
-        /* 精確調色：同意深綠、不同意紅色、棄權淺灰、未投票深灰 */
         .node-yes { background-color: #c2e0c6; color: #2e5c33; border: 2px solid #99cca0; }
         .node-no { background-color: #f7cbd0; color: #7a2e35; border: 2px solid #efa1aa; }
         .node-abstain { background-color: #e2e8f0; color: #4a515a; border: 2px solid #cbd1d6; }
@@ -109,12 +108,12 @@
         .res-card-no { background-color: #f7cbd0; color: #7a2e35; border-color: #efa1aa; }
         .res-card-none { background-color: #e2e8f0; color: #4a515a; border-color: #cbd1d6; }
 
-        /* 精美小圓圈示意圖：完全比照大圓圈等比例縮小 */
+        /* 微型示意圖例 */
         .result-explain-legend { display: flex; justify-content: center; gap: 10px; font-size: 11px; font-weight: bold; margin-top: 25px; }
         .legend-item { display: flex; align-items: center; gap: 4px; }
         .mini-dot { width: 14px; height: 14px; border-radius: 50%; display: inline-block; box-sizing: border-box; }
 
-        /* 🚀 復刻草圖右側：最高票橫帶染上莫蘭迪金黃色 */
+        /* 最高票勝出橫條高亮 */
         .strip-result-item {
             display: flex; justify-content: space-between; align-items: center;
             background: #f1f3f5; border: 2px solid #cbd1d6; border-radius: 14px;
@@ -180,64 +179,7 @@
 
     <div class="footer-info">
         <div>&copy; 2026 宿舍智慧管理系統. All Rights Reserved.</div>
-        <div style="font-weight: 600; margin-top: 2px;">Version v3.2.0.VT</div>
-    </div>
-</div>
-
-<button class="admin-fab" onclick="openAdminModal()">＋</button>
-
-<div class="modal-overlay" id="adminModal">
-    <div class="modal-box">
-        <h3>發起即時投票案</h3>
-        <hr style="border:0; border-top: 1px dashed #cbd1d6; margin-bottom: 15px;">
-        <div class="form-group">
-            <label>1. 投票說明 (目的)</label>
-            <input type="text" id="admin-desc" class="form-control" placeholder="例如：今晚點心吃哪家？">
-        </div>
-        <div class="form-group">
-            <label>2. 投票類型</label>
-            <select id="admin-type" class="form-control" onchange="handleTypeFlowChange()">
-                <option value="YN">同意 / 不同意</option>
-                <option value="SS">單項選擇 (單選)</option>
-                <option value="MS">多項選擇 (多選)</option>
-            </select>
-        </div>
-        <div class="form-group">
-            <label>3. 開始時間</label>
-            <select id="admin-start" class="form-control">
-                <option value="0">立刻開始</option>
-                <option value="1">1 分鐘後</option>
-                <option value="3">3 分鐘後</option>
-                <option value="5">5 分鐘後</option>
-                <option value="10">10 分鐘後</option>
-                <option value="30">30 分鐘後</option>
-                <option value="60">1 小時後</option>
-            </select>
-        </div>
-        <div class="form-group">
-            <label>4. 投票有效時限</label>
-            <select id="admin-duration" class="form-control">
-                <option value="1">1 分鐘</option>
-                <option value="3">3 分鐘</option>
-                <option value="5">5 分鐘</option>
-                <option value="10">10 分鐘</option> </select>
-        </div>
-        <div id="admin-dynamic-flow-zone" style="margin-top: 15px; padding-top: 10px; border-top: 1px dashed #e2e8f0;">
-            <div class="form-group" id="flow-yn-option">
-                <label style="display: flex; align-items: center; gap: 8px;">
-                    <input type="checkbox" id="admin-accept-abstain" checked style="width:16px; height:16px;"> 是否接受「棄權」選項
-                </label>
-            </div>
-            <div id="flow-choices-inputs" style="display: none;">
-                <label style="font-weight: 600; font-size: 14px; margin-bottom: 5px; display:block;">請輸入選項內容：</label>
-                <input type="text" id="opt-input-0" class="form-control" placeholder="選項一" style="margin-bottom: 8px;">
-                <input type="text" id="opt-input-1" class="form-control" placeholder="選項二" style="margin-bottom: 8px;">
-                <input type="text" id="opt-input-2" class="form-control" placeholder="選項三" style="margin-bottom: 8px;">
-                <input type="text" id="opt-input-3" class="form-control" placeholder="選項四">
-            </div>
-        </div>
-        <button class="btn-prime" style="margin-top: 20px;" onclick="submitNewVoteFromAdmin()">確認發起並發送通知信</button>
-        <button class="btn-prime" style="background:#cbd1d6; border-color:#b0b7bd; border-bottom-color:#8e959c; margin-top:10px;" onclick="closeAdminModal()">取消</button>
+        <div style="font-weight: 600; margin-top: 2px;">Version v3.2.1.VT</div>
     </div>
 </div>
 
@@ -251,7 +193,7 @@
     let selectedIndices = []; 
     let countdownInterval = null;
 
-    // 🚀 字數保護熔斷器：超過10個字自動用...
+    // 🚀 字數保護：超過10個字自動用...
     function limitTextLength(text) {
         if (!text) return "";
         return text.length > 10 ? text.substring(0, 10) + "..." : text;
@@ -269,7 +211,7 @@
         }
     };
 
-    // 🚀 二、在投票中心中的排序要先排正在進行>準備開始>已結束
+    // 🚀 排序優先級：正在進行中 > 即將開始 > 已結束
     function renderListUI(data) {
         allVotesCache = data.votes || [];
         const listPanel = document.getElementById("panel-list");
@@ -287,7 +229,7 @@
         let html = `<p style="font-size:14px; color:#7f8c8d; margin-bottom:15px; text-align:center;">即時投票系統公告欄：</p>`;
         allVotesCache.forEach((v, idx) => {
             let badgeClass = "status-closed";
-            let badgeText = "已結束"; // 🚀 三、將已結束結果 改成 已結束
+            let badgeText = "已結束"; 
             if (v.status === "進行中") { badgeClass = "status-running"; badgeText = "正在進行"; }
             if (v.status === "尚未開始") { badgeClass = "status-upcoming"; badgeText = "即將開始"; }
 
@@ -320,11 +262,10 @@
         document.body.appendChild(script);
     }
 
-    // 🚀【前置阻擋安全網】：一進網頁如果是錯的安全碼，抛錯並同時具備返回主頁按鈕
+    // 🚀【前置阻擋安全網】：輸入錯代碼 也要有返回投票主頁功能
     function directAccessJsonp(voteCode, token) {
         const directCallbackName = "VOTE_DIRECT_" + Math.floor(Math.random() * 10000000);
         window[directCallbackName] = function(data) {
-            // 🚀 輸入錯代碼 也要有返回投票主頁功能
             if (data.tokenCheck && !data.tokenCheck.valid) {
                 alert(data.tokenCheck.message);
                 document.getElementById("panel-list").innerHTML = `
@@ -365,7 +306,7 @@
         }
     }
 
-    // 🚀 六、歷史開票結果客製化（四圓圈 + 金黃高亮橫帶，完全復刻手繪草圖）
+    // 🚀 開票結果客製化
     function showVotingResult() {
         document.getElementById("panel-core").style.display = "block";
         document.getElementById("core-voting-header").style.display = "none";
@@ -391,7 +332,7 @@
             const abstainVotes = scores[2] || 0;
             const unvotedCount = Math.max(0, 4 - (yesVotes + noVotes + abstainVotes));
             
-            // 🚀 【單純比較 不同意 跟 同意】：其餘不投票、無意見皆不干擾勝負判定
+            // 🚀 【單純比較 不同意 跟 同意】：其餘不投票與無意見皆不干擾結論
             let conclusionBg = "res-card-none";
             let conclusionText = "無共識";
             if (yesVotes > noVotes) { conclusionBg = "res-card-yes"; conclusionText = "同意"; }
@@ -462,7 +403,6 @@
         document.getElementById("text-description").innerText = currentSelectedVote.description;
         
         const type = currentSelectedVote.code.substring(0, 2);
-        // 🚀 五、單選/多選精緻提示標籤
         document.getElementById("type-pill-label").innerText = type === "YN" ? "[同意表決案]" : type === "SS" ? "[單選題]" : "[多選題]";
         
         setupCountdown();
@@ -580,7 +520,7 @@
         });
     }
 
-    // 🚀 四、退出鍵 改為 返回鍵 核心邏輯
+    // 🚀 返回鍵核心邏輯
     function backToList() {
         if (countdownInterval) clearInterval(countdownInterval);
         document.getElementById("panel-core").style.display = "none";
@@ -591,49 +531,6 @@
         document.getElementById("global-home-btn").style.display = "block"; 
         document.getElementById("input-token").value = ""; 
         fetchActiveVotes();
-    }
-
-    function openAdminModal() { document.getElementById("adminModal").style.display = "flex"; }
-    function closeAdminModal() { document.getElementById("adminModal").style.display = "none"; }
-    
-    function handleTypeFlowChange() {
-        const type = document.getElementById("admin-type").value;
-        const ynOption = document.getElementById("flow-yn-option");
-        const choicesInputs = document.getElementById("flow-choices-inputs");
-        if (type === "YN") { ynOption.style.display = "block"; choicesInputs.style.display = "none"; } 
-        else { ynOption.style.display = "none"; choicesInputs.style.display = "block"; }
-    }
-
-    function submitNewVoteFromAdmin() {
-        const desc = document.getElementById("admin-desc").value.trim();
-        const type = document.getElementById("admin-type").value;
-        const startDelay = document.getElementById("admin-start").value;
-        const duration = document.getElementById("admin-duration").value;
-        if (!desc) { alert("請輸入投票說明目的！"); return; }
-        let optionsArr = [];
-        if (type === "YN") {
-            optionsArr.push("同意", "不同意");
-            if (document.getElementById("admin-accept-abstain").checked) optionsArr.push("棄權");
-        } else {
-            for (let i = 0; i < 4; i++) {
-                const val = document.getElementById("opt-input-" + i).value.trim();
-                if (val) optionsArr.push(val);
-            }
-            if (optionsArr.length < 2) { alert("請至少輸入兩個投票選項！"); return; }
-        }
-        const payload = { action: "createVote", type: type, description: desc, startDelay: startDelay, duration: duration, options: optionsArr };
-        if (!confirm("確定要發起此投票案嗎？")) return;
-        fetch(GAS_URL, { method: "POST", body: JSON.stringify(payload) })
-        .then(res => res.json())
-        .then(res => {
-            if (res.status === "success") {
-                alert(`🎉 投票案建立成功！代碼：${res.voteCode}`);
-                closeAdminModal();
-                document.getElementById("admin-desc").value = "";
-                for(let i=0; i<4; i++) document.getElementById("opt-input-" + i).value = "";
-                fetchActiveVotes();
-            } else { alert("❌ 建立失敗: " + res.message); }
-        });
     }
 </script>
 </body>
