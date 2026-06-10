@@ -118,13 +118,14 @@
             background-color: #E5B25D !important; border-color: #C9963F !important; color: #ffffff !important;
         }
 
-        /* 🚀 版權宣告完美置中、縮小、淡灰風 */
+        /* 下方版權與版本資訊水平置中、縮小、淡灰色 */
         .footer-info {
             margin-top: 40px; text-align: center; font-size: 11px; color: #b2b9c0;
             letter-spacing: 0.5px; line-height: 1.6; border-top: 1px solid #f1f3f5; padding-top: 15px;
             display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; box-sizing: border-box;
         }
-
+        
+        /* 🚀 加號按鈕原地回歸 */
         .admin-fab {
             position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px;
             background: #8FA494; color: white; border: 2px solid #6E8573; border-bottom: 5px solid #5C7261;
@@ -253,7 +254,8 @@
 </div>
 
 <script>
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbw4EmqIXabZYdCqYMCwA_IZyQ0fZG7kFALeAJeotR9NYGxWeRErmUQZLnMRqYC3BEY/exec"; 
+    // 🚀 請在此處更換為你在上一輪拿到並重新發布新版本的實體 GAS API 網址！
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbzbq0DSikkyPn3Olm641E1_lKWJL33M4qMDtzqUWbsWY_btLu286DuM6Cb-nd7U0ZY8/exec"; 
     
     let allVotesCache = [];
     let currentSelectedVote = null;
@@ -279,7 +281,7 @@
         }
     };
 
-    // 🚀 雙層排序：群組分類（進行中>未開始>已結束） + 組內降冪（時間越近越置頂）
+    // 🚀 核心大改寫：雙層排序（進行中 > 即將開始 > 已結束） ＋ 組內時間由近到遠倒序
     function renderListUI(data) {
         allVotesCache = data.votes || [];
         const listPanel = document.getElementById("panel-list");
@@ -288,6 +290,7 @@
             return;
         }
 
+        // 時間越新越靠前
         const timeSort = (a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime();
 
         const runningList = allVotesCache.filter(v => v.status === "進行中").sort(timeSort);
@@ -332,10 +335,10 @@
         document.body.appendChild(script);
     }
 
-    // 🚀 前置攔截拋錯與返回按鈕機制
     function directAccessJsonp(voteCode, token) {
         const directCallbackName = "VOTE_DIRECT_" + Math.floor(Math.random() * 10000000);
         window[directCallbackName] = function(data) {
+            // 🚀 前置攔截拋錯與返回首頁大顆粒按鈕機制
             if (data.tokenCheck && !data.tokenCheck.valid) {
                 alert(data.tokenCheck.message);
                 document.getElementById("main-voting-box").innerHTML = `
@@ -400,6 +403,7 @@
             const abstainVotes = scores[2] || 0;
             const unvotedCount = Math.max(0, 4 - (yesVotes + noVotes + abstainVotes));
             
+            // 🚀 單純比較不同意與同意
             let conclusionBg = "res-card-none";
             let conclusionText = "無共識";
             if (yesVotes > noVotes) { conclusionBg = "res-card-yes"; conclusionText = "同意"; }
@@ -430,6 +434,7 @@
                 }
             });
 
+            // 🚀 拿掉表符
             let html = `<div style="font-size: 14px; font-weight: bold; color: #4a515a; margin-bottom: 15px; margin-top:20px;">票數紀錄統計區：</div>`;
             currentSelectedVote.options.forEach((opt, idx) => {
                 if (opt && opt.trim() !== "") {
