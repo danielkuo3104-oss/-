@@ -58,14 +58,18 @@
         .info-header { display: flex; justify-content: space-between; margin-bottom: 15px; margin-top: 15px; }
         .info-tag { background: #e2e8f0; padding: 6px 12px; border-radius: 12px; font-size: 14px; font-weight: 600; }
         .timer-banner { text-align: center; color: #e05252; font-weight: bold; font-size: 16px; margin-bottom: 15px; }
-        .desc-box { background: #f1f3f5; border-radius: 20px; padding: 25px; text-align: center; font-size: 16px; line-height: 1.6; margin-bottom: 30px; border: 1px solid #e2e8f0; position: relative;}
+        
+        /* 🚀 分離排版：投票機制獨立標籤，不壓在說明卡片上 */
+        .mechanism-badge-row { margin-bottom: 10px; display: flex; gap: 8px; }
+        .mechanism-pill { background: #6E8573; color: white; padding: 4px 12px; border-radius: 10px; font-size: 12px; font-weight: bold; display: inline-block; }
+        .desc-box { background: #f1f3f5; border-radius: 20px; padding: 25px; text-align: center; font-size: 16px; line-height: 1.6; margin-bottom: 25px; border: 1px solid #e2e8f0; }
 
-        /* 🚀 圓圈按鈕修正：強制正圓且拿掉陰影 */
+        /* 🚀 圓圈投票介面：正圓且拿掉陰影 */
         .yn-container { display: flex; flex-direction: column; align-items: center; gap: 20px; }
         .circle-btn {
             width: 120px; height: 120px; border-radius: 50%; font-size: 22px; font-weight: bold;
             display: flex; align-items: center; justify-content: center; cursor: pointer;
-            box-sizing: border-box; transition: transform 0.1s; -webkit-backface-visibility: hidden;
+            box-sizing: border-box; transition: transform 0.1s;
         }
         .btn-yes { background: #c2e0c6; color: #2e5c33; border: 3px solid #99cca0; border-bottom: 7px solid #73a67a; }
         .btn-no { background: #f7cbd0; color: #7a2e35; border: 3px solid #efa1aa; border-bottom: 7px solid #cc7a84; }
@@ -80,32 +84,39 @@
             background: #8FA494; color: white; border-color: #6E8573; border-bottom-width: 2px; margin-top: 3px;
         }
 
-        /* 🚀 復刻草圖：開票結果全新 UI */
+        /* 🚀 復刻草圖左側：4正圓圈開票計票視覺 UI */
         .result-title-box { display: flex; justify-content: space-between; margin-bottom: 15px; }
-        .result-big-card {
-            width: 100%; border-radius: 20px; padding: 45px 20px; text-align: center;
-            font-size: 42px; font-weight: 900; letter-spacing: 4px; box-sizing: border-box; margin-bottom: 25px;
+        .result-circles-row { display: flex; justify-content: space-between; align-items: center; margin: 30px 0; gap: 8px; }
+        
+        .score-circle-node {
+            flex: 1; aspect-ratio: 1 / 1; border-radius: 50%; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; font-weight: bold; box-sizing: border-box; text-align: center;
         }
-        .res-card-yes { background-color: #c2e0c6; color: #2e5c33; border: 2px solid #99cca0; }
-        .res-card-no { background-color: #f7cbd0; color: #7a2e35; border: 2px solid #efa1aa; }
-        .res-card-none { background-color: #e2e8f0; color: #4a515a; border: 2px solid #cbd1d6; }
+        .node-yes-1 { background-color: #c2e0c6; color: #2e5c33; border: 2px solid #99cca0; }
+        .node-yes-2 { background-color: #e6f4ea; color: #137333; border: 2px solid #a8dab5; }
+        .node-no { background-color: #f7cbd0; color: #7a2e35; border: 2px solid #efa1aa; }
+        .node-abstain { background-color: #cbd1d6; color: #4a515a; border: 2px solid #b0b7bd; }
+        
+        .node-title { font-size: 13px; margin-bottom: 2px; }
+        .node-count { font-size: 20px; font-weight: 900; }
 
-        .result-dot-row { display: flex; justify-content: center; gap: 15px; margin-bottom: 20px; }
-        .result-dot-legend { display: flex; flex-direction: column; align-items: center; gap: 8px; font-size: 13px; font-weight: bold; }
-        .dot-indicator { width: 30px; height: 30px; border-radius: 50%; display: inline-block; }
+        .result-big-conclusion {
+            width: 100%; border-radius: 16px; padding: 15px; text-align: center;
+            font-size: 26px; font-weight: 900; box-sizing: border-box; margin-top: 25px; border: 2px solid #cbd1d6;
+        }
 
+        .result-explain-legend {
+            display: flex; justify-content: center; gap: 12px; font-size: 11px; color: #7f8c8d; font-weight: bold; margin-top: 15px;
+        }
+
+        /* 🚀 復刻草圖右側：單選多選獨立進度條區，勝出者染上莫蘭迪金黃色 */
         .strip-result-item {
             display: flex; justify-content: space-between; align-items: center;
             background: #f1f3f5; border: 2px solid #cbd1d6; border-radius: 14px;
             padding: 16px 20px; margin-bottom: 12px; font-size: 16px; font-weight: bold;
         }
         .strip-result-item.winner {
-            background: #FCEFCE; border-color: #E5B25D; color: #8A651A;
-        }
-
-        .type-pill-badge {
-            position: absolute; top: -12px; left: 20px; background: #6E8573; color: white;
-            padding: 3px 12px; border-radius: 10px; font-size: 12px; font-weight: bold;
+            background-color: #E5B25D !important; border-color: #C9963F !important; color: #ffffff !important;
         }
 
         .admin-fab {
@@ -177,13 +188,15 @@
             <div id="core-closed-header" style="display:none; margin-top:15px;">
                 <div class="result-title-box">
                     <div class="info-tag" id="res-tag-code">投票代碼</div>
-                    <div class="info-tag" style="background:#cbd1d6;">狀態：已結束</div>
+                    <div class="info-tag" style="background:#cbd1d6; color:#5a6168;">狀態：已結束</div>
                 </div>
                 <div style="font-size:14px; font-weight:bold; margin-bottom:15px;" id="res-tag-date">投票日期：----/--/--</div>
             </div>
 
+            <div class="mechanism-badge-row">
+                <div class="mechanism-pill" id="type-pill-label">加載中</div>
+            </div>
             <div class="desc-box">
-                <div class="type-pill-badge" id="type-pill-label">[單選題]</div>
                 <div id="text-description">投票說明載入中...</div>
             </div>
             
@@ -195,7 +208,7 @@
 
     <div class="footer-info">
         <div>&copy; 2026 宿舍智慧管理系統. All Rights Reserved.</div>
-        <div style="font-weight: 600; margin-top: 2px;">Version v3.0.0.VT</div>
+        <div style="font-weight: 600; margin-top: 2px;">Version v3.1.0.VT</div>
     </div>
 </div>
 
@@ -278,7 +291,7 @@
         }
     };
 
-    // 🚀 核心修改：智慧重組排序（正在進行中 > 即將開始 > 已結束）
+    // 🚀 優化排序：正在進行中 > 即將開始 > 已結束
     function renderListUI(data) {
         allVotesCache = data.votes || [];
         const listPanel = document.getElementById("panel-list");
@@ -287,19 +300,17 @@
             return;
         }
 
-        // 智慧分類分流器
         const runningList = allVotesCache.filter(v => v.status === "進行中");
         const upcomingList = allVotesCache.filter(v => v.status === "尚未開始");
         const closedList = allVotesCache.filter(v => v.status === "已結束");
         
-        // 依照黃金順序重組陣列
         const sortedVotes = [...runningList, ...upcomingList, ...closedList];
         allVotesCache = sortedVotes; 
 
         let html = `<p style="font-size:14px; color:#7f8c8d; margin-bottom:15px; text-align:center;">即時投票系統公告欄：</p>`;
         sortedVotes.forEach((v, idx) => {
             let badgeClass = "status-closed";
-            let badgeText = "已結束"; // 🚀 修正文字：已結束結果 -> 已結束
+            let badgeText = "已結束"; 
             if (v.status === "進行中") { badgeClass = "status-running"; badgeText = "正在進行"; }
             if (v.status === "尚未開始") { badgeClass = "status-upcoming"; badgeText = "即將開始"; }
 
@@ -347,7 +358,7 @@
 
         const script = document.createElement("script");
         script.id = directCallbackName + "_script";
-        script.src = GAS_URL + "?callback=directCallbackName&_ts=" + new Date().getTime();
+        script.src = GAS_URL + "?callback=" + directCallbackName + "&_ts=" + new Date().getTime();
         document.body.appendChild(script);
     }
 
@@ -364,13 +375,12 @@
         }
     }
 
-    // 🚀 【復刻手繪圖：客製化高質感開票 UI】
+    // 🚀 【完美復刻手繪草圖：客製化高質感開票顯示】
     function showVotingResult() {
         document.getElementById("panel-core").style.display = "block";
         document.getElementById("core-voting-header").style.display = "none";
         document.getElementById("core-closed-header").style.display = "block";
         
-        // 寫入基礎資訊
         document.getElementById("res-tag-code").innerText = `投票代碼：${currentSelectedVote.code}`;
         const dObj = new Date(currentSelectedVote.startTime);
         document.getElementById("res-tag-date").innerText = `投票日期：${dObj.getFullYear()}/${String(dObj.getMonth()+1).padStart(2,'0')}/${String(dObj.getDate()).padStart(2,'0')}`;
@@ -386,28 +396,37 @@
         const scores = currentSelectedVote.scores || [0, 0, 0, 0];
 
         if (type === "YN") {
-            // 🚀 同意不同意客製化判定 (過半數 3 票判定)
+            // 🚀 【復刻草圖左側：4色正圓圈計票器視覺設計】
             const yesVotes = scores[0];
             const noVotes = scores[1];
             const abstainVotes = scores[2] || 0;
+            // 宿舍共4人，未投數 = 4 - (同意 + 不同意 + 棄權)
+            const unvotedCount = Math.max(0, 4 - (yesVotes + noVotes + abstainVotes));
             
-            let conclusionClass = "res-card-none";
+            // 判定大塊結論字樣（過半數 3 票及以上判定）
+            let conclusionBg = "res-card-none";
             let conclusionText = "無共識";
-            
-            if (yesVotes >= 3) { conclusionClass = "res-card-yes"; conclusionText = "同意"; }
-            else if (noVotes >= 3) { conclusionClass = "res-card-no"; conclusionText = "不同意"; }
+            if (yesVotes >= 3) { conclusionBg = "res-card-yes"; conclusionText = "同意"; }
+            else if (noVotes >= 3) { conclusionBg = "res-card-no"; conclusionText = "不同意"; }
 
             let html = `
-                <div class="result-big-card ${conclusionClass}">${conclusionText}</div>
-                <div class="result-dot-row">
-                    <div class="result-dot-legend"><span class="dot-indicator" style="background:#c2e0c6; border:1px solid #99cca0;"></span>同意: ${yesVotes}票</div>
-                    <div class="result-dot-legend"><span class="dot-indicator" style="background:#f7cbd0; border:1px solid #efa1aa;"></span>不同意: ${noVotes}票</div>
-                    <div class="result-dot-legend"><span class="dot-indicator" style="background:#cbd1d6; border:1px solid #b0b7bd;"></span>未投票/棄權: ${abstainVotes}票</div>
+                <div class="result-circles-row">
+                    <div class="score-circle-node node-yes-1"><div class="node-title">同意</div><div class="node-count">${yesVotes}</div></div>
+                    <div class="score-circle-node node-yes-2"><div class="node-title">不同意</div><div class="node-count">${noVotes}</div></div>
+                    <div class="score-circle-node node-no"><div class="node-title">棄權</div><div class="node-count">${abstainVotes}</div></div>
+                    <div class="score-circle-node node-abstain"><div class="node-title">未投票</div><div class="node-count">${unvotedCount}</div></div>
+                </div>
+                <div class="result-big-conclusion ${conclusionBg}">${conclusionText}</div>
+                <div class="result-explain-legend">
+                    <span>🟢 深綠：同意</span>
+                    <span>🟢 淺綠：不同意</span>
+                    <span>🔴 粉紅：棄權</span>
+                    <span>⚫ 灰色：未投票</span>
                 </div>
             `;
             slot.innerHTML = html;
         } else {
-            // 🚀 單選/多選客製化判定 (找出最高票並渲染黃金莫蘭迪色條)
+            // 🚀 【復刻草圖右側：單選/多選橫帶進度條開票，最高票染上莫蘭迪金黃色】
             let maxScore = -1;
             currentSelectedVote.options.forEach((opt, idx) => {
                 if (opt && opt.trim() !== "") {
@@ -415,10 +434,11 @@
                 }
             });
 
-            let html = `<div style="margin-top:20px;">`;
+            let html = `<div style="font-size: 13px; font-weight: bold; color: #7f8c8d; margin-bottom: 10px; margin-top:20px;">📊 票數紀錄統計區：</div>`;
             currentSelectedVote.options.forEach((opt, idx) => {
                 if (opt && opt.trim() !== "") {
                     const count = scores[idx];
+                    // 最高票且不為0票時，染上專屬莫蘭迪金黃色條
                     const isWinner = (count === maxScore && maxScore > 0);
                     const activeClass = isWinner ? "winner" : "";
                     
@@ -429,7 +449,6 @@
                         </div>`;
                 }
             });
-            html += `</div>`;
             slot.innerHTML = html;
         }
     }
