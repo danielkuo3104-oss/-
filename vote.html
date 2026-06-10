@@ -59,15 +59,17 @@
         .info-tag { background: #e2e8f0; padding: 6px 12px; border-radius: 12px; font-size: 14px; font-weight: 600; }
         .timer-banner { text-align: center; color: #e05252; font-weight: bold; font-size: 16px; margin-bottom: 15px; }
         
+        /* 🚀 分離排版：投票機制獨立標籤，不壓在說明卡片上 */
         .mechanism-badge-row { margin-bottom: 10px; display: flex; gap: 8px; }
         .mechanism-pill { background: #6E8573; color: white; padding: 4px 12px; border-radius: 10px; font-size: 12px; font-weight: bold; display: inline-block; }
-        .desc-box { background: #f1f3f5; border-radius: 20px; padding: 25px; text-align: center; font-size: 16px; line-height: 1.6; margin-bottom: 25px; border: 1px solid #e2e8f0; position: relative; }
+        .desc-box { background: #f1f3f5; border-radius: 20px; padding: 25px; text-align: center; font-size: 16px; line-height: 1.6; margin-bottom: 25px; border: 1px solid #e2e8f0; }
 
+        /* 🚀 圓圈投票介面：正圓且拿掉陰影 */
         .yn-container { display: flex; flex-direction: column; align-items: center; gap: 20px; }
         .circle-btn {
             width: 120px; height: 120px; border-radius: 50%; font-size: 22px; font-weight: bold;
             display: flex; align-items: center; justify-content: center; cursor: pointer;
-            box-sizing: border-box; transition: transform 0.1s;
+            box-sizing: border-box; transition: transform 0.1s; -webkit-backface-visibility: hidden;
         }
         .btn-yes { background: #c2e0c6; color: #2e5c33; border: 3px solid #99cca0; border-bottom: 7px solid #73a67a; }
         .btn-no { background: #f7cbd0; color: #7a2e35; border: 3px solid #efa1aa; border-bottom: 7px solid #cc7a84; }
@@ -90,7 +92,7 @@
             flex: 1; aspect-ratio: 1 / 1; border-radius: 50%; display: flex; flex-direction: column;
             align-items: center; justify-content: center; font-weight: bold; box-sizing: border-box; text-align: center;
         }
-        /* 🚀 精確調色：同意深綠、不同意紅色、棄權淺灰、未投票深灰 */
+        /* 精確調色：同意深綠、不同意紅色、棄權淺灰、未投票深灰 */
         .node-yes { background-color: #c2e0c6; color: #2e5c33; border: 2px solid #99cca0; }
         .node-no { background-color: #f7cbd0; color: #7a2e35; border: 2px solid #efa1aa; }
         .node-abstain { background-color: #e2e8f0; color: #4a515a; border: 2px solid #cbd1d6; }
@@ -107,7 +109,7 @@
         .res-card-no { background-color: #f7cbd0; color: #7a2e35; border-color: #efa1aa; }
         .res-card-none { background-color: #e2e8f0; color: #4a515a; border-color: #cbd1d6; }
 
-        /* 🚀 精美小圓圈示意圖：完全比照大圓圈等比例縮小 */
+        /* 精美小圓圈示意圖：完全比照大圓圈等比例縮小 */
         .result-explain-legend { display: flex; justify-content: center; gap: 10px; font-size: 11px; font-weight: bold; margin-top: 25px; }
         .legend-item { display: flex; align-items: center; gap: 4px; }
         .mini-dot { width: 14px; height: 14px; border-radius: 50%; display: inline-block; box-sizing: border-box; }
@@ -120,6 +122,38 @@
         }
         .strip-result-item.winner {
             background-color: #E5B25D !important; border-color: #C9963F !important; color: #ffffff !important;
+        }
+
+        .admin-fab {
+            position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px;
+            background: #8FA494; color: white; border: 2px solid #6E8573; border-bottom: 5px solid #5C7261;
+            border-radius: 50%; font-size: 24px; cursor: pointer; display: flex;
+            align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+            transition: all 0.1s; z-index: 999;
+        }
+        .admin-fab:active { transform: translateY(2px); border-bottom-width: 2px; }
+
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.4); display: none; align-items: center;
+            justify-content: center; z-index: 1000;
+        }
+        .modal-box {
+            background: white; padding: 25px; border-radius: 20px; width: 90%;
+            max-width: 400px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); box-sizing: border-box;
+        }
+        .modal-box h3 { margin-top: 0; color: #333; text-align: center; }
+        
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-weight: 600; margin-bottom: 5px; font-size: 14px; }
+        .form-control {
+            width: 100%; padding: 10px; border: 2px solid #cbd1d6; border-radius: 12px;
+            font-size: 15px; box-sizing: border-box;
+        }
+
+        .footer-info {
+            margin-top: 40px; text-align: center; font-size: 11px; color: #a0aab5;
+            letter-spacing: 0.5px; line-height: 1.5; border-top: 1px solid #f1f3f5; padding-top: 15px;
         }
     </style>
 </head>
@@ -172,6 +206,7 @@
             </div>
             
             <div id="vote-interface-slot"></div>
+            
             <button class="btn-prime" id="submit-block-btn" style="margin-top: 30px; display: none;" onclick="confirmAndSubmitChoices()">確認送出投票</button>
         </div>
     </div>
@@ -218,8 +253,7 @@
                 <option value="1">1 分鐘</option>
                 <option value="3">3 分鐘</option>
                 <option value="5">5 分鐘</option>
-                <option value="10">10 分鐘</option>
-            </select>
+                <option value="10">10 分鐘</option> </select>
         </div>
         <div id="admin-dynamic-flow-zone" style="margin-top: 15px; padding-top: 10px; border-top: 1px dashed #e2e8f0;">
             <div class="form-group" id="flow-yn-option">
@@ -241,7 +275,7 @@
 </div>
 
 <script>
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbzbq0DSikkyPn3Olm641E1_lKWJL33M4qMDtzqUWbsWY_btLu286DuM6Cb-nd7U0ZY8/exec"; 
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbw4EmqIXabZYdCqYMCwA_IZyQ0fZG7kFALeAJeotR9NYGxWeRErmUQZLnMRqYC3BEY/exec"; 
     
     let allVotesCache = [];
     let currentSelectedVote = null;
@@ -250,7 +284,7 @@
     let selectedIndices = []; 
     let countdownInterval = null;
 
-    // 🚀 字數防護引擎：超過 10 字自動截斷變 ...
+    // 🚀 字數保護熔斷器：超過10個字自動用...
     function limitTextLength(text) {
         if (!text) return "";
         return text.length > 10 ? text.substring(0, 10) + "..." : text;
@@ -261,7 +295,7 @@
         if (urlParams.get('voteCode') && urlParams.get('token')) {
             voterName = urlParams.get('name') || "住宿生";
             verifiedToken = urlParams.get('token').toUpperCase();
-            // 進網頁第一時間，將 token 帶去後端核對進行前置驗證攔截
+            // 🚀 智慧前置驗證核銷
             directAccessJsonp(urlParams.get('voteCode'), verifiedToken);
         } else {
             fetchActiveVotes();
@@ -269,6 +303,7 @@
         }
     };
 
+    // 🚀 二、在投票中心中的排序要先排正在進行>準備開始>已結束
     function renderListUI(data) {
         allVotesCache = data.votes || [];
         const listPanel = document.getElementById("panel-list");
@@ -286,7 +321,7 @@
         let html = `<p style="font-size:14px; color:#7f8c8d; margin-bottom:15px; text-align:center;">即時投票系統公告欄：</p>`;
         allVotesCache.forEach((v, idx) => {
             let badgeClass = "status-closed";
-            let badgeText = "已結束"; 
+            let badgeText = "已結束"; // 🚀 三、將已結束結果 改成 已結束
             if (v.status === "進行中") { badgeClass = "status-running"; badgeText = "正在進行"; }
             if (v.status === "尚未開始") { badgeClass = "status-upcoming"; badgeText = "即將開始"; }
 
@@ -319,11 +354,10 @@
         document.body.appendChild(script);
     }
 
-    // 🚀【前置阻擋大絕招】：在讀取畫面階段就核對安全碼，不合規直接阻斷
+    // 🚀【前置阻擋安全網】：一進網頁如果是錯的安全碼，直接在首頁拋錯封死
     function directAccessJsonp(voteCode, token) {
         const directCallbackName = "VOTE_DIRECT_" + Math.floor(Math.random() * 10000000);
         window[directCallbackName] = function(data) {
-            // ⚡ 檢查後端前置攔截器回傳的 token 狀態
             if (data.tokenCheck && !data.tokenCheck.valid) {
                 alert(data.tokenCheck.message);
                 document.getElementById("panel-list").innerHTML = `<p style='text-align:center;color:#e05252;font-size:14px;margin-top:40px;font-weight:600;'>${data.tokenCheck.message}</p>`;
@@ -360,7 +394,7 @@
         }
     }
 
-    // 🚀【復刻手繪圖：全新高質感開票與配色設計】
+    // 🚀 六、歷史開票結果客製化（四圓圈 + 金黃高亮橫帶，完全復刻手繪草圖）
     function showVotingResult() {
         document.getElementById("panel-core").style.display = "block";
         document.getElementById("core-voting-header").style.display = "none";
@@ -381,12 +415,12 @@
         const scores = currentSelectedVote.scores || [0, 0, 0, 0];
 
         if (type === "YN") {
-            // 🚀 【完美復刻草圖左側：4色正圓圈計票器視覺設計】
             const yesVotes = scores[0];
             const noVotes = scores[1];
             const abstainVotes = scores[2] || 0;
             const unvotedCount = Math.max(0, 4 - (yesVotes + noVotes + abstainVotes));
             
+            // 🚀 根據投票結果不同客製化大字塊結構
             let conclusionBg = "res-card-none";
             let conclusionText = "無共識";
             if (yesVotes >= 3) { conclusionBg = "res-card-yes"; conclusionText = "同意"; }
@@ -410,7 +444,7 @@
             `;
             slot.innerHTML = html;
         } else {
-            // 🚀 【完美復刻草圖右側：單多選分離，原始選項內容完美渲染 + 最高票莫蘭迪金條】
+            // 單多選統計：原始文字與得票紀錄完全獨立
             let maxScore = -1;
             currentSelectedVote.options.forEach((opt, idx) => {
                 if (opt && opt.trim() !== "") {
@@ -425,7 +459,7 @@
                     const isWinner = (count === maxScore && maxScore > 0);
                     const activeClass = isWinner ? "winner" : "";
                     
-                    // 調用字數限制引擎限制顯示長度
+                    // 🚀 超過10字自動變...
                     const cleanDisplayOpt = limitTextLength(opt);
 
                     html += `
@@ -443,7 +477,7 @@
         const input = document.getElementById("input-token").value.trim().toUpperCase();
         if (input.length !== 6) { alert("請輸入完整的 6 碼安全碼！"); return; }
         
-        // 在首頁公告欄手動點選進入時，也第一時間調用前置阻擋驗證
+        // 公告欄點選進入時，也呼叫前置攔截
         verifiedToken = input;
         document.getElementById("panel-auth").style.display = "none";
         directAccessJsonp(currentSelectedVote.code, verifiedToken);
@@ -459,6 +493,7 @@
         document.getElementById("text-description").innerText = currentSelectedVote.description;
         
         const type = currentSelectedVote.code.substring(0, 2);
+        // 🚀 五、然後在單選/多選中 幫我加入顯示是 單選還是多選
         document.getElementById("type-pill-label").innerText = type === "YN" ? "[同意表決案]" : type === "SS" ? "[單選題]" : "[多選題]";
         
         setupCountdown();
@@ -517,7 +552,7 @@
             submitBtn.style.display = "block";
             currentSelectedVote.options.forEach((opt, idx) => {
                 if (opt && opt.trim() !== "") {
-                    // 投票選項渲染時也加上 10 字限縮保護
+                    // 投票時的橫帶選項也加上 10 字限縮保護
                     const displayOpt = limitTextLength(opt);
                     slot.innerHTML += `<div class="option-strip" id="strip-${idx}" onclick="handleStripSelect(${idx}, '${type}')">${displayOpt}</div>`;
                 }
@@ -528,7 +563,8 @@
     function handleStripSelect(idx, type) {
         if (type === "SS") {
             selectedIndices = [idx];
-            document.querySelectorAll(".option-strip").forEach(s => s.classList.remove("selected"));
+            const allStrips = document.querySelectorAll(".option-strip");
+            allStrips.forEach(s => s.classList.remove("selected"));
             document.getElementById(`strip-${idx}`).classList.add("selected");
         } else {
             const findIdx = selectedIndices.indexOf(idx);
@@ -543,31 +579,25 @@
     }
 
     function submitDirectYN(choiceIdx, choiceText) {
-        if (confirm(`您確定投下【${choiceText}】嗎？送出後即無法更改。`)) { 
-            // 同意不同意案，將點選的文字內容打包上傳
-            executeSubmitPost([choiceText]); 
-        }
+        if (confirm(`您確定投下【${choiceText}】嗎？送出後即無法更改。`)) { executeSubmitPost([choiceText]); }
     }
 
     function confirmAndSubmitChoices() {
         if (selectedIndices.length === 0) { alert("請至少選擇一個選項！"); return; }
         if (confirm("您確定要送出目前的投票選擇嗎？")) { 
-            // 🚀 核心優化：抓出使用者勾選的【選項原始文字內容】
+            // 🚀 將真實選項內容文字打包上傳，交給後端的動態文字對位引擎處理
             const chosenTexts = selectedIndices.map(idx => currentSelectedVote.options[idx]);
             executeSubmitPost(chosenTexts); 
         }
     }
 
-    // 🚀 核心 POST 對位指令提交
     function executeSubmitPost(choicesTextArr) {
-        // 將選取的真實選項文字陣列上傳給後端，GAS 會自動對位，絕對不寫錯格！
         const payload = { 
             action: "submitVote", 
             voteCode: currentSelectedVote.code, 
             token: verifiedToken, 
             choicesText: choicesTextArr 
         };
-        
         fetch(GAS_URL, { method: "POST", body: JSON.stringify(payload) })
         .then(res => res.json())
         .then(res => {
