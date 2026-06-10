@@ -207,13 +207,13 @@
 
     <div class="footer-info">
         <div>&copy; 2026 宿舍智慧管理系統. All Rights Reserved.</div>
-        <div style="font-weight: 600; margin-top: 2px;">Version v3.7.0.VT</div>
+        <div style="font-weight: 600; margin-top: 2px;">Version v3.8.0.VT</div>
     </div>
 </div>
 
 <button class="admin-fab" onclick="openAdminModal()">＋</button>
 
-<div class="modal-overlay" id="adminModal">
+<div class="modal-overlay" id="adminModal" style="display: none;">
     <div class="modal-box">
         <h3>發起即時投票案</h3>
         <hr style="border:0; border-top: 1px dashed #cbd1d6; margin-bottom: 15px;">
@@ -270,7 +270,6 @@
 </div>
 
 <script>
-    // 🚀 核心交代：請務必填入你重新建立防碰撞全新部署拿到的 URL 網址
     const GAS_URL = "https://script.google.com/macros/s/AKfycbx4U_nCu7S8Tf3hc40D-aP6N9MxdeTDoj3vs5vjBnHNE5Jkokir74WzBMtlav5fzUX1/exec"; 
     
     let allVotesCache = [];
@@ -297,7 +296,7 @@
         }
     };
 
-    // 🚀 群組分流 ＋ 降冪排序（時間越近、越新發起的越靠上面）
+    // 🚀 雙層精準降冪：進行中 > 未開始 > 已結束（組內時間越近越靠上）
     function renderListUI(data) {
         allVotesCache = data.votes || [];
         const listPanel = document.getElementById("panel-list");
@@ -353,21 +352,21 @@
     function directAccessJsonp(voteCode, token) {
         const directCallbackName = "VOTE_DIRECT_" + Math.floor(Math.random() * 10000000);
         window[directCallbackName] = function(data) {
-            // 🚀 第一、輸入錯代碼或安全碼，拋錯並提供「大綠色返回公告欄主頁」功能
             if (data.tokenCheck && !data.tokenCheck.valid) {
                 alert(data.tokenCheck.message);
+                // 🚀 第一、修復阻斷：點擊返回按鈕直接調用 backToPureHomeList 瞬間返回，以前那種絕不卡死加載的絲滑體驗完全回歸！
                 document.getElementById("main-voting-box").innerHTML = `
                     <div style='text-align:center; padding: 60px 20px;'>
                         <p style='color:#e05252; font-size:16px; font-weight:600; margin-bottom:30px; line-height:1.5;'>${data.tokenCheck.message}</p>
-                        <button class="btn-prime" onclick="backToMainHomeList()" style="max-width:240px; margin: 0 auto;">返回投票中心公告欄</button>
+                        <button class="btn-prime" onclick="backToPureHomeList()" style="max-width:240px; margin: 0 auto;">返回投票中心公告欄</button>
                     </div>`;
                 return;
             }
 
             currentSelectedVote = (data.votes || []).find(v => v.code === voteCode);
-            if (!currentSelectedVote) { alert("該投票案已關閉！"); backToMainHomeList(); return; }
+            if (!currentSelectedVote) { alert("該投票案已關閉！"); backToPureHomeList(); return; }
             document.getElementById("global-home-btn").style.display = "none";
-            if (currentSelectedVote.status === "已結束") { showVotingResult(); } 
+            if (currentSelectedVote.status === "Closed" || currentSelectedVote.status === "已結束") { showVotingResult(); } 
             else { document.getElementById("panel-list").style.display = "none"; startVoteInterface(); }
             
             document.getElementById(directCallbackName + "_script").remove();
@@ -380,20 +379,26 @@
         document.body.appendChild(script);
     }
 
-    // 🚀 核心優化：點擊返回主頁直接刷新回到公告欄名單，而不跳離網頁
-    function backToMainHomeList() {
+    // 🚀 絲滑歸航核心：只抹除 URL 參數、切換隱藏面板，絕不 reload 重新載入，速度拉滿
+    function backToPureHomeList() {
         if (countdownInterval) clearInterval(countdownInterval);
-        // 洗乾淨網址參數
         if (window.history && window.history.replaceState) {
             window.history.replaceState({}, document.title, window.location.pathname);
         }
-        window.location.reload();
+        document.getElementById("panel-core").style.display = "none";
+        document.getElementById("panel-auth").style.display = "none";
+        document.getElementById("core-voting-header").style.display = "none";
+        document.getElementById("core-closed-header").style.display = "none";
+        document.getElementById("panel-list").style.display = "block";
+        document.getElementById("global-home-btn").style.display = "block"; 
+        document.getElementById("input-token").value = ""; 
+        fetchActiveVotes();
     }
 
     function handleItemRoute(idx) {
         currentSelectedVote = allVotesCache[idx];
         document.getElementById("global-home-btn").style.display = "none"; 
-        if (currentSelectedVote.status === "已結束") {
+        if (currentSelectedVote.status === "Closed" || currentSelectedVote.status === "已結束") {
             document.getElementById("panel-list").style.display = "none";
             showVotingResult();
         } else {
@@ -454,26 +459,28 @@
             let maxScore = -1;
             currentSelectedVote.options.forEach((opt, idx) => {
                 if (opt && opt.trim() !== "") {
-                    if (scores[idx] > maxScore) maxScore = scores[idx];
+                    const count = scores[idx] || 0;
+                    if (count > maxScore) maxScore = count;
                 }
             });
 
             let html = `<div style="font-size: 14px; font-weight: bold; color: #4a515a; margin-bottom: 15px; margin-top:20px;">票數紀錄統計區：</div>`;
-            // 🚀 第三與第四點大修正：完整跑滿 4 個長度間距，完美調出單選/多選題的全部 4 個選項數據！
+            // 🚀【第三與第四點終極熔斷防錯】：精準進行4圈遍歷，並加入 !opt 判定阻斷。遇到舊空案例直接過濾跳過，絕不卡死 JavaScript，單選結果秒速完美調出！
             for (let idx = 0; idx < 4; idx++) {
                 const opt = currentSelectedVote.options[idx];
-                if (opt && opt.trim() !== "") {
-                    const count = scores[idx] || 0;
-                    const isWinner = (count === maxScore && maxScore > 0);
-                    const activeClass = isWinner ? "winner" : "";
-                    const cleanDisplayOpt = limitTextLength(opt);
-
-                    html += `
-                        <div class="strip-result-item ${activeClass}">
-                            <span>${cleanDisplayOpt}</span>
-                            <span>${count} 票</span>
-                        </div>`;
+                if (!opt || opt.trim() === "") {
+                    continue; 
                 }
+                const count = scores[idx] || 0;
+                const isWinner = (count === maxScore && maxScore > 0);
+                const activeClass = isWinner ? "winner" : "";
+                const cleanDisplayOpt = limitTextLength(opt);
+
+                html += `
+                    <div class="strip-result-item ${activeClass}">
+                        <span>${cleanDisplayOpt}</span>
+                        <span>${count} 票</span>
+                    </div>`;
             }
             slot.innerHTML = html;
         }
@@ -553,7 +560,6 @@
             html += `</div>`; slot.innerHTML = html;
         } else if (type === "SS" || type === "MS") {
             submitBtn.style.display = "block";
-            // 🚀 修正：投票介面同樣跑滿 4 格，確保完整顯示 4 個選項
             for (let idx = 0; idx < 4; idx++) {
                 const opt = currentSelectedVote.options[idx];
                 if (opt && opt.trim() !== "") {
@@ -606,13 +612,13 @@
         .then(res => {
             if (res.status === "success") {
                 alert("🎉 投票成功！感謝您的參與。"); 
-                backToMainHomeList(); // 投完票直接主動重載並抹除網址列參數回到公告欄
+                backToPureHomeList(); 
             } else { alert("❌ 錯誤: " + res.message); }
         });
     }
 
     function backToList() {
-        backToMainHomeList(); // 點擊返回鍵時也改為強制重整公告欄列表
+        backToPureHomeList(); 
     }
 
     function openAdminModal() { document.getElementById("adminModal").style.display = "flex"; }
@@ -653,7 +659,7 @@
                 closeAdminModal();
                 document.getElementById("admin-desc").value = "";
                 for(let i=0; i<4; i++) document.getElementById("opt-input-" + i).value = "";
-                backToMainHomeList();
+                backToPureHomeList();
             } else { alert("❌ 建立失敗: " + res.message); }
         });
     }
