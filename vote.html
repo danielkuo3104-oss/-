@@ -152,7 +152,7 @@
 
     <div class="footer-info">
         <div>&copy; 2026 宿舍智慧管理系統. All Rights Reserved.</div>
-        <div style="font-weight: 600; margin-top: 2px;">Version v2.1.7.VT</div>
+        <div style="font-weight: 600; margin-top: 2px;">Version v2.3.2.VT</div>
     </div>
 </div>
 
@@ -236,40 +236,52 @@
         }
     };
 
+    // 🚀 核心大修正：全球通用的 JSONP 接收處理函式
+    function handleGASResponse(data) {
+        allVotesCache = data.votes || [];
+        const listPanel = document.getElementById("panel-list");
+        if (allVotesCache.length === 0) {
+            listPanel.innerHTML = `<p style='text-align:center;color:#95a5a6;margin-top:40px; font-size:14px;'>目前沒有排程中的投票案。</p>`;
+            return;
+        }
+        let html = `<p style="font-size:14px; color:#7f8c8d; margin-bottom:15px; text-align:center;">即時投票系統公告欄：</p>`;
+        allVotesCache.forEach((v, idx) => {
+            let badgeClass = "status-closed";
+            let badgeText = "已結束結果";
+            if (v.status === "進行中") { badgeClass = "status-running"; badgeText = "正在進行"; }
+            if (v.status === "尚未開始") { badgeClass = "status-upcoming"; badgeText = "即將開始"; }
+
+            html += `
+                <div class="vote-list-item" onclick="handleItemRoute(${idx})">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                        <strong style="color:#333;">代碼: ${v.code}</strong>
+                        <span class="status-badge ${badgeClass}">${badgeText}</span>
+                    </div>
+                    <div style="font-size:15px; color:#555; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${v.description}</div>
+                </div>`;
+        });
+        listPanel.innerHTML = html;
+        
+        // 清理殘留的臨時 script 標籤
+        const oldScript = document.getElementById("gas-jsonp-script");
+        if (oldScript) oldScript.remove();
+    }
+
     function fetchActiveVotes() {
         if (document.getElementById("panel-core").style.display === "block" || 
             document.getElementById("panel-auth").style.display === "block") return;
 
-        // 🚀 終極修復：回歸最標準的純淨 fetch，不再夾帶任何可能阻擋 Google 的特殊設定
-        fetch(GAS_URL)
-        .then(res => res.json())
-        .then(data => {
-            allVotesCache = data.votes || [];
-            const listPanel = document.getElementById("panel-list");
-            if (allVotesCache.length === 0) {
-                listPanel.innerHTML = `<p style='text-align:center;color:#95a5a6;margin-top:40px; font-size:14px;'>目前沒有排程中的投票案。</p>`;
-                return;
-            }
-            let html = `<p style="font-size:14px; color:#7f8c8d; margin-bottom:15px; text-align:center;">即時投票系統公告欄：</p>`;
-            allVotesCache.forEach((v, idx) => {
-                let badgeClass = "status-closed";
-                let badgeText = "已結束結果";
-                if (v.status === "進行中") { badgeClass = "status-running"; badgeText = "正在進行"; }
-                if (v.status === "尚未開始") { badgeClass = "status-upcoming"; badgeText = "即將開始"; }
+        // 🚀 核心優化：改用動態 script 注入，帶上 callback 參數，百分之百規避 CORS 阻擋！
+        const oldScript = document.getElementById("gas-jsonp-script");
+        if (oldScript) oldScript.remove();
 
-                html += `
-                    <div class="vote-list-item" onclick="handleItemRoute(${idx})">
-                        <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
-                            <strong style="color:#333;">代碼: ${v.code}</strong>
-                            <span class="status-badge ${badgeClass}">${badgeText}</span>
-                        </div>
-                        <div style="font-size:15px; color:#555; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${v.description}</div>
-                    </div>`;
-            });
-            listPanel.innerHTML = html;
-        }).catch(err => {
-            document.getElementById("panel-list").innerHTML = `<p style='text-align:center;color:#e05252;font-size:14px;margin-top:40px;font-weight:600;'>連線失敗，請檢查 GAS_URL 是否設定正確！</p>`;
-        });
+        const script = document.createElement("script");
+        script.id = "gas-jsonp-script";
+        script.src = GAS_URL + "?callback=handleGASResponse&_ts=" + new Date().getTime();
+        script.onerror = function() {
+            document.getElementById("panel-list").innerHTML = `<p style='text-align:center;color:#e05252;font-size:14px;margin-top:40px;font-weight:600;'>連線失敗，請確認 GAS 後端網址！</p>`;
+        };
+        document.body.appendChild(script);
     }
 
     function handleItemRoute(idx) {
@@ -444,7 +456,7 @@
             if (res.status === "success") {
                 alert("🎉 投票成功！感謝您的參與。"); location.reload();
             } else { alert("❌ 錯誤: " + res.message); }
-        }).catch(err => alert("投票送出發生異常，請重試！"));
+        });
     }
 
     function backToList() {
