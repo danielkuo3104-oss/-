@@ -118,14 +118,12 @@
             background-color: #E5B25D !important; border-color: #C9963F !important; color: #ffffff !important;
         }
 
-        /* 下方版權與版本資訊水平置中、縮小、淡灰色 */
         .footer-info {
             margin-top: 40px; text-align: center; font-size: 11px; color: #b2b9c0;
             letter-spacing: 0.5px; line-height: 1.6; border-top: 1px solid #f1f3f5; padding-top: 15px;
             display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; box-sizing: border-box;
         }
         
-        /* 🚀 加號按鈕原地回歸 */
         .admin-fab {
             position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px;
             background: #8FA494; color: white; border: 2px solid #6E8573; border-bottom: 5px solid #5C7261;
@@ -134,6 +132,25 @@
             transition: all 0.1s; z-index: 999;
         }
         .admin-fab:active { transform: translateY(2px); border-bottom-width: 2px; }
+
+        /* 🚀 鋼鐵鎖定：將彈窗改回最正宗的全螢幕 fixed 遮罩層佈局，絕不在頁尾炸開 */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); display: none; align-items: center;
+            justify-content: center; z-index: 2000;
+        }
+        .modal-box {
+            background: white; padding: 25px; border-radius: 20px; width: 90%;
+            max-width: 400px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); box-sizing: border-box;
+        }
+        .modal-box h3 { margin-top: 0; color: #333; text-align: center; }
+        
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-weight: 600; margin-bottom: 5px; font-size: 14px; }
+        .form-control {
+            width: 100%; padding: 10px; border: 2px solid #cbd1d6; border-radius: 12px;
+            font-size: 15px; box-sizing: border-box;
+        }
     </style>
 </head>
 <body>
@@ -197,7 +214,7 @@
 
 <button class="admin-fab" onclick="openAdminModal()">＋</button>
 
-<div class="modal-overlay" id="adminModal" style="display: none;">
+<div class="modal-overlay" id="adminModal">
     <div class="modal-box">
         <h3>發起即時投票案</h3>
         <hr style="border:0; border-top: 1px dashed #cbd1d6; margin-bottom: 15px;">
@@ -254,7 +271,7 @@
 </div>
 
 <script>
-    // 🚀 請在此處更換為你在上一輪拿到並重新發布新版本的實體 GAS API 網址！
+    // 🚀 核心交代：請務必在此填入你上一輪發布新版本拿到的 exec 網址！
     const GAS_URL = "https://script.google.com/macros/s/AKfycbzbq0DSikkyPn3Olm641E1_lKWJL33M4qMDtzqUWbsWY_btLu286DuM6Cb-nd7U0ZY8/exec"; 
     
     let allVotesCache = [];
@@ -281,7 +298,7 @@
         }
     };
 
-    // 🚀 核心大改寫：雙層排序（進行中 > 即將開始 > 已結束） ＋ 組內時間由近到遠倒序
+    // 🚀 智慧排序核心：群組分類（進行中>未開始>已結束） + 組內降冪（時間最新最靠前）
     function renderListUI(data) {
         allVotesCache = data.votes || [];
         const listPanel = document.getElementById("panel-list");
@@ -290,7 +307,6 @@
             return;
         }
 
-        // 時間越新越靠前
         const timeSort = (a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime();
 
         const runningList = allVotesCache.filter(v => v.status === "進行中").sort(timeSort);
@@ -338,7 +354,6 @@
     function directAccessJsonp(voteCode, token) {
         const directCallbackName = "VOTE_DIRECT_" + Math.floor(Math.random() * 10000000);
         window[directCallbackName] = function(data) {
-            // 🚀 前置攔截拋錯與返回首頁大顆粒按鈕機制
             if (data.tokenCheck && !data.tokenCheck.valid) {
                 alert(data.tokenCheck.message);
                 document.getElementById("main-voting-box").innerHTML = `
@@ -403,7 +418,6 @@
             const abstainVotes = scores[2] || 0;
             const unvotedCount = Math.max(0, 4 - (yesVotes + noVotes + abstainVotes));
             
-            // 🚀 單純比較不同意與同意
             let conclusionBg = "res-card-none";
             let conclusionText = "無共識";
             if (yesVotes > noVotes) { conclusionBg = "res-card-yes"; conclusionText = "同意"; }
@@ -434,7 +448,6 @@
                 }
             });
 
-            // 🚀 拿掉表符
             let html = `<div style="font-size: 14px; font-weight: bold; color: #4a515a; margin-bottom: 15px; margin-top:20px;">票數紀錄統計區：</div>`;
             currentSelectedVote.options.forEach((opt, idx) => {
                 if (opt && opt.trim() !== "") {
@@ -601,6 +614,7 @@
         fetchActiveVotes();
     }
 
+    // 🚀 控制彈窗系統正常啟動與關閉
     function openAdminModal() { document.getElementById("adminModal").style.display = "flex"; }
     function closeAdminModal() { document.getElementById("adminModal").style.display = "none"; }
     
