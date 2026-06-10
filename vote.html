@@ -118,6 +118,7 @@
             background-color: #E5B25D !important; border-color: #C9963F !important; color: #ffffff !important;
         }
 
+        /* 下方版權與版本資訊水平置中、縮小、淡灰色 */
         .footer-info {
             margin-top: 40px; text-align: center; font-size: 11px; color: #b2b9c0;
             letter-spacing: 0.5px; line-height: 1.6; border-top: 1px solid #f1f3f5; padding-top: 15px;
@@ -207,7 +208,7 @@
 
     <div class="footer-info">
         <div>&copy; 2026 宿舍智慧管理系統. All Rights Reserved.</div>
-        <div style="font-weight: 600; margin-top: 2px;">Version v3.8.0.VT</div>
+        <div style="font-weight: 600; margin-top: 2px;">Version v3.8.5.VT</div>
     </div>
 </div>
 
@@ -270,7 +271,8 @@
 </div>
 
 <script>
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbx4U_nCu7S8Tf3hc40D-aP6N9MxdeTDoj3vs5vjBnHNE5Jkokir74WzBMtlav5fzUX1/exec"; 
+    // 🚀【唯一需要檢查的地方】：請將此網址精準修正為你在 GAS 新部署（Version v3.8.5.VT）拿到的實體 URL！
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbzbq0DSikkyPn3Olm641E1_lKWJL33M4qMDtzqUWbsWY_btLu286DuM6Cb-nd7U0ZY8/exec"; 
     
     let allVotesCache = [];
     let currentSelectedVote = null;
@@ -296,7 +298,6 @@
         }
     };
 
-    // 🚀 雙層精準降冪：進行中 > 未開始 > 已結束（組內時間越近越靠上）
     function renderListUI(data) {
         allVotesCache = data.votes || [];
         const listPanel = document.getElementById("panel-list");
@@ -354,7 +355,6 @@
         window[directCallbackName] = function(data) {
             if (data.tokenCheck && !data.tokenCheck.valid) {
                 alert(data.tokenCheck.message);
-                // 🚀 第一、修復阻斷：點擊返回按鈕直接調用 backToPureHomeList 瞬間返回，以前那種絕不卡死加載的絲滑體驗完全回歸！
                 document.getElementById("main-voting-box").innerHTML = `
                     <div style='text-align:center; padding: 60px 20px;'>
                         <p style='color:#e05252; font-size:16px; font-weight:600; margin-bottom:30px; line-height:1.5;'>${data.tokenCheck.message}</p>
@@ -379,7 +379,7 @@
         document.body.appendChild(script);
     }
 
-    // 🚀 絲滑歸航核心：只抹除 URL 參數、切換隱藏面板，絕不 reload 重新載入，速度拉滿
+    // 🚀【絲滑返回核心】：完全不 reload，僅切換面板，徹底還原無感返回體驗
     function backToPureHomeList() {
         if (countdownInterval) clearInterval(countdownInterval);
         if (window.history && window.history.replaceState) {
@@ -465,7 +465,7 @@
             });
 
             let html = `<div style="font-size: 14px; font-weight: bold; color: #4a515a; margin-bottom: 15px; margin-top:20px;">票數紀錄統計區：</div>`;
-            // 🚀【第三與第四點終極熔斷防錯】：精準進行4圈遍歷，並加入 !opt 判定阻斷。遇到舊空案例直接過濾跳過，絕不卡死 JavaScript，單選結果秒速完美調出！
+            // 🚀【精確對位遍歷防錯】：精準防範未填寫滿 4 格選項的歷史舊案例，空欄位直接自動安全過濾，將單選結果秒速完美渲染！
             for (let idx = 0; idx < 4; idx++) {
                 const opt = currentSelectedVote.options[idx];
                 if (!opt || opt.trim() === "") {
