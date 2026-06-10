@@ -118,7 +118,7 @@
             background-color: #E5B25D !important; border-color: #C9963F !important; color: #ffffff !important;
         }
 
-        /* 下方版權與版本資訊置中、縮小、淡灰色 */
+        /* 🚀 版權宣告完美置中、縮小、淡灰風 */
         .footer-info {
             margin-top: 40px; text-align: center; font-size: 11px; color: #b2b9c0;
             letter-spacing: 0.5px; line-height: 1.6; border-top: 1px solid #f1f3f5; padding-top: 15px;
@@ -190,7 +190,7 @@
 
     <div class="footer-info">
         <div>&copy; 2026 宿舍智慧管理系統. All Rights Reserved.</div>
-        <div style="font-weight: 600; margin-top: 2px;">Version v3.6.0.VT</div>
+        <div style="font-weight: 600; margin-top: 2px;">Version v3.6.5.VT</div>
     </div>
 </div>
 
@@ -279,7 +279,7 @@
         }
     };
 
-    // 🚀 核心大改寫：進行中 > 準備開始 > 已結束，且同分類下時間越新越靠前排序
+    // 🚀 雙層排序：群組分類（進行中>未開始>已結束） + 組內降冪（時間越近越置頂）
     function renderListUI(data) {
         allVotesCache = data.votes || [];
         const listPanel = document.getElementById("panel-list");
@@ -288,7 +288,6 @@
             return;
         }
 
-        // 時間越新越上面排序工具 (startTime 越大代表越新)
         const timeSort = (a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime();
 
         const runningList = allVotesCache.filter(v => v.status === "進行中").sort(timeSort);
@@ -333,18 +332,17 @@
         document.body.appendChild(script);
     }
 
+    // 🚀 前置攔截拋錯與返回按鈕機制
     function directAccessJsonp(voteCode, token) {
         const directCallbackName = "VOTE_DIRECT_" + Math.floor(Math.random() * 10000000);
         window[directCallbackName] = function(data) {
-            // 🚀 輸入錯代碼、或重複投票，阻斷並在遮罩渲染大綠色返回主頁按鈕！
             if (data.tokenCheck && !data.tokenCheck.valid) {
                 alert(data.tokenCheck.message);
-                document.getElementById("panel-list").innerHTML = `
-                    <div style='text-align:center; margin-top:40px;'>
-                        <p style='color:#e05252; font-size:15px; font-weight:600; margin-bottom:25px;'>${data.tokenCheck.message}</p>
-                        <button class="btn-prime" onclick="location.href='index.html'" style="max-width:220px; margin: 0 auto;">返回投票中心首頁</button>
+                document.getElementById("main-voting-box").innerHTML = `
+                    <div style='text-align:center; padding: 60px 20px;'>
+                        <p style='color:#e05252; font-size:16px; font-weight:600; margin-bottom:30px; line-height:1.5;'>${data.tokenCheck.message}</p>
+                        <button class="btn-prime" onclick="location.href='index.html'" style="max-width:240px; margin: 0 auto;">返回投票中心首頁</button>
                     </div>`;
-                document.getElementById("global-home-btn").style.display = "block";
                 return;
             }
 
@@ -454,7 +452,6 @@
     function verifyAndEnterVote() {
         const input = document.getElementById("input-token").value.trim().toUpperCase();
         if (input.length !== 6) { alert("請輸入完整的 6 碼安全碼！"); return; }
-        
         verifiedToken = input;
         document.getElementById("panel-auth").style.display = "none";
         directAccessJsonp(currentSelectedVote.code, verifiedToken);
