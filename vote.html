@@ -59,12 +59,12 @@
         .info-tag { background: #e2e8f0; padding: 6px 12px; border-radius: 12px; font-size: 14px; font-weight: 600; }
         .timer-banner { text-align: center; color: #e05252; font-weight: bold; font-size: 16px; margin-bottom: 15px; }
         
-        /* 投票機制獨立標籤 */
+        /* 🚀 投票機制獨立標籤 */
         .mechanism-badge-row { margin-bottom: 10px; display: flex; gap: 8px; }
         .mechanism-pill { background: #6E8573; color: white; padding: 4px 12px; border-radius: 10px; font-size: 12px; font-weight: bold; display: inline-block; }
         .desc-box { background: #f1f3f5; border-radius: 20px; padding: 25px; text-align: center; font-size: 16px; line-height: 1.6; margin-bottom: 25px; border: 1px solid #e2e8f0; }
 
-        /* 正圓形表決按鈕，拿掉陰影 */
+        /* 🚀 圓圈投票介面：正圓且拿掉陰影 */
         .yn-container { display: flex; flex-direction: column; align-items: center; gap: 20px; }
         .circle-btn {
             width: 120px; height: 120px; border-radius: 50%; font-size: 22px; font-weight: bold;
@@ -84,7 +84,7 @@
             background: #8FA494; color: white; border-color: #6E8573; border-bottom-width: 2px; margin-top: 3px;
         }
 
-        /* 4正圓圈開票計票視覺 UI */
+        /* 🚀 4正圓圈開票計票視覺 UI */
         .result-title-box { display: flex; justify-content: space-between; margin-bottom: 15px; }
         .result-circles-row { display: flex; justify-content: space-between; align-items: center; margin: 30px 0; gap: 8px; }
         
@@ -92,6 +92,7 @@
             flex: 1; aspect-ratio: 1 / 1; border-radius: 50%; display: flex; flex-direction: column;
             align-items: center; justify-content: center; font-weight: bold; box-sizing: border-box; text-align: center;
         }
+        /* 精確調色：同意深綠、不同意紅色、棄權淺灰、未投票深灰 */
         .node-yes { background-color: #c2e0c6; color: #2e5c33; border: 2px solid #99cca0; }
         .node-no { background-color: #f7cbd0; color: #7a2e35; border: 2px solid #efa1aa; }
         .node-abstain { background-color: #e2e8f0; color: #4a515a; border: 2px solid #cbd1d6; }
@@ -123,11 +124,10 @@
             background-color: #E5B25D !important; border-color: #C9963F !important; color: #ffffff !important;
         }
 
-        /* 🚀 加號按鈕樣式保留 */
         .admin-fab {
             position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px;
             background: #8FA494; color: white; border: 2px solid #6E8573; border-bottom: 5px solid #5C7261;
-            border-radius: 50%; font-size: 24px; cursor: pointer; display: none; /* 預設先隱藏，靠 JS 智慧喚醒 */
+            border-radius: 50%; font-size: 24px; cursor: pointer; display: flex;
             align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.15);
             transition: all 0.1s; z-index: 999;
         }
@@ -207,11 +207,11 @@
 
     <div class="footer-info">
         <div>&copy; 2026 宿舍智慧管理系統. All Rights Reserved.</div>
-        <div style="font-weight: 600; margin-top: 2px;">Version v3.3.0.VT</div>
+        <div style="font-weight: 600; margin-top: 2px;">Version v3.3.5.VT</div>
     </div>
 </div>
 
-<button class="admin-fab" id="admin-trigger-fab" onclick="openAdminModal()">＋</button>
+<button class="admin-fab" onclick="openAdminModal()">＋</button>
 
 <div class="modal-overlay" id="adminModal">
     <div class="modal-box">
@@ -285,19 +285,6 @@
 
     window.onload = function() {
         const urlParams = new URLSearchParams(window.location.search);
-        const nameParam = urlParams.get('name') || "";
-
-        // 🚀【最高智慧神隱盾】：如果不是郭丹騏，物理上直接從 DOM 移除建立選單，絕不留痕跡
-        if (nameParam === "郭丹騏") {
-            const fab = document.getElementById("admin-trigger-fab");
-            if (fab) fab.style.display = "flex";
-        } else {
-            const fab = document.getElementById("admin-trigger-fab");
-            const modal = document.getElementById("adminModal");
-            if (fab) fab.remove();
-            if (modal) modal.remove();
-        }
-
         if (urlParams.get('voteCode') && urlParams.get('token')) {
             voterName = urlParams.get('name') || "住宿生";
             verifiedToken = urlParams.get('token').toUpperCase();
@@ -308,6 +295,7 @@
         }
     };
 
+    // 🚀 二、在投票中心中的排序要先排正在進行>準備開始>已結束
     function renderListUI(data) {
         allVotesCache = data.votes || [];
         const listPanel = document.getElementById("panel-list");
@@ -325,7 +313,7 @@
         let html = `<p style="font-size:14px; color:#7f8c8d; margin-bottom:15px; text-align:center;">即時投票系統公告欄：</p>`;
         allVotesCache.forEach((v, idx) => {
             let badgeClass = "status-closed";
-            let badgeText = "已結束"; 
+            let badgeText = "已結束"; // 🚀 三、將已結束結果 改成 已結束
             if (v.status === "進行中") { badgeClass = "status-running"; badgeText = "正在進行"; }
             if (v.status === "尚未開始") { badgeClass = "status-upcoming"; badgeText = "即將開始"; }
 
@@ -358,10 +346,11 @@
         document.body.appendChild(script);
     }
 
-    // 🚀【前置阻擋安全網】：輸入錯代碼 具有返回首頁功能
+    // 🚀【前置阻擋安全網】：一進網頁如果是錯的安全碼，抛錯並同時具備返回主頁按鈕
     function directAccessJsonp(voteCode, token) {
         const directCallbackName = "VOTE_DIRECT_" + Math.floor(Math.random() * 10000000);
         window[directCallbackName] = function(data) {
+            // 🚀 輸入錯代碼 也要有返回投票主頁功能
             if (data.tokenCheck && !data.tokenCheck.valid) {
                 alert(data.tokenCheck.message);
                 document.getElementById("panel-list").innerHTML = `
@@ -427,7 +416,7 @@
             const abstainVotes = scores[2] || 0;
             const unvotedCount = Math.max(0, 4 - (yesVotes + noVotes + abstainVotes));
             
-            // 🚀 【單純比較 不同意 跟 同意】：其餘不干擾
+            // 🚀 【單純比較 不同意 跟 同意】：其餘不投票、無意見皆不干擾勝負判定
             let conclusionBg = "res-card-none";
             let conclusionText = "無共識";
             if (yesVotes > noVotes) { conclusionBg = "res-card-yes"; conclusionText = "同意"; }
@@ -458,7 +447,7 @@
                 }
             });
 
-            // 🚀 拿掉 📊 表符
+            // 🚀 📊 票數紀錄統計區：的表符拿掉
             let html = `<div style="font-size: 14px; font-weight: bold; color: #4a515a; margin-bottom: 15px; margin-top:20px;">票數紀錄統計區：</div>`;
             currentSelectedVote.options.forEach((opt, idx) => {
                 if (opt && opt.trim() !== "") {
@@ -481,6 +470,7 @@
     function verifyAndEnterVote() {
         const input = document.getElementById("input-token").value.trim().toUpperCase();
         if (input.length !== 6) { alert("請輸入完整的 6 碼安全碼！"); return; }
+        
         verifiedToken = input;
         document.getElementById("panel-auth").style.display = "none";
         directAccessJsonp(currentSelectedVote.code, verifiedToken);
@@ -579,7 +569,6 @@
         }
     }
 
-    // 直投 YN 案
     function submitDirectYN(choiceIdx, choiceText) {
         if (confirm(`您確定投下【${choiceText}】嗎？送出後即無法更改。`)) { executeSubmitPost([choiceText]); }
     }
@@ -614,6 +603,7 @@
         });
     }
 
+    // 🚀 四、退出鍵 改為 返回鍵 核心邏輯
     function backToList() {
         if (countdownInterval) clearInterval(countdownInterval);
         document.getElementById("panel-core").style.display = "none";
@@ -626,7 +616,6 @@
         fetchActiveVotes();
     }
 
-    // 🚀 建立投票管理員專屬邏輯加回
     function openAdminModal() { document.getElementById("adminModal").style.display = "flex"; }
     function closeAdminModal() { document.getElementById("adminModal").style.display = "none"; }
     
