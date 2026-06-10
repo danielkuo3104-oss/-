@@ -152,7 +152,7 @@
 
     <div class="footer-info">
         <div>&copy; 2026 宿舍智慧管理系統. All Rights Reserved.</div>
-        <div style="font-weight: 600; margin-top: 2px;">Version v2.5.0.VT</div>
+        <div style="font-weight: 600; margin-top: 2px;">Version v2.5.1.VT</div>
     </div>
 </div>
 
@@ -164,7 +164,7 @@
         <hr style="border:0; border-top: 1px dashed #cbd1d6; margin-bottom: 15px;">
         <div class="form-group">
             <label>1. 投票說明 (目的)</label>
-            <input type="text" id="admin-desc" class="form-control" placeholder="例如：今晚點心吃哪家？">
+            <input type="text" id="admin-desc" class="form-control" placeholder="example：今晚點心吃哪家？">
         </div>
         <div class="form-group">
             <label>2. 投票類型</label>
@@ -236,12 +236,11 @@
         }
     };
 
-    // 🚀 回歸最純淨、完全不帶變動參數的標準 Fetch 機制
+    // 🚀 使用純淨不帶變動參數的標準 Fetch，並強加 cache: "no-store" 防快取撞車
     function fetchActiveVotes() {
         if (document.getElementById("panel-core").style.display === "block" || 
             document.getElementById("panel-auth").style.display === "block") return;
 
-        // 🚀 關鍵加註：cache: "no-store" 屬性會強迫瀏覽器跳過任何歷史重定向快取，完美支援多人同時在線！
         fetch(GAS_URL, { cache: "no-store" })
         .then(res => res.json())
         .then(data => {
@@ -482,7 +481,7 @@
             if (document.getElementById("admin-accept-abstain").checked) optionsArr.push("棄權");
         } else {
             for (let i = 0; i < 4; i++) {
-                const val = document.getElementById(`opt-input-${i}`).value.trim();
+                const val = document.getElementById("opt-input-" + i).value.trim();
                 if (val) optionsArr.push(val);
             }
             if (optionsArr.length < 2) { alert("請至少輸入兩個投票選項！"); return; }
@@ -496,7 +495,7 @@
                 alert(`🎉 投票案建立成功！代碼：${res.voteCode}`);
                 closeAdminModal();
                 document.getElementById("admin-desc").value = "";
-                for(let i=0; i<4; i++) document.getElementById(`opt-input-${i}`).value = "";
+                for(let i=0; i<4; i++) document.getElementById("opt-input-" + i).value = "";
                 fetchActiveVotes();
             } else { alert("❌ 建立失敗: " + res.message); }
         });
