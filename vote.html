@@ -109,6 +109,7 @@
         .legend-item { display: flex; align-items: center; gap: 4px; }
         .mini-dot { width: 14px; height: 14px; border-radius: 50%; display: inline-block; box-sizing: border-box; }
 
+        /* 🚀 草圖復刻：單選/多選橫帶開票結果，完美顯示選項與票數 */
         .strip-result-item {
             display: flex; justify-content: space-between; align-items: center;
             background: #f1f3f5; border: 2px solid #cbd1d6; border-radius: 14px;
@@ -117,8 +118,10 @@
         .strip-result-item.winner {
             background-color: #E5B25D !important; border-color: #C9963F !important; color: #ffffff !important;
         }
+        /* 選項與票數在橫條內的精準排版 */
+        .strip-opt-text { flex: 1; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-right: 15px; }
+        .strip-opt-score { min-width: 45px; text-align: right; }
 
-        /* 下方版權與版本資訊水平置中、縮小、淡灰色 */
         .footer-info {
             margin-top: 40px; text-align: center; font-size: 11px; color: #b2b9c0;
             letter-spacing: 0.5px; line-height: 1.6; border-top: 1px solid #f1f3f5; padding-top: 15px;
@@ -208,7 +211,7 @@
 
     <div class="footer-info">
         <div>&copy; 2026 宿舍智慧管理系統. All Rights Reserved.</div>
-        <div style="font-weight: 600; margin-top: 2px;">Version v3.8.5.VT</div>
+        <div style="font-weight: 600; margin-top: 2px;">Version v3.8.6.VT</div>
     </div>
 </div>
 
@@ -271,7 +274,7 @@
 </div>
 
 <script>
-    // 🚀【唯一需要檢查的地方】：請將此網址精準修正為你在 GAS 新部署（Version v3.8.5.VT）拿到的實體 URL！
+    // 🚀 請確認這真的是你最新、完全沒有報錯那版的 GAS 網址！
     const GAS_URL = "https://script.google.com/macros/s/AKfycbx4U_nCu7S8Tf3hc40D-aP6N9MxdeTDoj3vs5vjBnHNE5Jkokir74WzBMtlav5fzUX1/exec"; 
     
     let allVotesCache = [];
@@ -379,7 +382,7 @@
         document.body.appendChild(script);
     }
 
-    // 🚀【絲滑返回核心】：完全不 reload，僅切換面板，徹底還原無感返回體驗
+    // 🚀 核心：返回鍵與送出投票後，【完全不 reload】，只切換隱藏顯示，重現絲滑返回體驗！
     function backToPureHomeList() {
         if (countdownInterval) clearInterval(countdownInterval);
         if (window.history && window.history.replaceState) {
@@ -456,21 +459,22 @@
             `;
             slot.innerHTML = html;
         } else {
+            // 🚀【單多選草圖復刻與防卡死】：只比對真正有填寫的選項（跳過未填寫的）
             let maxScore = -1;
-            currentSelectedVote.options.forEach((opt, idx) => {
-                if (opt && opt.trim() !== "") {
+            for (let idx = 0; idx < 4; idx++) {
+                const opt = currentSelectedVote.options[idx];
+                if (opt && String(opt).trim() !== "") {
                     const count = scores[idx] || 0;
                     if (count > maxScore) maxScore = count;
                 }
-            });
+            }
 
-            let html = `<div style="font-size: 14px; font-weight: bold; color: #4a515a; margin-bottom: 15px; margin-top:20px;">票數紀錄統計區：</div>`;
-            // 🚀【精確對位遍歷防錯】：精準防範未填寫滿 4 格選項的歷史舊案例，空欄位直接自動安全過濾，將單選結果秒速完美渲染！
+            let html = ``;
             for (let idx = 0; idx < 4; idx++) {
                 const opt = currentSelectedVote.options[idx];
-                if (!opt || opt.trim() === "") {
-                    continue; 
-                }
+                // 如果選項是空的，就直接跳過不渲染，絕不崩潰！
+                if (!opt || String(opt).trim() === "") continue; 
+                
                 const count = scores[idx] || 0;
                 const isWinner = (count === maxScore && maxScore > 0);
                 const activeClass = isWinner ? "winner" : "";
@@ -478,8 +482,8 @@
 
                 html += `
                     <div class="strip-result-item ${activeClass}">
-                        <span>${cleanDisplayOpt}</span>
-                        <span>${count} 票</span>
+                        <span class="strip-opt-text">${cleanDisplayOpt}</span>
+                        <span class="strip-opt-score">${count} 票</span>
                     </div>`;
             }
             slot.innerHTML = html;
@@ -612,13 +616,13 @@
         .then(res => {
             if (res.status === "success") {
                 alert("🎉 投票成功！感謝您的參與。"); 
-                backToPureHomeList(); 
+                backToPureHomeList(); // 無感返回，不卡頓！
             } else { alert("❌ 錯誤: " + res.message); }
         });
     }
 
     function backToList() {
-        backToPureHomeList(); 
+        backToPureHomeList(); // 無感返回，不卡頓！
     }
 
     function openAdminModal() { document.getElementById("adminModal").style.display = "flex"; }
@@ -659,7 +663,7 @@
                 closeAdminModal();
                 document.getElementById("admin-desc").value = "";
                 for(let i=0; i<4; i++) document.getElementById("opt-input-" + i).value = "";
-                backToPureHomeList();
+                backToPureHomeList(); // 發起成功也無感返回！
             } else { alert("❌ 建立失敗: " + res.message); }
         });
     }
