@@ -118,13 +118,13 @@
             background-color: #E5B25D !important; border-color: #C9963F !important; color: #ffffff !important;
         }
 
+        /* 下方版權與版本資訊置中、縮小、淡灰色 */
         .footer-info {
             margin-top: 40px; text-align: center; font-size: 11px; color: #b2b9c0;
             letter-spacing: 0.5px; line-height: 1.6; border-top: 1px solid #f1f3f5; padding-top: 15px;
             display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; box-sizing: border-box;
         }
-        
-        /* 🚀 加號按鈕維持原位 */
+
         .admin-fab {
             position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px;
             background: #8FA494; color: white; border: 2px solid #6E8573; border-bottom: 5px solid #5C7261;
@@ -190,7 +190,7 @@
 
     <div class="footer-info">
         <div>&copy; 2026 宿舍智慧管理系統. All Rights Reserved.</div>
-        <div style="font-weight: 600; margin-top: 2px;">Version v3.5.0.VT</div>
+        <div style="font-weight: 600; margin-top: 2px;">Version v3.6.0.VT</div>
     </div>
 </div>
 
@@ -253,7 +253,7 @@
 </div>
 
 <script>
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbw4EmqIXabZYdCqYMCwA_IZyQ0fZG7kFALeAJeotR9NYGxWeRErmUQZLnMRqYC3BEY/exec"; 
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbzbq0DSikkyPn3Olm641E1_lKWJL33M4qMDtzqUWbsWY_btLu286DuM6Cb-nd7U0ZY8/exec"; 
     
     let allVotesCache = [];
     let currentSelectedVote = null;
@@ -272,7 +272,6 @@
         if (urlParams.get('voteCode') && urlParams.get('token')) {
             voterName = urlParams.get('name') || "住宿生";
             verifiedToken = urlParams.get('token').toUpperCase();
-            // 🚀 大修正：第一時間將大寫 Token 帶去後端攔截核銷
             directAccessJsonp(urlParams.get('voteCode'), verifiedToken);
         } else {
             fetchActiveVotes();
@@ -280,6 +279,7 @@
         }
     };
 
+    // 🚀 核心大改寫：進行中 > 準備開始 > 已結束，且同分類下時間越新越靠前排序
     function renderListUI(data) {
         allVotesCache = data.votes || [];
         const listPanel = document.getElementById("panel-list");
@@ -288,9 +288,12 @@
             return;
         }
 
-        const runningList = allVotesCache.filter(v => v.status === "進行中");
-        const upcomingList = allVotesCache.filter(v => v.status === "尚未開始");
-        const closedList = allVotesCache.filter(v => v.status === "已結束");
+        // 時間越新越上面排序工具 (startTime 越大代表越新)
+        const timeSort = (a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime();
+
+        const runningList = allVotesCache.filter(v => v.status === "進行中").sort(timeSort);
+        const upcomingList = allVotesCache.filter(v => v.status === "尚未開始").sort(timeSort);
+        const closedList = allVotesCache.filter(v => v.status === "已結束").sort(timeSort);
         
         allVotesCache = [...runningList, ...upcomingList, ...closedList]; 
 
@@ -330,17 +333,16 @@
         document.body.appendChild(script);
     }
 
-    // 🚀【前置阻擋攔截防線】：一進網頁如果是錯的安全碼，拋錯並提供「返回首頁」按鈕
     function directAccessJsonp(voteCode, token) {
         const directCallbackName = "VOTE_DIRECT_" + Math.floor(Math.random() * 10000000);
         window[directCallbackName] = function(data) {
-            // 🚀 輸入錯代碼、或重複投票，直接阻斷渲染並爆出大綠色返回按鈕！
+            // 🚀 輸入錯代碼、或重複投票，阻斷並在遮罩渲染大綠色返回主頁按鈕！
             if (data.tokenCheck && !data.tokenCheck.valid) {
                 alert(data.tokenCheck.message);
                 document.getElementById("panel-list").innerHTML = `
                     <div style='text-align:center; margin-top:40px;'>
                         <p style='color:#e05252; font-size:15px; font-weight:600; margin-bottom:25px;'>${data.tokenCheck.message}</p>
-                        <button class="btn-prime" onclick="location.href='index.html'" style="max-width:200px;">返回投票中心首頁</button>
+                        <button class="btn-prime" onclick="location.href='index.html'" style="max-width:220px; margin: 0 auto;">返回投票中心首頁</button>
                     </div>`;
                 document.getElementById("global-home-btn").style.display = "block";
                 return;
@@ -358,7 +360,6 @@
 
         const script = document.createElement("script");
         script.id = directCallbackName + "_script";
-        // 🚀 大大修正：參數名稱精確對位為 &voteCode= 且 &token= 以便後端 doGet 精準攔截
         script.src = GAS_URL + "?callback=" + directCallbackName + "&voteCode=" + voteCode + "&token=" + token + "&_ts=" + new Date().getTime();
         document.body.appendChild(script);
     }
@@ -564,7 +565,6 @@
         }
     }
 
-    // 🚀 核心優化：投向後端文字對位，後端會精準累加到 N~Q 欄
     function executeSubmitPost(choicesTextArr) {
         const payload = { 
             action: "submitVote", 
