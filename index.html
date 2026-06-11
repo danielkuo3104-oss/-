@@ -253,30 +253,27 @@
                 margin-bottom: 6px;
                 padding-bottom: 4px;
             }
-            /* 1. 修正：房租憑證的標題與按鈕改為上下排列，並縮減空隙 */
-            .chart-header-row { 
-                flex-direction: column; 
-                align-items: flex-start; 
-                gap: 2px; 
-            }
-            .chart-header-row .section-title {
-                margin-bottom: 10px; /* 拉近標題與下方展開按鈕的距離 */
-            }
-
-            .chart-card { padding: 16px; border-radius: 18px; margin-top: 16px; }
-            .chart-container { height: 280px; }
-            .gray-section { padding: 16px; border-radius: 20px; margin-top: 40px; }
-            .rent-table th, .rent-table td { padding: 12px 8px; font-size: 12px; }
-
-            /* 🚀 水電憑證手機端：標題與按鈕改為上下排列，縮減空隙 */
-            .utility-header-row {
+            /* 🚀 修正：將房租與水電標題列寬度拉滿 100%，確保子元件完美靠左對齊 */
+            .chart-header-row, .utility-header-row { 
                 display: flex;
                 flex-direction: column; 
-                align-items: flex-start; 
+                align-items: flex-start; /* 💡 強制所有內部元件從最左側開始排列 */
+                justify-content: flex-start;
+                width: 100%;             /* 💡 寬度拉滿防擠壓 */
                 gap: 2px; 
+                text-align: left;        /* 💡 文字百分之百靠左 */
             }
-            .utility-header-row .section-title {
-                margin-bottom: 10px;
+            
+            /* 修正標題與按鈕的間距 */
+            .chart-header-row .section-title, .utility-header-row .section-title {
+                margin-bottom: 4px;
+                text-align: left;
+                width: 100%;
+            }
+            
+            /* 讓展開/收合面板按鈕在手機端也規矩靠左 */
+            .collapse-toggle-btn {
+                align-self: flex-start;  /* 💡 確保按鈕物理靠左，不被強行置中 */
             }
 
             /* 2. 修正：宿舍綜合公約標題與按鈕放回同一列，並微調大小確保不打架 */
