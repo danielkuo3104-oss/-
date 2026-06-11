@@ -434,7 +434,7 @@
     });
 </script>
 
-    <script>
+   <script>
         const urlPrimary = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQkqhXCPp4XiHKCEpI3pz4pzcu3sQreQ_qNRLger00ULCHFr9cTbXHMQqAfk7dLa_gUBAIBSJ5sZM4F/pub?gid=0&single=true&output=csv";
         const urlAnnounce = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQkqhXCPp4XiHKCEpI3pz4pzcu3sQreQ_qNRLger00ULCHFr9cTbXHMQqAfk7dLa_gUBAIBSJ5sZM4F/pub?gid=1058170538&single=true&output=csv"; 
         const urlTenantInfo = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQkqhXCPp4XiHKCEpI3pz4pzcu3sQreQ_qNRLger00ULCHFr9cTbXHMQqAfk7dLa_gUBAIBSJ5sZM4F/pub?gid=1423212010&single=true&output=csv";
@@ -533,123 +533,121 @@
             return cells;
         }
 
-        // 動態加載綜合公約法規庫（修正版：放寬版本日期偵測，相容初發、初訂、初編、增修）
-async function loadDynamicRules() {
-    try {
-        const response = await fetchWithTimeout(urlRules, { timeout: 4000 });
-        const csvText = await response.text();
-        if (csvText.includes("<!doctype html") || csvText.includes("<script")) return;
+        async function loadDynamicRules() {
+            try {
+                const response = await fetchWithTimeout(urlRules, { timeout: 4000 });
+                const csvText = await response.text();
+                if (csvText.includes("<!doctype html") || csvText.includes("<script")) return;
 
-        const lines = csvText.replace(/\r/g, "").split("\n").map(l => l.trim()).filter(l => l);
-        if (lines.length < 2) return;
+                const lines = csvText.replace(/\r/g, "").split("\n").map(l => l.trim()).filter(l => l);
+                if (lines.length < 2) return;
 
-        let htmlHtml = "";
-        globalRulesHistory = []; 
-        let latestDate = "2026/6/6";
-        let latestType = "初編";
+                let htmlHtml = "";
+                globalRulesHistory = []; 
+                let latestDate = "2026/6/6";
+                let latestType = "初編";
 
-        const dateRegex = /\d{4}\/\d{1,2}\/\d{1,2}/;
+                const dateRegex = /\d{4}\/\d{1,2}\/\d{1,2}/;
 
-        for(let i = 1; i < lines.length; i++) {
-            const cells = parseCSVLine(lines[i]);
-            
-            const level = cells[0] ? cells[0].trim() : "";       
-            const vMarker = cells[1] ? cells[1].trim() : "";     
-            const content = cells[2] ? cells[2].trim() : "";     
+                for(let i = 1; i < lines.length; i++) {
+                    const cells = parseCSVLine(lines[i]);
+                    
+                    const level = cells[0] ? cells[0].trim() : "";       
+                    const vMarker = cells[1] ? cells[1].trim() : "";     
+                    const content = cells[2] ? cells[2].trim() : "";     
 
-            const foundDate = cells[4] ? cells[4].trim() : "";
-            const foundType = cells[5] ? cells[5].trim() : "";
-            
-            if (foundDate !== "" && dateRegex.test(foundDate)) {
-                const typeLabel = foundType !== "" ? foundType : "修訂";
+                    const foundDate = cells[4] ? cells[4].trim() : "";
+                    const foundType = cells[5] ? cells[5].trim() : "";
+                    
+                    if (foundDate !== "" && dateRegex.test(foundDate)) {
+                        const typeLabel = foundType !== "" ? foundType : "修訂";
+                        
+                        globalRulesHistory.push({ date: foundDate, type: typeLabel });
+                        latestDate = foundDate;
+                        latestType = typeLabel;
+                    }
+
+                    if (content === "") continue;
+
+                    if (level === "總綱") {
+                        htmlHtml += `<div class="rule-item rule-category-block">${content}</div>`;
+                    } else if (level === "主法") {
+                        htmlHtml += `<div class="rule-item rule-main-title">${content}</div>`;
+                    } else if (level === "細則") {
+                        let isBold = (vMarker.toLowerCase() === 'v') ? "rule-bold" : "";
+                        htmlHtml += `<div class="rule-item rule-indent ${isBold}">${content}</div>`;
+                    }
+                }
+
+                document.getElementById('rulesEditionDate').innerText = `編修日期：${latestDate} (${latestType})`;
+                document.getElementById('dynamicRulesBody').innerHTML = htmlHtml;
+
+            } catch (e) {
+                console.error("宿舍公約規則讀取失敗:", e);
+                document.getElementById('dynamicRulesBody').innerHTML = `<div style="font-size:12px; color:#b54a4a;">⚠️ 動態法規庫聯機失敗，顯示唯讀快取。</div>`;
+            }
+        }
+
+        function openRulesHistoryModal() {
+            try {
+                const overlay = document.getElementById('detailModal');
+                const title = document.getElementById('modalTitle');
+                const body = document.getElementById('modalBody');
                 
-                globalRulesHistory.push({ date: foundDate, type: typeLabel });
-                latestDate = foundDate;
-                latestType = typeLabel;
-            }
+                title.innerText = "宿舍綜合公約 歷史編修紀錄";
+                
+                if (!globalRulesHistory || globalRulesHistory.length === 0) {
+                    body.innerHTML = "<div class='loading'>暫無歷史版本紀錄。</div>";
+                    overlay.classList.add('active');
+                    return;
+                }
 
-            if (content === "") continue;
+                let uniqueHistory = new Map();
+                globalRulesHistory.forEach(item => {
+                    if (item.date && item.date !== "") {
+                        uniqueHistory.set(`${item.date}_${item.type}`, item);
+                    }
+                });
 
-            if (level === "總綱") {
-                htmlHtml += `<div class="rule-item rule-category-block">${content}</div>`;
-            } else if (level === "主法") {
-                htmlHtml += `<div class="rule-item rule-main-title">${content}</div>`;
-            } else if (level === "細則") {
-                let isBold = (vMarker.toLowerCase() === 'v') ? "rule-bold" : "";
-                htmlHtml += `<div class="rule-item rule-indent ${isBold}">${content}</div>`;
+                if (uniqueHistory.size === 0) {
+                    body.innerHTML = "<div class='loading'>暫無歷史版本紀錄。</div>";
+                    overlay.classList.add('active');
+                    return;
+                }
+
+                let htmlContent = `<div class="modal-item-block">
+                    <p style="font-size: 12px; color: #8a929a; margin-bottom: 15px;">此公約歷經以下版本更動修訂，依時間由舊至新排列：</p>
+                    <table class="detail-table">
+                        <thead>
+                            <tr>
+                                <th>版本序</th>
+                                <th>更動日期</th>
+                                <th>修訂類別</th>
+                            </tr>
+                        </thead>
+                        <tbody>`;
+
+                let idx = 1;
+                uniqueHistory.forEach((val) => {
+                    const isInitial = val.type.includes("初") || val.type === '初編';
+                    const badgeClass = isInitial ? '初編' : '增修';
+
+                    htmlContent += `
+                        <tr>
+                            <td><span class="rent-month-badge" style="background:#edf3f7; color:#69779b;">第 ${idx} 版</span></td>
+                            <td style="font-family: monospace; font-weight: 600;">${val.date}</td>
+                            <td><span class="badge ${badgeClass}">${val.type}</span></td>
+                        </tr>`;
+                    idx++;
+                });
+
+                htmlContent += `</tbody></table></div>`;
+                body.innerHTML = htmlContent;
+                overlay.classList.add('active');
+            } catch (e) {
+                console.error("渲染歷史彈窗失敗:", e);
             }
         }
-
-        document.getElementById('rulesEditionDate').innerText = `編修日期：${latestDate} (${latestType})`;
-        document.getElementById('dynamicRulesBody').innerHTML = htmlHtml;
-
-    } catch (e) {
-        console.error("宿舍公約規則讀取失敗:", e);
-        document.getElementById('dynamicRulesBody').innerHTML = `<div style="font-size:12px; color:#b54a4a;">⚠️ 動態法規庫聯機失敗，顯示唯讀快取。</div>`;
-    }
-}
-
-        // 點擊歷史紀錄彈窗
-function openRulesHistoryModal() {
-    try {
-        const overlay = document.getElementById('detailModal');
-        const title = document.getElementById('modalTitle');
-        const body = document.getElementById('modalBody');
-        
-        title.innerText = "宿舍綜合公約 歷史編修紀錄";
-        
-        if (!globalRulesHistory || globalRulesHistory.length === 0) {
-            body.innerHTML = "<div class='loading'>暫無歷史版本紀錄。</div>";
-            overlay.classList.add('active');
-            return;
-        }
-
-        let uniqueHistory = new Map();
-        globalRulesHistory.forEach(item => {
-            if (item.date && item.date !== "") {
-                uniqueHistory.set(`${item.date}_${item.type}`, item);
-            }
-        });
-
-        if (uniqueHistory.size === 0) {
-            body.innerHTML = "<div class='loading'>暫無歷史版本紀錄。</div>";
-            overlay.classList.add('active');
-            return;
-        }
-
-        let htmlContent = `<div class="modal-item-block">
-            <p style="font-size: 12px; color: #8a929a; margin-bottom: 15px;">此公約歷經以下版本更動修訂，依時間由舊至新排列：</p>
-            <table class="detail-table">
-                <thead>
-                    <tr>
-                        <th>版本序</th>
-                        <th>更動日期</th>
-                        <th>修訂類別</th>
-                    </tr>
-                </thead>
-                <tbody>`;
-
-        let idx = 1;
-        uniqueHistory.forEach((val) => {
-            const isInitial = val.type.includes("初") || val.type === '初編';
-            const badgeClass = isInitial ? '初編' : '增修';
-
-            htmlContent += `
-                <tr>
-                    <td><span class="rent-month-badge" style="background:#edf3f7; color:#69779b;">第 ${idx} 版</span></td>
-                    <td style="font-family: monospace; font-weight: 600;">${val.date}</td>
-                    <td><span class="badge ${badgeClass}">${val.type}</span></td>
-                </tr>`;
-            idx++;
-        });
-
-        htmlContent += `</tbody></table></div>`;
-        body.innerHTML = htmlContent;
-        overlay.classList.add('active');
-    } catch (e) {
-        console.error("渲染歷史彈窗失敗:", e);
-    }
-}
 
         function allToggleRentPanel() {
             const panel = document.getElementById('rentReceiptPanel');
@@ -735,7 +733,6 @@ function openRulesHistoryModal() {
                 const roomCostIdx = { "內大": 12, "內小": 13, "中": 14, "外": 15 }; 
                 const recordIdx = { "內大": 2, "內小": 3, "中": 4, "外": 5 };
                 
-                // 精確定位水電費的試算表欄位索引 (AN~AR, AS~AW)
                 const waterBillIdx = { "內大": 39, "內小": 40, "中": 41, "外": 42, "證明": 43 };
                 const eleBillIdx   = { "內大": 44, "內小": 45, "中": 46, "外": 47, "證明": 48 };
 
@@ -771,7 +768,6 @@ function openRulesHistoryModal() {
                     const eleTotalVal = parseFloat(cells[eleTotalIdx]) || 0; 
                     const combinedSum = waterVal + eleTotalVal;
 
-                    // 🚀 修正一：取消任何四捨五入計算，改採「純字串硬擷取」
                     const deltaMeters = {
                         "總和": cells[deltaIdx["總和"]] || "0",
                         "內大": cells[deltaIdx["內大"]] || "0",
@@ -780,7 +776,6 @@ function openRulesHistoryModal() {
                         "外": cells[deltaIdx["外"]] || "0"
                     };
 
-                    // 🚀 修正二：完全修復「中」房的 cells[recordIdx] 陣列錯位語法
                     const recordMeters = {
                         "內大": cells[recordIdx["內大"]] || "--",
                         "內小": cells[recordIdx["內小"]] || "--",
@@ -822,7 +817,7 @@ function openRulesHistoryModal() {
 
                     const uBig   = cells[rentIdx["內大"]] || "";
                     const uSmall = cells[rentIdx["內小"]] || "";
-                    const uMid   = cells[rentIdx["專"] || cells[rentIdx["中"]]] || ""; // 防呆中房欄位名稱
+                    const uMid   = cells[rentIdx["中"]] || ""; 
                     const uOut   = cells[rentIdx["外"]] || "";
                     const uOwner = cells[rentIdx["房東"]] || "";
 
@@ -842,7 +837,6 @@ function openRulesHistoryModal() {
                             <td>${btnOwner}</td>
                         </tr>`;
 
-                    // 讀取水電費憑證資料庫欄位並生成對位按鈕
                     const wbBig   = cells[waterBillIdx["內大"]] || "";
                     const wbSmall = cells[waterBillIdx["內小"]] || "";
                     const wbMid   = cells[waterBillIdx["中"]] || "";
@@ -1054,7 +1048,7 @@ function openRulesHistoryModal() {
                     globalParsedData.forEach(item => {
                         if(item.eleTotal > 0) {
                             const receiptBtn = item.eleReceipt ? `<div class="receipt-link-btn" onclick="openImageModal('${item.eleReceipt}', '${item.eleDate}', '${item.month} 電費憑證')">查看憑證</div>` : "";
-                            htmlContent += `<div class="modal-item-block" style="border-bottom: 1px dashed #eaecef; padding-bottom: 10px;"><div class="modal-month-title"><span>${item.month}</span>${receiptBtn}</div><div class="modal-row"><span>電費帳單總額</span><span>NT$ ${item.item.eleTotal.toLocaleString()}</span></div><div style="font-size: 11px; color: #437353; background: #ebf5ee; padding: 4px 8px; border-radius: 4px; display: inline-block; margin-top: 4px;">公基金補貼：NT$ ${item.eleImpute}</div></div>`;
+                            htmlContent += `<div class="modal-item-block" style="border-bottom: 1px dashed #eaecef; padding-bottom: 10px;"><div class="modal-month-title"><span>${item.month}</span>${receiptBtn}</div><div class="modal-row"><span>電費帳單總額</span><span>NT$ ${item.eleTotal.toLocaleString()}</span></div><div style="font-size: 11px; color: #437353; background: #ebf5ee; padding: 4px 8px; border-radius: 4px; display: inline-block; margin-top: 4px;">公基金補貼：NT$ ${item.eleImpute}</div></div>`;
                         }
                     });
                 } else if (type === 'historyWater') {
@@ -1074,7 +1068,7 @@ function openRulesHistoryModal() {
                         receiptGroup += `</div>`;
                         htmlContent += `<div class="modal-item-block" style="border-bottom: 1px dashed #eaecef; padding-bottom: 10px;"><div class="modal-month-title"><span>${item.month}</span>${receiptGroup}</div><div class="modal-row"><span>水費金額</span><span>NT$ ${item.water.toLocaleString()}</span></div><div class="modal-row"><span>電費金額</span><span>NT$ ${item.eleTotal.toLocaleString()}</span></div><div class="modal-row total-line"><span>當月支出小計</span><span style="color: #7b2cbf;">NT$ ${item.total.toLocaleString()}</span></div></div>`;
                     });
-                } else if (type === 'meter') {
+                } else if (type === 'meter') { // 🎯 這裡成功閉環，解決所有括號錯位問題
                     title.innerText = "歷月電表抄錄與實用度數";
                     const basePhotoBtn = globalBasePhotoUrl ? `<div class="receipt-link-btn" onclick="openImageModal('${globalBasePhotoUrl}', '入住當日', '初始入住電表基準照片')">查看基準照片</div>` : "";
                     htmlContent = `<div style="background:#eef2f5; padding:14px; border-radius:12px; font-size:12px; color:#54606e; margin-bottom:15px; line-height:1.6; border: 1px solid #dbe2e8;"><div style="float: right; margin-top: -2px;">${basePhotoBtn}</div>初始入住電表基準值：<br>外: 7479.8 | 中: 3664.6 | 內大: 6337.0 | 內小: 4010.4</div>`;
@@ -1082,7 +1076,6 @@ function openRulesHistoryModal() {
                     globalParsedData.forEach(item => {
                         const photoBtn = item.meterPhoto ? `<div class="receipt-link-btn" onclick="openImageModal('${item.meterPhoto}', '${item.meterDate}', '${item.month} 電表照片憑證')">電表照片</div>` : "";
                         
-                        // 🚀 直接採用硬擷取的字串，修復「.8 變成 .9」與「尹奕竤顯示不出來」的問題
                         const recInBig   = item.recordMeters["內大"];
                         const recInSmall = item.recordMeters["內小"];
                         const recMid     = item.recordMeters["中"];
@@ -1131,7 +1124,6 @@ function openRulesHistoryModal() {
             document.getElementById('imageModal').classList.remove('active');
         }
 
-        // 🚀 新增：水電憑證面板的動態展開與收合控制
         function allToggleUtilityPanel() {
             const panel = document.getElementById('utilityReceiptPanel');
             const btn = document.getElementById('utilityToggleBtn');
