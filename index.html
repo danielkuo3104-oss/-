@@ -150,6 +150,17 @@
         .rent-table tr:hover { background-color: #f8fafc; }
         .rent-month-badge { font-weight: 600; color: #69779b; background: #eef2f5; padding: 4px 10px; border-radius: 6px; }
 
+        /* 水電憑證面板 RWD 動態收合設計 */
+        .utility-receipt-card { 
+            background: #ffffff; border-radius: 20px; padding: 24px; 
+            box-shadow: 0 8px 20px rgba(140, 149, 159, 0.08); border: 1px solid #e1e4e8;
+            transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), padding 0.3s ease, opacity 0.3s ease, border-color 0.3s ease;
+            overflow: hidden; max-height: 1200px; opacity: 1;
+        }
+        .utility-receipt-card.collapsed {
+            max-height: 0 !important; padding-top: 0 !important; padding-bottom: 0 !important; border-color: transparent !important; opacity: 0; pointer-events: none;
+        }
+
         /* 宿舍綜合公約動態卡片樣式 */
         .rules-card { background: #ffffff; border-radius: 20px; padding: 26px; box-shadow: 0 8px 20px rgba(140, 149, 159, 0.08); border: 1px solid #e1e4e8; margin-top: 15px; margin-bottom: 25px; }
         .rules-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eaecef; padding-bottom: 12px; margin-bottom: 16px; }
@@ -256,6 +267,17 @@
             .chart-container { height: 280px; }
             .gray-section { padding: 16px; border-radius: 20px; margin-top: 40px; }
             .rent-table th, .rent-table td { padding: 12px 8px; font-size: 12px; }
+
+            /* 🚀 水電憑證手機端：標題與按鈕改為上下排列，縮減空隙 */
+            .utility-header-row {
+                display: flex;
+                flex-direction: column; 
+                align-items: flex-start; 
+                gap: 2px; 
+            }
+            .utility-header-row .section-title {
+                margin-bottom: 10px;
+            }
 
             /* 2. 修正：宿舍綜合公約標題與按鈕放回同一列，並微調大小確保不打架 */
             .rules-header {
@@ -715,6 +737,9 @@ function openRulesHistoryModal() {
                 const deltaIdx = { "總和": 6, "內大": 7, "內小": 8, "中": 9, "外": 10 }; 
                 const roomCostIdx = { "內大": 12, "內小": 13, "中": 14, "外": 15 }; 
                 const recordIdx = { "內大": 2, "內小": 3, "中": 4, "外": 5 };
+                // 🚀 新增：水電轉帳憑證與繳款證明的資料庫欄位索引 (AN~AR, AS~AW)
+                const waterBillIdx = { "內大": 39, "內小": 40, "中": 41, "外": 42, "證明": 43 };
+                const eleBillIdx   = { "內大": 44, "內小": 45, "中": 46, "外": 47, "證明": 48 };
 
                 const meterPhotoIdx = 28;  
                 const meterDateIdx = 29;   
@@ -762,6 +787,8 @@ function openRulesHistoryModal() {
                         "外": cells[recordIdx["外"]] ? parseFloat(cells[recordIdx["外"]]).toFixed(1) : "--"
                     };
 
+                    
+
                     totalWater += waterVal; totalElectricity += eleTotalVal; historyTotal += combinedSum;
                     
                     labels.push(monthVal); 
@@ -806,6 +833,8 @@ function openRulesHistoryModal() {
                     const btnOut   = uOut   ? `<span class="receipt-link-btn" onclick="openImageModal('${uOut}', '', '${monthVal} 外房房租憑證')">檢視</span>` : "<span style='color:#cbd1d6;'>-</span>";
                     const btnOwner = uOwner ? `<span class="receipt-link-btn" onclick="openImageModal('${uOwner}', '', '${monthVal} 轉帳房東證明')">檢視</span>` : "<span style='color:#cbd1d6;'>-</span>";
 
+                    
+
                     rentTableRowsHtml += `
                         <tr>
                             <td><span class="rent-month-badge">${monthVal}</span></td>
@@ -814,6 +843,42 @@ function openRulesHistoryModal() {
                             <td>${btnMid}</td>
                             <td>${btnOut}</td>
                             <td>${btnOwner}</td>
+                        </tr>`;
+
+                    // 🚀 新增：水電憑證欄位字串讀取與按鈕生成
+                    const wbBig   = cells[waterBillIdx["內大"]] || "";
+                    const wbSmall = cells[waterBillIdx["內小"]] || "";
+                    const wbMid   = cells[waterBillIdx["中"]] || "";
+                    const wbOut   = cells[waterBillIdx["外"]] || "";
+                    const wbProof = cells[waterBillIdx["證明"]] || "";
+
+                    const ebBig   = cells[eleBillIdx["內大"]] || "";
+                    const ebSmall = cells[eleBillIdx["內小"]] || "";
+                    const ebMid   = cells[eleBillIdx["中"]] || "";
+                    const ebOut   = cells[eleBillIdx["外"]] || "";
+                    const ebProof = cells[eleBillIdx["證明"]] || "";
+
+                    const btnWBig   = wbBig   ? `<span class="receipt-link-btn" onclick="openImageModal('${wbBig}', '', '${monthVal} 內大水費憑證')">水費</span>` : "<span style='color:#cbd1d6;'>-</span>";
+                    const btnWSmall = wbSmall ? `<span class="receipt-link-btn" onclick="openImageModal('${wbSmall}', '', '${monthVal} 內小水費憑證')">水費</span>` : "<span style='color:#cbd1d6;'>-</span>";
+                    const btnWMid   = wbMid   ? `<span class="receipt-link-btn" onclick="openImageModal('${wbMid}', '', '${monthVal} 中房水費憑證')">水費</span>` : "<span style='color:#cbd1d6;'>-</span>";
+                    const btnWOut   = wbOut   ? `<span class="receipt-link-btn" onclick="openImageModal('${wbOut}', '', '${monthVal} 外房水費憑證')">水費</span>` : "<span style='color:#cbd1d6;'>-</span>";
+                    const btnWProof = wbProof ? `<span class="receipt-link-btn" style="color:#527996; background:#edf3f7; border-color:#cedde7;" onclick="openImageModal('${wbProof}', '', '${monthVal} 水費繳款完成證明')">水費收據</span>` : "<span style='color:#cbd1d6;'>-</span>";
+
+                    const btnEBig   = ebBig   ? `<span class="receipt-link-btn" onclick="openImageModal('${ebBig}', '', '${monthVal} 內大電費憑證')">電費</span>` : "<span style='color:#cbd1d6;'>-</span>";
+                    const btnESmall = ebSmall ? `<span class="receipt-link-btn" onclick="openImageModal('${ebSmall}', '', '${monthVal} 內小電費憑證')">電費</span>` : "<span style='color:#cbd1d6;'>-</span>";
+                    const btnEMid   = ebMid   ? `<span class="receipt-link-btn" onclick="openImageModal('${ebMid}', '', '${monthVal} 中房電費憑證')">電費</span>` : "<span style='color:#cbd1d6;'>-</span>";
+                    const btnEOut   = ebOut   ? `<span class="receipt-link-btn" onclick="openImageModal('${ebOut}', '', '${monthVal} 外房電費憑證')">電費</span>` : "<span style='color:#cbd1d6;'>-</span>";
+                    const btnEProof = ebProof ? `<span class="receipt-link-btn" style="color:#d97736; background:#fdf6f0; border-color:#f9e3d5;" onclick="openImageModal('${ebProof}', '', '${monthVal} 電費繳款完成證明')">電費收據</span>` : "<span style='color:#cbd1d6;'>-</span>";
+
+                    // 將水電整合在同一個格內，外觀更乾淨精緻
+                    utilityTableRowsHtml += `
+                        <tr>
+                            <td><span class="rent-month-badge" style="background:#edf3f7; color:#527996;">${monthVal}</span></td>
+                            <td><div style="display:flex; gap:4px; justify-content:center;">${btnWBig}${btnEBig}</div></td>
+                            <td><div style="display:flex; gap:4px; justify-content:center;">${btnWSmall}${btnESmall}</div></td>
+                            <td><div style="display:flex; gap:4px; justify-content:center;">${btnWMid}${btnEMid}</div></td>
+                            <td><div style="display:flex; gap:4px; justify-content:center;">${btnWOut}${btnEOut}</div></td>
+                            <td><div style="display:flex; gap:4px; justify-content:center;">${btnWProof}${btnEProof}</div></td>
                         </tr>`;
                 }
                 
@@ -910,6 +975,30 @@ function openRulesHistoryModal() {
                             </table>
                         </div>
                     </div>`;
+
+                <div class="utility-header-row" style="margin-top: 30px; margin-bottom: 5px; display:flex; justify-content: space-between; align-items: center;">
+                        <div class="section-title">水電費憑證紀錄</div>
+                        <button class="collapse-toggle-btn" id="utilityToggleBtn" onclick="allToggleUtilityPanel()">展開面板</button>
+                    </div>
+                    <div class="utility-receipt-card collapsed" id="utilityReceiptPanel">
+                        <div class="rent-table-wrapper">
+                            <table class="rent-table">
+                                <thead>
+                                    <tr>
+                                        <th>月份</th>
+                                        <th>內大 (${tenantNames["內大"]})</th>
+                                        <th>內小 (${tenantNames["內小"]})</th>
+                                        <th>中房 (${tenantNames["中"]})</th>
+                                        <th>外房 (${tenantNames["外"]})</th>
+                                        <th>繳款完成證明</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${utilityTableRowsHtml}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
 
                 trendChartInstance = new Chart(document.getElementById('trendChart').getContext('2d'), {
                     type: 'line',
@@ -1042,6 +1131,19 @@ function openRulesHistoryModal() {
             imgDisplay.onerror = null; 
             imgDisplay.src = ""; 
             document.getElementById('imageModal').classList.remove('active');
+        }
+
+        // 🚀 新增：水電憑證面板的動態展開與收合控制
+        function allToggleUtilityPanel() {
+            const panel = document.getElementById('utilityReceiptPanel');
+            const btn = document.getElementById('utilityToggleBtn');
+            if (panel.classList.contains('collapsed')) {
+                panel.classList.remove('collapsed');
+                btn.innerText = '收合面板';
+            } else {
+                panel.classList.add('collapsed');
+                btn.innerText = '展開面板';
+            }
         }
 
         updateTimestamp();
