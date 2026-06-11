@@ -298,9 +298,9 @@
         }
     </style>
 
-    <!-- PWA 設定 -->
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon-192.png">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="宿舍系統">
@@ -737,7 +737,8 @@ function openRulesHistoryModal() {
                 const deltaIdx = { "總和": 6, "內大": 7, "內小": 8, "中": 9, "外": 10 }; 
                 const roomCostIdx = { "內大": 12, "內小": 13, "中": 14, "外": 15 }; 
                 const recordIdx = { "內大": 2, "內小": 3, "中": 4, "外": 5 };
-                // 🚀 新增：水電轉帳憑證與繳款證明的資料庫欄位索引 (AN~AR, AS~AW)
+                
+                // 🚀 變更宣告順序：先精確定位水電費的試算表欄位索引 (AN~AR, AS~AW)
                 const waterBillIdx = { "內大": 39, "內小": 40, "中": 41, "外": 42, "證明": 43 };
                 const eleBillIdx   = { "內大": 44, "內小": 45, "中": 46, "外": 47, "證明": 48 };
 
@@ -756,6 +757,7 @@ function openRulesHistoryModal() {
                 
                 globalParsedData = [];
                 let rentTableRowsHtml = ""; 
+                let utilityTableRowsHtml = ""; // 🚀 修正變數初始化
 
                 for(let i = 1; i < lines.length; i++) {
                     const cells = lines[i].split(",").map(c => c.replace(/["'\uFEFF]/g, '').trim());
@@ -783,11 +785,9 @@ function openRulesHistoryModal() {
                     const recordMeters = {
                         "內大": cells[recordIdx["內大"]] ? parseFloat(cells[recordIdx["內大"]]).toFixed(1) : "--",
                         "內小": cells[recordIdx["內小"]] ? parseFloat(cells[recordIdx["內小"]]).toFixed(1) : "--",
-                        "中": cells[recordIdx["中"]] ? parseFloat(cells[recordIdx["中"]]).toFixed(1) : "--",
+                        "中": cells[recordIdx["專"] || cells[recordIdx["中"]]] ? parseFloat(cells[recordIdx["專"] || cells[recordIdx["中"]]]).toFixed(1) : "--",
                         "外": cells[recordIdx["外"]] ? parseFloat(cells[recordIdx["外"]]).toFixed(1) : "--"
                     };
-
-                    
 
                     totalWater += waterVal; totalElectricity += eleTotalVal; historyTotal += combinedSum;
                     
@@ -833,8 +833,6 @@ function openRulesHistoryModal() {
                     const btnOut   = uOut   ? `<span class="receipt-link-btn" onclick="openImageModal('${uOut}', '', '${monthVal} 外房房租憑證')">檢視</span>` : "<span style='color:#cbd1d6;'>-</span>";
                     const btnOwner = uOwner ? `<span class="receipt-link-btn" onclick="openImageModal('${uOwner}', '', '${monthVal} 轉帳房東證明')">檢視</span>` : "<span style='color:#cbd1d6;'>-</span>";
 
-                    
-
                     rentTableRowsHtml += `
                         <tr>
                             <td><span class="rent-month-badge">${monthVal}</span></td>
@@ -845,7 +843,7 @@ function openRulesHistoryModal() {
                             <td>${btnOwner}</td>
                         </tr>`;
 
-                    // 🚀 新增：水電憑證欄位字串讀取與按鈕生成
+                    // 🚀 讀取水電費憑證資料庫欄位並生成對位按鈕
                     const wbBig   = cells[waterBillIdx["內大"]] || "";
                     const wbSmall = cells[waterBillIdx["內小"]] || "";
                     const wbMid   = cells[waterBillIdx["中"]] || "";
@@ -854,7 +852,7 @@ function openRulesHistoryModal() {
 
                     const ebBig   = cells[eleBillIdx["內大"]] || "";
                     const ebSmall = cells[eleBillIdx["內小"]] || "";
-                    const ebMid   = cells[eleBillIdx["中"]] || "";
+                    const ebMid   = cells[eleBillIdx["心中"] || cells[eleBillIdx["中"]]] || "";
                     const ebOut   = cells[eleBillIdx["外"]] || "";
                     const ebProof = cells[eleBillIdx["證明"]] || "";
 
@@ -870,7 +868,6 @@ function openRulesHistoryModal() {
                     const btnEOut   = ebOut   ? `<span class="receipt-link-btn" onclick="openImageModal('${ebOut}', '', '${monthVal} 外房電費憑證')">電費</span>` : "<span style='color:#cbd1d6;'>-</span>";
                     const btnEProof = ebProof ? `<span class="receipt-link-btn" style="color:#d97736; background:#fdf6f0; border-color:#f9e3d5;" onclick="openImageModal('${ebProof}', '', '${monthVal} 電費繳款完成證明')">電費收據</span>` : "<span style='color:#cbd1d6;'>-</span>";
 
-                    // 將水電整合在同一個格內，外觀更乾淨精緻
                     utilityTableRowsHtml += `
                         <tr>
                             <td><span class="rent-month-badge" style="background:#edf3f7; color:#527996;">${monthVal}</span></td>
@@ -974,9 +971,9 @@ function openRulesHistoryModal() {
                                 </tbody>
                             </table>
                         </div>
-                    </div>`;
+                    </div>
 
-                <div class="utility-header-row" style="margin-top: 30px; margin-bottom: 5px; display:flex; justify-content: space-between; align-items: center;">
+                    <div class="utility-header-row" style="margin-top: 30px; margin-bottom: 5px; display:flex; justify-content: space-between; align-items: center;">
                         <div class="section-title">水電費憑證紀錄</div>
                         <button class="collapse-toggle-btn" id="utilityToggleBtn" onclick="allToggleUtilityPanel()">展開面板</button>
                     </div>
@@ -998,7 +995,7 @@ function openRulesHistoryModal() {
                                 </tbody>
                             </table>
                         </div>
-                    </div>
+                    </div>`;
 
                 trendChartInstance = new Chart(document.getElementById('trendChart').getContext('2d'), {
                     type: 'line',
