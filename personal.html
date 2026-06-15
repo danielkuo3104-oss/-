@@ -534,9 +534,7 @@
                         <div class="stat-label">本月瓦斯費 (點擊看歷史)</div>
                         <div class="stat-value">NT$ ${currentGas.toLocaleString()}</div>
                     </div>
-                </div>
-                <!-- 🚀 平均用電度數獨立成行全寬展示 -->
-                <div class="stats-grid" style="margin-top:20px;">
+                    <!-- 🎯 關鍵修正：移入同一個 grid 內，使其在電腦端自動維持等寬，且在手機端自動換行至下一列 -->
                     <div class="stat-card current-meter" onclick="openPersonalHistoryPop('meter', '${roomKey}')">
                         <div class="stat-label">平均用電度數 (點擊看抄錄值)</div>
                         <div class="stat-value">${avgMeterVal} <span style="font-size: 14px; font-weight: 500;">度</span></div>
