@@ -115,6 +115,8 @@
         .stat-card.current-ele .stat-value { color: #d97736; }
         .stat-card.current-water { background: linear-gradient(135deg, #ffffff 0%, #edf3f7 100%); border: 1px solid rgba(82, 121, 150, 0.18); }
         .stat-card.current-water .stat-value { color: #527996; }
+        .stat-card.current-gas { background: linear-gradient(135deg, #ffffff 0%, #f7f2f1 100%); border: 1px solid rgba(145, 123, 122, 0.2); }
+        .stat-card.current-gas .stat-value { color: #917B7A; }
         .stat-card.current-total { background: linear-gradient(135deg, #ffffff 0%, #f3f6f3 100%); border: 1px solid rgba(110, 145, 110, 0.15); }
         .stat-card.current-total .stat-value { color: #6e916e; }
 
@@ -184,7 +186,7 @@
             margin-top: 20px;              
             margin-bottom: 8px;            
             border-bottom: 1px dashed #cedde7; 
-            padding-bottom: 6px;           
+            padding-bottom: 6px;            
             letter-spacing: 0.5px;         
         }
 
@@ -347,7 +349,7 @@
         </div>
         <div class="copyright">
             © 2026 GUO DANIEL. ALL RIGHTS RESERVED.<br>
-            <span class="version-tag">V2.1.9</span>
+            <span class="version-tag">V2.2.0</span>
         </div>
     </div>
 
@@ -729,12 +731,15 @@
                 if(lines.length < 2) throw new Error("試算表內無有效花費數據");
 
                 const monthIdx = 0; const waterIdx = 1; const eleTotalIdx = 11; 
+                const gasIdx = 56; // BE 欄：瓦斯費
+
                 const deltaIdx = { "總和": 6, "內大": 7, "內小": 8, "中": 9, "外": 10 }; 
                 const roomCostIdx = { "內大": 12, "內小": 13, "中": 14, "外": 15 }; 
                 const recordIdx = { "內大": 2, "內小": 3, "中": 4, "外": 5 };
                 
                 const waterBillIdx = { "內大": 39, "內小": 40, "中": 41, "外": 42, "證明": 43 };
                 const eleBillIdx   = { "內大": 44, "內小": 45, "中": 46, "外": 47, "證明": 48 };
+                const gasBillIdx   = { "內大": 49, "內小": 50, "中": 51, "外": 52, "證明": 53 }; // AX 至 BB
 
                 const meterPhotoIdx = 28;  
                 const meterDateIdx = 29;   
@@ -742,11 +747,13 @@
                 const waterDateIdx = 31;   
                 const eleReceiptIdx = 32;  
                 const eleDateIdx = 33;     
+                const gasReceiptIdx = 54; // BC 欄
+                const gasDateIdx = 55;    // BD 欄
 
                 const rentIdx = { "內大": 34, "內小": 35, "中": 36, "外": 37, "房東": 38 };
 
-                let totalWater = 0; let totalElectricity = 0; let historyTotal = 0;
-                const labels = []; const waterChartData = []; const eleChartData = [];
+                let totalWater = 0; let totalElectricity = 0; let totalGas = 0; let historyTotal = 0;
+                const labels = []; const waterChartData = []; const eleChartData = []; const gasChartData = [];
                 const meterDeltaTotal = [];
                 
                 globalParsedData = [];
@@ -766,9 +773,10 @@
                     const monthVal = cells[monthIdx];
                     const waterVal = parseFloat(cells[waterIdx]) || 0;
                     const eleTotalVal = parseFloat(cells[eleTotalIdx]) || 0; 
-                    const combinedSum = waterVal + eleTotalVal;
+                    const gasVal = parseFloat(cells[gasIdx]) || 0;
 
-                    // 🚀 核心優化：直接擷取原始字串，破除任何除以10及浮點數重組帶來的四捨五入誤差
+                    const combinedSum = waterVal + eleTotalVal + gasVal;
+
                     const deltaMeters = {
                         "總和": cells[deltaIdx["總和"]] || "0",
                         "內大": cells[deltaIdx["內大"]] || "0",
@@ -784,15 +792,19 @@
                         "外": cells[recordIdx["外"]] || "--"
                     };
 
-                    totalWater += waterVal; totalElectricity += eleTotalVal; historyTotal += combinedSum;
+                    totalWater += waterVal; totalElectricity += eleTotalVal; totalGas += gasVal; historyTotal += combinedSum;
                     
                     labels.push(monthVal); 
                     waterChartData.push(waterVal > 0 ? waterVal : null); 
                     eleChartData.push(eleTotalVal > 0 ? eleTotalVal : null);
+                    gasChartData.push(gasVal > 0 ? gasVal : null);
                     meterDeltaTotal.push(deltaMeters["總和"] > 0 ? parseFloat(deltaMeters["總和"]) : null);
 
                     const waterPerRoom = Math.floor(waterVal / 4);
                     const waterImpute = waterVal - (waterPerRoom * 4);
+
+                    const gasPerRoom = Math.floor(gasVal / 4);
+                    const gasImpute = gasVal - (gasPerRoom * 4);
 
                     const roomSum = (parseFloat(cells[roomCostIdx["內大"]]) || 0) + 
                                     (parseFloat(cells[roomCostIdx["內小"]]) || 0) + 
@@ -803,11 +815,14 @@
 
                     globalParsedData.push({
                         month: monthVal, water: waterVal, waterPerRoom: waterPerRoom, waterImpute: waterImpute,
-                        eleTotal: eleTotalVal, eleImpute: eleImpute, total: combinedSum,
+                        eleTotal: eleTotalVal, eleImpute: eleImpute, 
+                        gas: gasVal, gasPerRoom: gasPerRoom, gasImpute: gasImpute,
+                        total: combinedSum,
                         deltaMeters: deltaMeters, recordMeters: recordMeters,
                         meterPhoto: cells[meterPhotoIdx] || "", meterDate: cells[meterDateIdx] || "",
                         waterReceipt: cells[waterReceiptIdx] || "", waterDate: cells[waterDateIdx] || "",
                         eleReceipt: cells[eleReceiptIdx] || "", eleDate: cells[eleDateIdx] || "",
+                        gasReceipt: cells[gasReceiptIdx] || "", gasDate: cells[gasDateIdx] || "",
                         rooms: { 
                             "內大": parseFloat(cells[roomCostIdx["內大"]]) || 0, 
                             "內小": parseFloat(cells[roomCostIdx["內小"]]) || 0, 
@@ -850,6 +865,12 @@
                     const ebOut   = cells[eleBillIdx["外"]] || "";
                     const ebProof = cells[eleBillIdx["證明"]] || "";
 
+                    const gbBig   = cells[gasBillIdx["內大"]] || "";
+                    const gbSmall = cells[gasBillIdx["內小"]] || "";
+                    const gbMid   = cells[gasBillIdx["中"]] || "";
+                    const gbOut   = cells[gasBillIdx["外"]] || "";
+                    const gbProof = cells[gasBillIdx["證明"]] || "";
+
                     const btnWBig   = wbBig   ? `<span class="receipt-link-btn" onclick="openImageModal('${wbBig}', '', '${monthVal} 內大水費憑證')">水費</span>` : "<span style='color:#cbd1d6;'>-</span>";
                     const btnWSmall = wbSmall ? `<span class="receipt-link-btn" onclick="openImageModal('${wbSmall}', '', '${monthVal} 內小水費憑證')">水費</span>` : "<span style='color:#cbd1d6;'>-</span>";
                     const btnWMid   = wbMid   ? `<span class="receipt-link-btn" onclick="openImageModal('${wbMid}', '', '${monthVal} 中房水費憑證')">水費</span>` : "<span style='color:#cbd1d6;'>-</span>";
@@ -862,14 +883,20 @@
                     const btnEOut   = ebOut   ? `<span class="receipt-link-btn" onclick="openImageModal('${ebOut}', '', '${monthVal} 外房電費憑證')">電費</span>` : "<span style='color:#cbd1d6;'>-</span>";
                     const btnEProof = ebProof ? `<span class="receipt-link-btn" style="color:#d97736; background:#fdf6f0; border-color:#f9e3d5;" onclick="openImageModal('${ebProof}', '', '${monthVal} 電費繳款完成證明')">電費收據</span>` : "<span style='color:#cbd1d6;'>-</span>";
 
+                    const btnGBig   = gbBig   ? `<span class="receipt-link-btn" style="color:#917B7A; background:#F5EFEB; border-color:#e6dede;" onclick="openImageModal('${gbBig}', '', '${monthVal} 內大瓦斯費憑證')">瓦斯</span>` : "<span style='color:#cbd1d6;'>-</span>";
+                    const btnGSmall = gbSmall ? `<span class="receipt-link-btn" style="color:#917B7A; background:#F5EFEB; border-color:#e6dede;" onclick="openImageModal('${gbSmall}', '', '${monthVal} 內小瓦斯費憑證')">瓦斯</span>` : "<span style='color:#cbd1d6;'>-</span>";
+                    const btnGMid   = gbMid   ? `<span class="receipt-link-btn" style="color:#917B7A; background:#F5EFEB; border-color:#e6dede;" onclick="openImageModal('${gbMid}', '', '${monthVal} 中房瓦斯費憑證')">瓦斯</span>` : "<span style='color:#cbd1d6;'>-</span>";
+                    const btnGOut   = gbOut   ? `<span class="receipt-link-btn" style="color:#917B7A; background:#F5EFEB; border-color:#e6dede;" onclick="openImageModal('${gbOut}', '', '${monthVal} 外房瓦斯費憑證')">瓦斯</span>` : "<span style='color:#cbd1d6;'>-</span>";
+                    const btnGProof = gbProof ? `<span class="receipt-link-btn" style="color:#917B7A; background:#F5EFEB; border-color:#e6dede;" onclick="openImageModal('${gbProof}', '', '${monthVal} 瓦斯費繳款完成證明')">瓦斯收據</span>` : "<span style='color:#cbd1d6;'>-</span>";
+
                     utilityTableRowsHtml += `
                         <tr>
                             <td><span class="rent-month-badge" style="background:#edf3f7; color:#527996;">${monthVal}</span></td>
-                            <td><div style="display:flex; gap:4px; justify-content:center;">${btnWBig}${btnEBig}</div></td>
-                            <td><div style="display:flex; gap:4px; justify-content:center;">${btnWSmall}${btnESmall}</div></td>
-                            <td><div style="display:flex; gap:4px; justify-content:center;">${btnWMid}${btnEMid}</div></td>
-                            <td><div style="display:flex; gap:4px; justify-content:center;">${btnWOut}${btnEOut}</div></td>
-                            <td><div style="display:flex; gap:4px; justify-content:center;">${btnWProof}${btnEProof}</div></td>
+                            <td><div style="display:flex; flex-wrap:wrap; gap:4px; justify-content:center;">${btnWBig}${btnEBig}${btnGBig}</div></td>
+                            <td><div style="display:flex; flex-wrap:wrap; gap:4px; justify-content:center;">${btnWSmall}${btnESmall}${btnGSmall}</div></td>
+                            <td><div style="display:flex; flex-wrap:wrap; gap:4px; justify-content:center;">${btnWMid}${btnEMid}${btnGMid}</div></td>
+                            <td><div style="display:flex; flex-wrap:wrap; gap:4px; justify-content:center;">${btnWOut}${btnEOut}${btnGOut}</div></td>
+                            <td><div style="display:flex; flex-wrap:wrap; gap:4px; justify-content:center;">${btnWProof}${btnEProof}${btnGProof}</div></td>
                         </tr>`;
                 }
                 
@@ -878,14 +905,18 @@
                 const lastIdx = globalParsedData.length - 1;
                 const latest = globalParsedData[lastIdx];
 
-                let eleIdx = lastIdx; let currentWaterIdx = lastIdx; 
+                let eleIdx = lastIdx; let currentWaterIdx = lastIdx; let currentGasIdx = lastIdx;
                 while(eleIdx > 0 && globalParsedData[eleIdx].eleTotal === 0) eleIdx--;
                 while(currentWaterIdx > 0 && globalParsedData[currentWaterIdx].water === 0) currentWaterIdx--;
+                while(currentGasIdx > 0 && globalParsedData[currentGasIdx].gas === 0) currentGasIdx--;
                 
-                const dispEle = globalParsedData[eleIdx]; const dispWater = globalParsedData[currentWaterIdx]; 
+                const dispEle = globalParsedData[eleIdx]; 
+                const dispWater = globalParsedData[currentWaterIdx]; 
+                const dispGas = globalParsedData[currentGasIdx];
 
                 const eleRemark = (eleIdx !== lastIdx) ? `<div style="font-size: 11px; color: #b56a6a; margin-top: 8px; font-weight: 600;">* 當月無帳單，顯示 ${dispEle.month} 費用</div>` : "";
                 const waterRemark = (currentWaterIdx !== lastIdx) ? `<div style="font-size: 11px; color: #b56a6a; margin-top: 8px; font-weight: 600;">* 當月無帳單，顯示 ${dispWater.month} 費用</div>` : "";
+                const gasRemark = (currentGasIdx !== lastIdx) ? `<div style="font-size: 11px; color: #b56a6a; margin-top: 8px; font-weight: 600;">* 當月無帳單，顯示 ${dispGas.month} 費用</div>` : "";
                 
                 document.getElementById('mainContent').innerHTML = `
                     <div class="section-title">近期費用摘要 (目前結算至 ${latest.month})</div>
@@ -903,6 +934,15 @@
                             <div class="impute-green-badge">✓ 公基金補貼 NT$ ${dispWater.waterImpute}</div>
                             ${waterRemark}
                         </div>
+                        <div class="stat-card current-gas" onclick="openRoomDetails('currentGas')">
+                            <div class="stat-label">近期瓦斯費 (點擊看當月明細)</div>
+                            <div class="stat-value">NT$ ${dispGas.gas.toLocaleString()}</div>
+                            <div class="stat-sub">每房實付：NT$ ${dispGas.gasPerRoom}</div>
+                            <div class="impute-green-badge">✓ 公基金補貼 NT$ ${dispGas.gasImpute}</div>
+                            ${gasRemark}
+                        </div>
+                    </div>
+                    <div class="stats-grid" style="margin-top:20px;">
                         <div class="stat-card current-total" onclick="openRoomDetails('currentSummary')">
                             <div class="stat-label">當月總和 (點擊看小計摘要)</div>
                             <div class="stat-value">NT$ ${latest.total.toLocaleString()}</div>
@@ -921,10 +961,17 @@
                             <div class="stat-value">NT$ ${totalWater.toLocaleString()}</div>
                             <div class="stat-sub">查看歷月自來水費單與補貼紀錄</div>
                         </div>
+                        <div class="stat-card history-card" onclick="openRoomDetails('historyGas')">
+                            <div class="stat-label">歷年瓦斯費總計</div>
+                            <div class="stat-value">NT$ ${totalGas.toLocaleString()}</div>
+                            <div class="stat-sub">查看歷月瓦斯費單與補貼紀錄</div>
+                        </div>
+                    </div>
+                    <div class="stats-grid" style="margin-top:20px;">
                         <div class="stat-card history-purple" onclick="openRoomDetails('historySummary')">
                             <div class="stat-label">歷年費用加總</div>
                             <div class="stat-value">NT$ ${historyTotal.toLocaleString()}</div>
-                            <div class="stat-sub">查看歷月水電合併摘要小計</div>
+                            <div class="stat-sub">查看歷月水電瓦斯合併摘要小計</div>
                         </div> 
                     </div>
 
@@ -968,7 +1015,7 @@
                     </div>
 
                     <div class="utility-header-row" style="margin-top: 30px; margin-bottom: 5px; display:flex; justify-content: space-between; align-items: center;">
-                        <div class="section-title">水電費憑證紀錄</div>
+                        <div class="section-title">水電瓦斯費憑證紀錄</div>
                         <button class="collapse-toggle-btn" id="utilityToggleBtn" onclick="allToggleUtilityPanel()">展開面板</button>
                     </div>
                     <div class="utility-receipt-card collapsed" id="utilityReceiptPanel">
@@ -997,7 +1044,8 @@
                         labels: labels,
                         datasets: [
                             { label: '電費帳單', data: eleChartData, borderColor: '#d97736', backgroundColor: 'transparent', borderWidth: 2.5, pointBackgroundColor: '#d97736', tension: 0.25, spanGaps: true },
-                            { label: '水費帳單', data: waterChartData, borderColor: '#527996', backgroundColor: 'transparent', borderWidth: 2.5, pointBackgroundColor: '#527996', tension: 0.25, spanGaps: true }
+                            { label: '水費帳單', data: waterChartData, borderColor: '#527996', backgroundColor: 'transparent', borderWidth: 2.5, pointBackgroundColor: '#527996', tension: 0.25, spanGaps: true },
+                            { label: '瓦斯帳單', data: gasChartData, borderColor: '#917B7A', backgroundColor: 'transparent', borderWidth: 2.5, pointBackgroundColor: '#917B7A', tension: 0.25, spanGaps: true }
                         ]
                     },
                     options: { responsive: true, maintainAspectRatio: false, scales: { x: { display: false }, y: { ticks: { callback: val => 'NT$ ' + val.toLocaleString() } } } }
@@ -1027,11 +1075,14 @@
                 const lastIdx = globalParsedData.length - 1;
                 const latestItem = globalParsedData[lastIdx];
                 
-                let eleIdx = lastIdx; let waterIdx = lastIdx;
+                let eleIdx = lastIdx; let waterIdx = lastIdx; let gasIdx = lastIdx;
                 while(eleIdx > 0 && globalParsedData[eleIdx].eleTotal === 0) eleIdx--;
                 while(waterIdx > 0 && globalParsedData[waterIdx].water === 0) waterIdx--;
+                while(gasIdx > 0 && globalParsedData[gasIdx].gas === 0) gasIdx--;
 
-                const eleItem = globalParsedData[eleIdx]; const waterItem = globalParsedData[waterIdx];
+                const eleItem = globalParsedData[eleIdx]; 
+                const waterItem = globalParsedData[waterIdx];
+                const gasItem = globalParsedData[gasIdx];
 
                 if (type === 'currentEle') {
                     title.innerText = `${eleItem.month} 電費分房明細`;
@@ -1041,15 +1092,18 @@
                     title.innerText = `${waterItem.month} 水費明細摘要`;
                     const receiptBtn = waterItem.waterReceipt ? `<div class="receipt-link-btn" onclick="openImageModal('${waterItem.waterReceipt}', '${waterItem.waterDate}', '${waterItem.month} 水費憑證')">查看憑證</div>` : "";
                     htmlContent = `<div class="modal-item-block"><div class="modal-month-title"><span>${waterItem.month} 自來水費明細</span>${receiptBtn}</div><div class="modal-row"><span>全戶總水費</span><span>NT$ ${waterItem.water.toLocaleString()}</span></div><div class="modal-row"><span>每房實付 (4房均分)</span><span>NT$ ${waterItem.waterPerRoom.toLocaleString()}</span></div><div style="font-size: 11px; color: #437353; background: #ebf5ee; padding: 8px 10px; border-radius: 6px; margin-top: 12px; font-weight: 600;">* 餘數 NT$ ${waterItem.waterImpute} 已由公共基金自動補貼分攤</div></div>`;
+                } else if (type === 'currentGas') {
+                    title.innerText = `${gasItem.month} 瓦斯費明細摘要`;
+                    const receiptBtn = gasItem.gasReceipt ? `<div class="receipt-link-btn" style="color:#917B7A; background:#F5EFEB; border-color:#e6dede;" onclick="openImageModal('${gasItem.gasReceipt}', '${gasItem.gasDate}', '${gasItem.month} 瓦斯費憑證')">查看憑證</div>` : "";
+                    htmlContent = `<div class="modal-item-block"><div class="modal-month-title"><span>${gasItem.month} 瓦斯費明細</span>${receiptBtn}</div><div class="modal-row"><span>全戶總瓦斯費</span><span>NT$ ${gasItem.gas.toLocaleString()}</span></div><div class="modal-row"><span>每房實付 (4房均分)</span><span>NT$ ${gasItem.gasPerRoom.toLocaleString()}</span></div><div style="font-size: 11px; color: #437353; background: #ebf5ee; padding: 8px 10px; border-radius: 6px; margin-top: 12px; font-weight: 600;">* 餘數 NT$ ${gasItem.gasImpute} 已由公共基金自動補貼分攤</div></div>`;
                 } else if (type === 'currentSummary') {
-                    title.innerText = `${latestItem.month} 水電加總摘要`;
-                    htmlContent = `<div class="modal-item-block"><div class="modal-month-title">${latestItem.month} 實際結算加總</div><div class="modal-row"><span>總電費出帳金額</span><span>NT$ ${latestItem.eleTotal.toLocaleString()}</span></div><div class="modal-row"><span>總水費出帳金額</span><span>NT$ ${latestItem.water.toLocaleString()}</span></div><div class="modal-row total-line"><span>當月實際花費總計</span><span style="color:#6e916e;">NT$ ${latestItem.total.toLocaleString()}</span></div></div>`;
+                    title.innerText = `${latestItem.month} 水電瓦斯加總摘要`;
+                    htmlContent = `<div class="modal-item-block"><div class="modal-month-title">${latestItem.month} 實際結算加總</div><div class="modal-row"><span>總電費出帳金額</span><span>NT$ ${latestItem.eleTotal.toLocaleString()}</span></div><div class="modal-row"><span>總水費出帳金額</span><span>NT$ ${latestItem.water.toLocaleString()}</span></div><div class="modal-row"><span>總瓦斯費出帳金額</span><span>NT$ ${latestItem.gas.toLocaleString()}</span></div><div class="modal-row total-line"><span>當月實際花費總計</span><span style="color:#6e916e;">NT$ ${latestItem.total.toLocaleString()}</span></div></div>`;
                 } else if (type === 'historyEle') {
                     title.innerText = "歷月電費總額紀錄";
                     globalParsedData.forEach(item => {
                         if(item.eleTotal > 0) {
                             const receiptBtn = item.eleReceipt ? `<div class="receipt-link-btn" onclick="openImageModal('${item.eleReceipt}', '${item.eleDate}', '${item.month} 電費憑證')">查看憑證</div>` : "";
-                            // 🚀 世紀大臭蟲捕捉點：修正原先誤寫的 item.item.eleTotal 拼字錯誤，閉合語法
                             htmlContent += `<div class="modal-item-block" style="border-bottom: 1px dashed #eaecef; padding-bottom: 10px;"><div class="modal-month-title"><span>${item.month}</span>${receiptBtn}</div><div class="modal-row"><span>電費帳單總額</span><span>NT$ ${item.eleTotal.toLocaleString()}</span></div><div style="font-size: 11px; color: #437353; background: #ebf5ee; padding: 4px 8px; border-radius: 4px; display: inline-block; margin-top: 4px;">公基金補貼：NT$ ${item.eleImpute}</div></div>`;
                         }
                     });
@@ -1061,14 +1115,23 @@
                             htmlContent += `<div class="modal-item-block" style="border-bottom: 1px dashed #eaecef; padding-bottom: 10px;"><div class="modal-month-title"><span>${item.month}</span>${receiptBtn}</div><div class="modal-row"><span>全戶總水費</span><span>NT$ ${item.water.toLocaleString()}</span></div><div class="modal-row"><span>每房實付 (均分)</span><span>NT$ ${item.waterPerRoom}</span></div></div>`;
                         }
                     });
+                } else if (type === 'historyGas') {
+                    title.innerText = "歷月瓦斯費明細紀錄";
+                    globalParsedData.forEach(item => {
+                        if(item.gas > 0) {
+                            const receiptBtn = item.gasReceipt ? `<div class="receipt-link-btn" style="color:#917B7A; background:#F5EFEB; border-color:#e6dede;" onclick="openImageModal('${item.gasReceipt}', '${item.gasDate}', '${item.month} 瓦斯費憑證')">查看憑證</div>` : "";
+                            htmlContent += `<div class="modal-item-block" style="border-bottom: 1px dashed #eaecef; padding-bottom: 10px;"><div class="modal-month-title"><span>${item.month}</span>${receiptBtn}</div><div class="modal-row"><span>全戶總瓦斯費</span><span>NT$ ${item.gas.toLocaleString()}</span></div><div class="modal-row"><span>每房實付 (均分)</span><span>NT$ ${item.gasPerRoom}</span></div></div>`;
+                        }
+                    });
                 } else if (type === 'historySummary') {
-                    title.innerText = "歷史水電帳單紀錄明細";
+                    title.innerText = "歷史帳單紀錄明細摘要";
                     globalParsedData.forEach(item => {
                         let receiptGroup = `<div class="receipt-group-box">`;
                         if (item.waterReceipt) receiptGroup += `<div class="receipt-link-btn" onclick="openImageModal('${item.waterReceipt}', '${item.waterDate}', '${item.month} 水費憑證')">水費憑證</div>`;
                         if (item.eleReceipt) receiptGroup += `<div class="receipt-link-btn" onclick="openImageModal('${item.eleReceipt}', '${item.eleDate}', '${item.month} 電費憑證')">電費憑證</div>`;
+                        if (item.gasReceipt) receiptGroup += `<div class="receipt-link-btn" style="color:#917B7A; background:#F5EFEB; border-color:#e6dede;" onclick="openImageModal('${item.gasReceipt}', '${item.gasDate}', '${item.month} 瓦斯費憑證')">瓦斯憑證</div>`;
                         receiptGroup += `</div>`;
-                        htmlContent += `<div class="modal-item-block" style="border-bottom: 1px dashed #eaecef; padding-bottom: 10px;"><div class="modal-month-title"><span>${item.month}</span>${receiptGroup}</div><div class="modal-row"><span>水費金額</span><span>NT$ ${item.water.toLocaleString()}</span></div><div class="modal-row"><span>電費金額</span><span>NT$ ${item.eleTotal.toLocaleString()}</span></div><div class="modal-row total-line"><span>當月支出小計</span><span style="color: #7b2cbf;">NT$ ${item.total.toLocaleString()}</span></div></div>`;
+                        htmlContent += `<div class="modal-item-block" style="border-bottom: 1px dashed #eaecef; padding-bottom: 10px;"><div class="modal-month-title"><span>${item.month}</span>${receiptGroup}</div><div class="modal-row"><span>水費金額</span><span>NT$ ${item.water.toLocaleString()}</span></div><div class="modal-row"><span>電費金額</span><span>NT$ ${item.eleTotal.toLocaleString()}</span></div><div class="modal-row"><span>瓦斯費金額</span><span>NT$ ${item.gas.toLocaleString()}</span></div><div class="modal-row total-line"><span>當月支出小計</span><span style="color: #7b2cbf;">NT$ ${item.total.toLocaleString()}</span></div></div>`;
                     });
                 } else if (type === 'meter') {
                     title.innerText = "歷月電表抄錄與實用度數";
@@ -1078,13 +1141,11 @@
                     globalParsedData.forEach(item => {
                         const photoBtn = item.meterPhoto ? `<div class="receipt-link-btn" onclick="openImageModal('${item.meterPhoto}', '${item.meterDate}', '${item.month} 電表照片憑證')">電表照片</div>` : "";
                         
-                        // 🚀 關鍵修正：只在最終畫面上，將擷取到的純字串轉數字除以 10 並加上一位小數，絕不污染資料庫原始數值
                         const recInBig   = item.recordMeters["內大"] !== "--" ? (parseFloat(item.recordMeters["內大"]) / 10).toFixed(1) : "--";
                         const recInSmall = item.recordMeters["內小"] !== "--" ? (parseFloat(item.recordMeters["內小"]) / 10).toFixed(1) : "--";
                         const recMid     = item.recordMeters["中"]   !== "--" ? (parseFloat(item.recordMeters["中"]) / 10).toFixed(1) : "--";
                         const recOut     = item.recordMeters["外"]   !== "--" ? (parseFloat(item.recordMeters["外"]) / 10).toFixed(1) : "--";
 
-                        // 🚀 同步將電表差值（度數）區也一併做除以 10 的漂亮轉變呈現
                         const deltaOut   = item.deltaMeters["外"] !== "0" ? (parseFloat(item.deltaMeters["外"]) / 10).toFixed(1) : "0.0";
                         const deltaMid   = item.deltaMeters["中"] !== "0" ? (parseFloat(item.deltaMeters["中"]) / 10).toFixed(1) : "0.0";
                         const deltaBig   = item.deltaMeters["內大"] !== "0" ? (parseFloat(item.deltaMeters["內大"]) / 10).toFixed(1) : "0.0";
