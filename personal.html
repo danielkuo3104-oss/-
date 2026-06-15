@@ -100,6 +100,10 @@
         .stat-card.current-water .stat-value { color: #527996; }
         .stat-card.current-ele { background: linear-gradient(135deg, #ffffff 0%, #fdf6f0 100%); border: 1px solid rgba(217, 119, 54, 0.15); }
         .stat-card.current-ele .stat-value { color: #d97736; }
+        
+        /* 🎯 瓦斯費專用莫蘭迪粉色系卡片樣式 */
+        .stat-card.current-gas { background: linear-gradient(135deg, #ffffff 0%, #f7f2f1 100%); border: 1px solid rgba(145, 123, 122, 0.2); }
+        .stat-card.current-gas .stat-value { color: #917B7A; }
 
         /* 🔒 平均用電度數專用莫蘭迪高級灰色系卡片樣式 */
         .stat-card.current-meter { background: linear-gradient(135deg, #ffffff 0%, #f2f4f7 100%); border: 1px solid rgba(138, 146, 154, 0.25); }
@@ -131,13 +135,14 @@
         .td-rent { color: #b56a6a; font-weight: 600; }
         .td-water { color: #42637a; font-weight: 600; }
         .td-ele { color: #bc6c3a; font-weight: 600; }
+        .td-gas { color: #917B7A; font-weight: 600; }
         .table-total-bold { font-weight: 700; color: #6e916e; }
 
-        /* 🚀 修正排版 */
+        /* 🚀 彙整數據欄位排版設定 */
         .total-summary-box {
             margin-top: 20px; background: #ffffff; padding: 24px; border-radius: 20px;
             border: 1px solid #e1e4e8; box-shadow: 0 6px 18px rgba(0,0,0,0.02);
-            display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px;
+            display: grid; grid-template-columns: repeat(5, 1fr); gap: 20px;
         }
         .summary-item-label { font-size: 12px; color: #8a929a; margin-bottom: 6px; font-weight: 500; }
         .summary-item-value { font-size: 16px; font-weight: 700; }
@@ -169,6 +174,7 @@
             .chart-card { padding: 16px; border-radius: 18px; margin-top: 16px; }
             .chart-container { height: 280px; }
             
+            /* 🚀 修正：手機端歷月總花費累計獨立自成一行 */
             .total-summary-box {
                 grid-template-columns: repeat(2, 1fr);
                 gap: 24px 16px; padding: 20px;
@@ -176,6 +182,10 @@
             .summary-item-total {
                 border-left: none; 
                 padding-left: 0;
+                grid-column: span 2; /* 滿格拉橫全寬 */
+                border-top: 1px dashed #cbd1d6;
+                padding-top: 16px;
+                margin-top: 4px;
             }
         }
     </style>
@@ -205,7 +215,7 @@
         
         <div class="copyright">
             © 2026 GUO DANIEL. ALL RIGHTS RESERVED.<br>
-            <span class="version-tag">v2.1.2.P</span>
+            <span class="version-tag">v2.2.0.P</span>
         </div>
     </div>
 
@@ -254,10 +264,8 @@
         const currentPath = window.location.pathname;
         const homeLink = document.getElementById('homeMenuLink');
         
-        const isHomePage = currentPath.endsWith('index.html') || currentPath.endsWith('/');
-        
         if (!isHomePage && homeLink) {
-            homeLink.style.display = 'block'; // 保持原本 CSS 對 .menu-link 的 display 設定
+            homeLink.style.display = 'block';
         }
     });
 </script>
@@ -334,6 +342,7 @@
                 const deltaIdx = { "內大": 7, "內小": 8, "中": 9, "外": 10 };
                 const roomCostIdx = { "內大": 12, "內小": 13, "中": 14, "外": 15 };
                 const rentCostIdx = { "內大": 23, "內小": 24, "中": 25, "外": 26 };
+                const gasIdx = 56; // 🎯 BE 欄：總表瓦斯費
 
                 globalParsedData = [];
 
@@ -346,13 +355,17 @@
                     const waterVal = parseFloat(cells[waterIdx]) || 0;
                     const waterPerRoom = Math.floor(waterVal / 4);
 
+                    const gasVal = parseFloat(cells[gasIdx]) || 0;
+                    const gasPerRoom = Math.floor(gasVal / 4); // 🎯 瓦斯費比照水費均分四房
+
                     globalParsedData.push({
                         month: monthVal,
                         waterPerRoom: waterPerRoom,
+                        gasPerRoom: gasPerRoom,
                         deltaMeters: {
                             "內大": Number(((parseFloat(cells[deltaIdx["內大"]]) || 0) / 10).toFixed(1)),
                             "內小": Number(((parseFloat(cells[deltaIdx["內小"]]) || 0) / 10).toFixed(1)),
-                            "中": Number(((parseFloat(cells[deltaIdx["中"]]) || 0) / 10).toFixed(1)),
+                            "中": Number(((parseFloat(cells[deltaIdx["長"]]) || parseFloat(cells[deltaIdx["中"]]) || 0) / 10).toFixed(1)),
                             "外": Number(((parseFloat(cells[deltaIdx["外"]]) || 0) / 10).toFixed(1))
                         },
                         rooms: {
@@ -364,7 +377,7 @@
                         rents: {
                             "內大": parseFloat(cells[rentCostIdx["內大"]]) || 0,
                             "內小": parseFloat(cells[rentCostIdx["內小"]]) || 0,
-                            "中": parseFloat(cells[rentCostIdx["中"]]) || 0,
+                            "中": parseFloat(cells[rentCostIdx["中文"]]) || parseFloat(cells[rentCostIdx["中"]]) || 0,
                             "外": parseFloat(cells[rentCostIdx["外"]]) || 0
                         }
                     });
@@ -415,6 +428,16 @@
                         borderWidth: 2.5, 
                         tension: 0.2,
                         spanGaps: true 
+                    },
+                    { 
+                        // 🎯 趨勢圖導入莫蘭迪粉瓦斯費曲線
+                        label: '瓦斯費金額', 
+                        data: globalParsedData.map(d => d.gasPerRoom > 0 ? d.gasPerRoom : null), 
+                        borderColor: '#917B7A', 
+                        backgroundColor: 'transparent', 
+                        borderWidth: 2.5, 
+                        tension: 0.2,
+                        spanGaps: true 
                     }
                 ];
             } else {
@@ -460,6 +483,7 @@
             const currentRent = latest.rents[roomKey] || 0;
             const currentEle = latest.rooms[roomKey] || 0;
             const currentWater = latest.waterPerRoom;
+            const currentGas = latest.gasPerRoom; // 🎯 瓦斯費
 
             const validMeterEntries = globalParsedData.filter(d => (d.deltaMeters[roomKey] || 0) > 0);
             const avgMeterVal = validMeterEntries.length > 0 
@@ -469,7 +493,8 @@
             const totalRentSum = globalParsedData.reduce((sum, d) => sum + (d.rents[roomKey] || 0), 0);
             const totalWaterSum = globalParsedData.reduce((sum, d) => sum + d.waterPerRoom, 0);
             const totalEleSum = globalParsedData.reduce((sum, d) => sum + (d.rooms[roomKey] || 0), 0);
-            const overallGrandTotal = totalRentSum + totalWaterSum + totalEleSum;
+            const totalGasSum = globalParsedData.reduce((sum, d) => sum + d.gasPerRoom, 0); // 🎯 歷月瓦斯
+            const overallGrandTotal = totalRentSum + totalWaterSum + totalEleSum + totalGasSum;
 
             const violationElement = (violations === "0" || !violations) 
                 ? `<div class="profile-violation-clean">✓ 良好無違規紀錄</div>`
@@ -495,7 +520,7 @@
                     </div>
                 </div>
 
-                <div class="section-title">| 水電費用</div>
+                <div class="section-title">| 水電瓦斯費用</div>
                 <div class="stats-grid">
                     <div class="stat-card current-water" onclick="openPersonalHistoryPop('water', '${roomKey}')">
                         <div class="stat-label">本月水費 (點擊看歷史)</div>
@@ -505,6 +530,13 @@
                         <div class="stat-label">本月電費 (點擊看歷史)</div>
                         <div class="stat-value">NT$ ${currentEle.toLocaleString()}</div>
                     </div>
+                    <div class="stat-card current-gas" onclick="openPersonalHistoryPop('gas', '${roomKey}')">
+                        <div class="stat-label">本月瓦斯費 (點擊看歷史)</div>
+                        <div class="stat-value">NT$ ${currentGas.toLocaleString()}</div>
+                    </div>
+                </div>
+                <!-- 🚀 平均用電度數獨立成行全寬展示 -->
+                <div class="stats-grid" style="margin-top:20px;">
                     <div class="stat-card current-meter" onclick="openPersonalHistoryPop('meter', '${roomKey}')">
                         <div class="stat-label">平均用電度數 (點擊看抄錄值)</div>
                         <div class="stat-value">${avgMeterVal} <span style="font-size: 14px; font-weight: 500;">度</span></div>
@@ -513,26 +545,27 @@
 
                 <div class="section-title">| 個人用量趨勢折線圖</div>
                 <div class="chart-toggle-container">
-                    <button id="btn-chart-cost" class="chart-toggle-btn active" onclick="toggleChartMode('cost')">水電費用走勢 (NT$)</button>
+                    <button id="btn-chart-cost" class="chart-toggle-btn active" onclick="toggleChartMode('cost')">水電瓦斯費用走勢 (NT$)</button>
                     <button id="btn-chart-meter" class="chart-toggle-btn" onclick="toggleChartMode('meter')">獨立用電度數 (度)</button>
                 </div>
                 <div class="chart-card"><div class="chart-container"><canvas id="personalTrendChart"></canvas></div></div>
 
-                <div class="section-title">| 彙整費用清單 (月租 + 水電)</div>
+                <div class="section-title">| 彙整費用清單 (月租 + 水電瓦斯)</div>
                 <div class="morandi-table-container">
                     <table class="morandi-table">
                         <thead>
-                            <tr><th>月份</th><th>房租</th><th>水費</th><th>電費</th><th class="table-total-bold">加總費用</th></tr>
+                            <tr><th>月份</th><th>房租</th><th>水費</th><th>電費</th><th>瓦斯費</th><th class="table-total-bold">加總費用</th></tr>
                         </thead>
                         <tbody>
                             ${globalParsedData.map(d => {
-                                const rowTotal = (d.rents[roomKey]||0) + d.waterPerRoom + (d.rooms[roomKey]||0);
+                                const rowTotal = (d.rents[roomKey]||0) + d.waterPerRoom + (d.rooms[roomKey]||0) + d.gasPerRoom;
                                 return `
                                 <tr>
                                     <td>${d.month}</td>
                                     <td class="td-rent">NT$ ${(d.rents[roomKey]||0).toLocaleString()}</td>
                                     <td class="td-water">NT$ ${d.waterPerRoom.toLocaleString()}</td>
                                     <td class="td-ele">NT$ ${(d.rooms[roomKey]||0).toLocaleString()}</td>
+                                    <td class="td-gas">NT$ ${d.gasPerRoom.toLocaleString()}</td>
                                     <td class="table-total-bold">NT$ ${rowTotal.toLocaleString()}</td>
                                 </tr>`;
                             }).join('')}
@@ -552,6 +585,10 @@
                     <div class="summary-item">
                         <div class="summary-item-label">歷月電費總計</div>
                         <div class="summary-item-value" style="color: #bc6c3a;">NT$ ${totalEleSum.toLocaleString()}</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-item-label">歷月瓦斯總計</div>
+                        <div class="summary-item-value" style="color: #917B7A;">NT$ ${totalGasSum.toLocaleString()}</div>
                     </div>
                     <div class="summary-item summary-item-total">
                         <div class="summary-item-label" style="color: #4a515a; font-weight: 600;">歷月總花費累計</div>
@@ -589,6 +626,9 @@
                     displayStr = `NT$ ${val.toLocaleString()}`;
                 } else if(type === 'ele') {
                     val = item.rooms[roomKey] || 0;
+                    displayStr = `NT$ ${val.toLocaleString()}`;
+                } else if(type === 'gas') {
+                    val = item.gasPerRoom || 0;
                     displayStr = `NT$ ${val.toLocaleString()}`;
                 } else if(type === 'meter') {
                     val = item.deltaMeters[roomKey] || 0;
