@@ -237,14 +237,22 @@
             前往資訊登錄系統
         </a>
 
-        <a href="vote.html" class="menu-link" style="background: #8FA494; color: #ffffff; font-weight: 700; border: 2px solid #6E8573; border-bottom: 5px solid #5C7261; margin-bottom: 18px; box-shadow: 0 4px 8px rgba(0,0,0,0.05); text-shadow: 0 1px 2px rgba(0,0,0,0.1); border-radius: 16px;">
+        <a href="vote.html" class="menu-link" style="background: #8FA494; color: #ffffff; font-weight: 700; border: 2px solid #6E8573; border-bottom: 5px solid #5C7261; margin-bottom: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.05); text-shadow: 0 1px 2px rgba(0,0,0,0.1); border-radius: 16px;">
             進入即時投票系統
+        </a>
+
+        <a href="https://docs.google.com/forms/d/e/1FAIpQLSfYu1VcqN-hhsCbZCW6dqMiBpbmA793rIJ7mMKBX8kjdaNsWQ/viewform?usp=header" class="menu-link" target="_blank" style="background: #C97A7A; color: #ffffff; font-weight: 700; border: 2px solid #A85B5B; border-bottom: 5px solid #8E4343; margin-bottom: 18px; box-shadow: 0 4px 8px rgba(0,0,0,0.05); text-shadow: 0 1px 2px rgba(0,0,0,0.1); border-radius: 16px;">
+            舉發與申覆系統
         </a>
 
         <hr style="border: 0; border-top: 1px dashed #cbd1d6; margin-bottom: 15px;">
 
         <a href="records.html" class="menu-link" style="background: #9ba3ab; color: #ffffff; font-weight: 600; border: 2px solid #7e878f; margin-bottom: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); border-radius: 16px;">
             大事紀與會議記錄
+        </a>
+        
+        <a href="violations.html" class="menu-link" style="background: #6E7B85; color: #ffffff; font-weight: 600; border: 2px solid #56636C; margin-bottom: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); border-radius: 16px;">
+            違規紀錄中心
         </a>
         
         <a href="index.html" id="homeMenuLink" class="menu-link" style="background: #5a6168; color: #ffffff; font-weight: 600; border: 2px solid #43494f; margin-bottom: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); border-radius: 16px; display: none;">
@@ -261,10 +269,11 @@
     }
 
     document.addEventListener("DOMContentLoaded", function() {
-        const currentPath = window.location.pathname;
+        // 確保防錯：如果外部沒有定義 isHomePage，自動給予 false 安全降級
+        const isHome = (typeof isHomePage !== 'undefined') ? isHomePage : false;
         const homeLink = document.getElementById('homeMenuLink');
         
-        if (!isHomePage && homeLink) {
+        if (!isHome && homeLink) {
             homeLink.style.display = 'block';
         }
     });
