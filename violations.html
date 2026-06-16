@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>違規紀錄中心 - 宿舍智慧管理系統</title>
+    <style>
+        :root {
+            --morandi-dark: #8C6A6A;    /* 莫蘭迪深磚紅 */
+            --morandi-main: #B58D8D;    /* 莫蘭迪主粉紅 */
+            --morandi-light: #F4EAEA;   /* 莫蘭迪淺粉白 */
+            --morandi-bg: #F9F6F6;      /* 背景基調 */
+            --text-main: #4A3E3E;       /* 主文字色 */
+            --border-color: #E2D5D5;    /* 邊框色 */
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "PingFang TC", "Microsoft JhengHei", sans-serif;
+            background-color: var(--morandi-bg);
+            margin: 0;
+            padding: 20px 12px;
+            color: var(--text-main);
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(140, 106, 106, 0.08);
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+        .header {
+            background: linear-gradient(135deg, var(--morandi-dark), var(--morandi-main));
+            padding: 30px 20px;
+            color: #ffffff;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: bold;
+            letter-spacing: 1.5px;
+        }
+        .header p {
+            margin: 8px 0 0 0;
+            font-size: 14px;
+            color: #fff0f0;
+            opacity: 0.9;
+        }
+        .content {
+            padding: 25px 20px;
+        }
+
+        /* ─── 核心過濾器區塊 ─── */
+        .filter-section {
+            background-color: #ffffff;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 25px;
+        }
+        .filter-title {
+            font-size: 13px;
+            font-weight: bold;
+            color: var(--morandi-dark);
+            margin-bottom: 10px;
+            letter-spacing: 0.5px;
+        }
+        .search-container {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+        }
+        .search-input {
+            flex: 1;
+            min-width: 250px;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            font-size: 14px;
+            color: var(--text-main);
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .search-input:focus {
+            border-color: var(--morandi-dark);
+        }
+        .roommate-filters {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .filter-btn {
+            background-color: #ffffff;
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 8px 14px;
+            font-size: 13px;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .filter-btn:hover {
+            background-color: var(--morandi-light);
+        }
+        .filter-btn.active {
+            background-color: var(--morandi-dark);
+            border-color: var(--morandi-dark);
+            color: #ffffff;
+        }
+
+        /* ─── 分頁頁籤區塊 ─── */
+        .tabs-container {
+            display: flex;
+            border-bottom: 2px solid var(--border-color);
+            margin-bottom: 20px;
+            gap: 5px;
+        }
+        .tab {
+            padding: 12px 20px;
+            font-size: 15px;
+            font-weight: bold;
+            color: #7A6F6F;
+            cursor: pointer;
+            border-radius: 8px 8px 0 0;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+            margin-bottom: -2px;
+        }
+        .tab:hover {
+            color: var(--morandi-dark);
+            background-color: var(--morandi-light);
+        }
+        .tab.active {
+            color: var(--morandi-dark);
+            background-color: #ffffff;
+            border: 1px solid var(--border-color);
+            border-bottom: 2px solid #ffffff;
+        }
+
+        /* ─── 表格與控制 ─── */
+        .table-panel {
+            display: none;
+        }
+        .table-panel.active {
+            display: block;
+        }
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            table-layout: auto;
+        }
+        th {
+            background-color: #FAF6F6;
+            border-top: 1px solid var(--border-color);
+            border-bottom: 2px solid var(--morandi-dark);
+            padding: 14px 8px;
+            font-size: 14px;
+            color: var(--morandi-dark);
+            font-weight: bold;
+        }
+        td {
+            padding: 16px 8px;
+            font-size: 14px;
+            color: var(--text-main);
+            font-weight: 500;
+            border-bottom: 1px solid #F0E6E6;
+        }
+        tr.hidden {
+            display: none !important;
+        }
+        
+        /* 案號與基本元件 */
+        .case-id {
+            font-family: Consolas, Monaco, monospace;
+            font-size: 13px;
+            color: #A36A6A;
+            font-weight: bold;
+            background-color: var(--morandi-light);
+            border: 1px dashed var(--morandi-main);
+            padding: 4px 8px;
+            border-radius: 4px;
+            display: inline-block;
+            white-space: nowrap;
+            cursor: pointer;
+            -webkit-user-select: all;
+            user-select: all;
+        }
+        .law-text {
+            color: #8A7E7E;
+            font-style: italic;
+            font-weight: 500;
+        }
+        .nowrap {
+            white-space: nowrap;
+        }
+
+        /* ─── 狀態顏色指定標籤 (莫蘭迪風) ─── */
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            white-space: nowrap;
+            text-align: center;
+        }
+        /* 1. 成案/可申覆：沉穩藍底 */
+        .status-appealable {
+            background-color: #E6EEF8;
+            color: #2B5797;
+        }
+        /* 2. 已結案：暗磚紅底 */
+        .status-closed {
+            background-color: #F8E6E6;
+            color: #A33A3A;
+        }
+        /* 3. 申覆中：莫蘭迪芥末黃/暖灰底 */
+        .status-pending {
+            background-color: #FFF3E0;
+            color: #B7791F;
+        }
+        /* 4. 申覆駁回/結案：暗炭灰底 */
+        .status-rejected {
+            background-color: #EDF2F7;
+            color: #4A5568;
+        }
+        /* 5. 申覆通過/撤銷：莫蘭迪草綠底 */
+        .status-approved {
+            background-color: #E6F4EA;
+            color: #2E7D32;
+        }
+
+        .btn-home {
+            display: inline-block;
+            background-color: #7A6F6F;
+            color: #ffffff;
+            text-decoration: none;
+            padding: 10px 24px;
+            font-size: 14px;
+            font-weight: 600;
+            border-radius: 12px;
+            margin-top: 25px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            border: none;
+            cursor: pointer;
+        }
+        .btn-home:hover {
+            background-color: var(--text-main);
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- 頂部橫幅 -->
+    <div class="header">
+        <h1>違規紀錄中心</h1>
+        <p>宿舍智慧管理系統 • 數據過濾與申覆追蹤平台</p>
+    </div>
+
+    <div class="content">
+        
+        <!-- ─── 篩選與過濾操作區 ─── -->
+        <div class="filter-section">
+            <div class="filter-title">🔍 案件多維度過濾（支援即時連動）</div>
+            <div class="search-container">
+                <input type="text" id="keywordSearch" class="search-input" placeholder="輸入關鍵字搜尋（案號、法源、說明事由...）" oninput="filterData()">
+            </div>
+            <div class="roommate-filters">
+                <button class="filter-btn active" id="btn-all" onclick="filterRoommate('全部', 'btn-all')">全部成員</button>
+                <button class="filter-btn" id="btn-gk" onclick="filterRoommate('洪健棋', 'btn-gk')">洪健棋 (GK)</button>
+                <button class="filter-btn" id="btn-dc" onclick="filterRoommate('郭丹騏', 'btn-dc')">郭丹騏 (DC)</button>
+                <button class="filter-btn" id="btn-yh" onclick="filterRoommate('尹奕竤', 'btn-yh')">尹奕竤 (YH)</button>
+                <button class="filter-btn" id="btn-yl" onclick="filterRoommate('林易諒', 'btn-yl')">林易諒 (YL)</button>
+            </div>
+        </div>
+
+        <!-- ─── 雙分頁頁籤 ─── -->
+        <div class="tabs-container">
+            <div class="tab active" id="tab-records" onclick="switchTab('records')">違規紀錄</div>
+            <div class="tab" id="tab-appeals" onclick="switchTab('appeals')">申覆紀錄</div>
+        </div>
+
+        <!-- ─── 面板一：違規紀錄 ─── -->
+        <div class="table-panel active" id="panel-records">
+            <div class="table-responsive">
+                <table id="recordsTable">
+                    <thead>
+                        <tr>
+                            <th style="width: 18%;">案件序號 (長按複製)</th>
+                            <th style="width: 12%;">立案日期</th>
+                            <th style="width: 10%;">違規人</th>
+                            <th style="width: 25%;">違規法源</th>
+                            <th style="width: 15%;">處分結果</th>
+                            <th style="width: 12%; text-align: center;">當前狀態</th>
+                            <th style="width: 8%;">舉發人</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- 資料完全對照您試算表 G21 截圖項目與全新指定顏色 -->
+                        <tr data-user="洪健棋">
+                            <td><div class="case-id">ST02GK260613581</div></td>
+                            <td class="nowrap">2026/06/13</td>
+                            <td class="nowrap">洪健棋</td>
+                            <td class="law-text">第二綱第二條第五款</td>
+                            <td>記點貳次</td>
+                            <td style="text-align: center;"><span class="badge status-closed">已結案</span></td>
+                            <td class="nowrap">系統自動</td>
+                        </tr>
+                        <tr data-user="尹奕竤">
+                            <td><div class="case-id">ST02YH260616421</div></td>
+                            <td class="nowrap">2026/06/16</td>
+                            <td class="nowrap">尹奕竤</td>
+                            <td class="law-text">第二綱第二條第五款</td>
+                            <td>記點乙次</td>
+                            <td style="text-align: center;"><span class="badge status-appealable">成案/可申覆</span></td>
+                            <td class="nowrap">系統自動</td>
+                        </tr>
+                        <tr data-user="林易諒">
+                            <td><div class="case-id">ST02YL260616239</div></td>
+                            <td class="nowrap">2026/06/16</td>
+                            <td class="nowrap">林易諒</td>
+                            <td class="law-text">第二綱第二條第五款</td>
+                            <td>記點乙次</td>
+                            <td style="text-align: center;"><span class="badge status-appealable">成案/可申覆</span></td>
+                            <td class="nowrap">系統自動</td>
+                        </tr>
+                        <tr data-user="洪健棋">
+                            <td><div class="case-id">ST02GK260616712</div></td>
+                            <td class="nowrap">2026/06/16</td>
+                            <td class="nowrap">洪健棋</td>
+                            <td class="law-text">第二綱第二條第五款</td>
+                            <td>記點乙次</td>
+                            <td style="text-align: center;"><span class="badge status-pending">申覆中</span></td>
+                            <td class="nowrap">系統自動</td>
+                        </tr>
+                        <tr data-user="尹奕竤">
+                            <td><div class="case-id">ST01YH260616110</div></td>
+                            <td class="nowrap">2026/06/16</td>
+                            <td class="nowrap">尹奕竤</td>
+                            <td class="law-text">第二綱第三條第六款</td>
+                            <td>記點乙次</td>
+                            <td style="text-align: center;"><span class="badge status-rejected">申覆駁回/結案</span></td>
+                            <td class="nowrap">系統自動</td>
+                        </tr>
+                        <tr data-user="林易諒">
+                            <td><div class="case-id">ST01YL260616155</div></td>
+                            <td class="nowrap">2026/06/16</td>
+                            <td class="nowrap">林易諒</td>
+                            <td class="law-text">第二綱第三條第六款</td>
+                            <td>記點乙次</td>
+                            <td style="text-align: center;"><span class="badge status-approved">申覆通過/撤銷</span></td>
+                            <td class="nowrap">系統自動</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ─── 面板二：申覆紀錄 ─── -->
+        <div class="table-panel" id="panel-appeals">
+            <div class="table-responsive">
+                <table id="appealsTable">
+                    <thead>
+                        <tr>
+                            <th style="width: 18%;">案件序號 (長按複製)</th>
+                            <th style="width: 10%;">申覆人</th>
+                            <th style="width: 12%;">申覆日期</th>
+                            <th style="width: 25%;">申覆說明事實</th>
+                            <th style="width: 12%;">申覆憑證</th>
+                            <th style="width: 13%; text-align: center;">申覆結果</th>
+                            <th style="width: 10%;">核覆人</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- 資料結構完全對應您的右半部 K-O 欄位 -->
+                        <tr data-user="洪健棋">
+                            <td><div class="case-id">ST02GK260616712</div></td>
+                            <td class="nowrap">洪健棋</td>
+                            <td class="nowrap">2026/06/16</td>
+                            <td>已於1號前經由網銀轉帳分攤款項，因疏漏表單填寫，現補上水費轉帳明細截圖證明。</td>
+                            <td class="nowrap"><a href="#" style="color:#A36A6A; text-decoration: underline;">查看網銀截圖</a></td>
+                            <td style="text-align: center;"><span class="badge status-pending">審查中</span></td>
+                            <td class="nowrap">郭丹騏</td>
+                        </tr>
+                        <tr data-user="尹奕竤">
+                            <td><div class="case-id">ST01YH260616110</div></td>
+                            <td class="nowrap">尹奕竤</td>
+                            <td class="nowrap">2026/06/16</td>
+                            <td>因出差忘記上傳憑證，補繳紀錄。</td>
+                            <td class="nowrap"><a href="#" style="color:#A36A6A; text-decoration: underline;">查看憑證</a></td>
+                            <td style="text-align: center;"><span class="badge status-closed">申覆駁回</span></td>
+                            <td class="nowrap">郭丹騏</td>
+                        </tr>
+                        <tr data-user="林易諒">
+                            <td><div class="case-id">ST01YL260616155</div></td>
+                            <td class="nowrap">林易諒</td>
+                            <td class="nowrap">2026/06/16</td>
+                            <td>對帳網銀確實有於時限內完成全額分攤轉帳，上傳紀錄供銷帳。</td>
+                            <td class="nowrap"><a href="#" style="color:#A36A6A; text-decoration: underline;">對帳證明.pdf</a></td>
+                            <td style="text-align: center;"><span class="badge status-approved">申覆通過</span></td>
+                            <td class="nowrap">郭丹騏</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div style="text-align: center;">
+            <a href="index.html" class="btn-home">回到智慧管理主頁</a>
+        </div>
+    </div>
+</div>
+
+<!-- ─── 前端即時交互過濾邏輯 JS ─── -->
+<script>
+    let currentRoommate = "全部";
+    let activeTab = "records";
+
+    // 1. 分頁選單切換邏輯
+    function switchTab(tabName) {
+        activeTab = tabName;
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.table-panel').forEach(p => p.classList.remove('active'));
+        
+        document.getElementById(`tab-${tabName}`).classList.add('active');
+        document.getElementById(`panel-${tabName}`).classList.add('active');
+        
+        // 切換分頁時，自動重新計算過濾狀態
+        filterData();
+    }
+
+    // 2. 室友按鈕點擊快選
+    function filterRoommate(name, btnId) {
+        currentRoommate = name;
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(btnId).classList.add('active');
+        
+        filterData();
+    }
+
+    // 3. 連動矩陣過濾核心引擎 (支援關鍵字 + 人員雙向連動)
+    function filterData() {
+        const keyword = document.getElementById("keywordSearch").value.toLowerCase().trim();
+        const targetTableId = activeTab === "records" ? "recordsTable" : "appealsTable";
+        const rows = document.querySelectorAll(`#${targetTableId} tbody tr`);
+
+        rows.forEach(row => {
+            const userAttr = row.getAttribute("data-user");
+            const rowText = row.innerText.toLowerCase();
+
+            // 條件一：比對人員篩選
+            const matchUser = (currentRoommate === "全部" || userAttr === currentRoommate);
+            // 條件二：比對關鍵字
+            const matchKeyword = (keyword === "" || rowText.includes(keyword));
+
+            if (matchUser && matchKeyword) {
+                row.classList.remove("hidden");
+            } else {
+                row.classList.add("hidden");
+            }
+        });
+    }
+</script>
+
+</body>
+</html>
