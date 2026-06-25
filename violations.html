@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>違規紀錄中心 - 宿舍智慧管理系統</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <style>
         :root {
             --morandi-dark: #8C6A6A;    /* 莫蘭迪深磚紅 */
@@ -52,7 +53,7 @@
             padding: 25px 20px;
         }
 
-        /* ─── 核心過濾器區塊 ─── */
+        /* 篩選與過濾操作區 */
         .filter-section {
             background-color: #ffffff;
             border: 1px solid var(--border-color);
@@ -112,7 +113,7 @@
             color: #ffffff;
         }
 
-        /* ─── 分頁頁籤區塊 ─── */
+        /* 分頁頁籤區塊 */
         .tabs-container {
             display: flex;
             border-bottom: 2px solid var(--border-color);
@@ -141,7 +142,7 @@
             border-bottom: 2px solid #ffffff;
         }
 
-        /* ─── 表格與控制 ─── */
+        /* 表格與控制 */
         .table-panel {
             display: none;
         }
@@ -179,7 +180,6 @@
             display: none !important;
         }
         
-        /* 案號與基本元件 */
         .case-id {
             font-family: Consolas, Monaco, monospace;
             font-size: 13px;
@@ -203,42 +203,30 @@
         .nowrap {
             white-space: nowrap;
         }
+        .loading-text {
+            padding: 40px;
+            text-align: center;
+            font-size: 15px;
+            color: var(--morandi-dark);
+            font-weight: bold;
+            letter-spacing: 0.5px;
+        }
 
-        /* ─── 狀態顏色指定標籤 (莫蘭迪風) ─── */
+        /* ─── 狀態指定莫蘭迪色標籤庫 ─── */
         .badge {
             display: inline-block;
-            padding: 4px 10px;
+            padding: 5px 12px;
             border-radius: 4px;
             font-size: 12px;
             font-weight: bold;
             white-space: nowrap;
             text-align: center;
         }
-        /* 1. 成案/可申覆：沉穩藍底 */
-        .status-appealable {
-            background-color: #E6EEF8;
-            color: #2B5797;
-        }
-        /* 2. 已結案：暗磚紅底 */
-        .status-closed {
-            background-color: #F8E6E6;
-            color: #A33A3A;
-        }
-        /* 3. 申覆中：莫蘭迪芥末黃/暖灰底 */
-        .status-pending {
-            background-color: #FFF3E0;
-            color: #B7791F;
-        }
-        /* 4. 申覆駁回/結案：暗炭灰底 */
-        .status-rejected {
-            background-color: #EDF2F7;
-            color: #4A5568;
-        }
-        /* 5. 申覆通過/撤銷：莫蘭迪草綠底 */
-        .status-approved {
-            background-color: #E6F4EA;
-            color: #2E7D32;
-        }
+        .status-appealable { background-color: #E6EEF8; color: #2B5797; }
+        .status-closed { background-color: #F8E6E6; color: #A33A3A; }
+        .status-pending { background-color: #FFF3E0; color: #B7791F; }
+        .status-rejected { background-color: #EDF2F7; color: #4A5568; }
+        .status-approved { background-color: #E6F4EA; color: #2E7D32; }
 
         .btn-home {
             display: inline-block;
@@ -252,25 +240,18 @@
             margin-top: 25px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.02);
             border: none;
-            cursor: pointer;
-        }
-        .btn-home:hover {
-            background-color: var(--text-main);
         }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <!-- 頂部橫幅 -->
     <div class="header">
         <h1>違規紀錄中心</h1>
-        <p>宿舍智慧管理系統 • 數據過濾與申覆追蹤平台</p>
+        <p>宿舍智慧管理系統 • 雲端數據即時連動中心</p>
     </div>
 
     <div class="content">
-        
-        <!-- ─── 篩選與過濾操作區 ─── -->
         <div class="filter-section">
             <div class="filter-title">🔍 案件多維度過濾（支援即時連動）</div>
             <div class="search-container">
@@ -285,13 +266,11 @@
             </div>
         </div>
 
-        <!-- ─── 雙分頁頁籤 ─── -->
         <div class="tabs-container">
             <div class="tab active" id="tab-records" onclick="switchTab('records')">違規紀錄</div>
             <div class="tab" id="tab-appeals" onclick="switchTab('appeals')">申覆紀錄</div>
         </div>
 
-        <!-- ─── 面板一：違規紀錄 ─── -->
         <div class="table-panel active" id="panel-records">
             <div class="table-responsive">
                 <table id="recordsTable">
@@ -306,68 +285,13 @@
                             <th style="width: 8%;">舉發人</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        <!-- 資料完全對照您試算表 G21 截圖項目與全新指定顏色 -->
-                        <tr data-user="洪健棋">
-                            <td><div class="case-id">ST02GK260613581</div></td>
-                            <td class="nowrap">2026/06/13</td>
-                            <td class="nowrap">洪健棋</td>
-                            <td class="law-text">第二綱第二條第五款</td>
-                            <td>記點貳次</td>
-                            <td style="text-align: center;"><span class="badge status-closed">已結案</span></td>
-                            <td class="nowrap">系統自動</td>
-                        </tr>
-                        <tr data-user="尹奕竤">
-                            <td><div class="case-id">ST02YH260616421</div></td>
-                            <td class="nowrap">2026/06/16</td>
-                            <td class="nowrap">尹奕竤</td>
-                            <td class="law-text">第二綱第二條第五款</td>
-                            <td>記點乙次</td>
-                            <td style="text-align: center;"><span class="badge status-appealable">成案/可申覆</span></td>
-                            <td class="nowrap">系統自動</td>
-                        </tr>
-                        <tr data-user="林易諒">
-                            <td><div class="case-id">ST02YL260616239</div></td>
-                            <td class="nowrap">2026/06/16</td>
-                            <td class="nowrap">林易諒</td>
-                            <td class="law-text">第二綱第二條第五款</td>
-                            <td>記點乙次</td>
-                            <td style="text-align: center;"><span class="badge status-appealable">成案/可申覆</span></td>
-                            <td class="nowrap">系統自動</td>
-                        </tr>
-                        <tr data-user="洪健棋">
-                            <td><div class="case-id">ST02GK260616712</div></td>
-                            <td class="nowrap">2026/06/16</td>
-                            <td class="nowrap">洪健棋</td>
-                            <td class="law-text">第二綱第二條第五款</td>
-                            <td>記點乙次</td>
-                            <td style="text-align: center;"><span class="badge status-pending">申覆中</span></td>
-                            <td class="nowrap">系統自動</td>
-                        </tr>
-                        <tr data-user="尹奕竤">
-                            <td><div class="case-id">ST01YH260616110</div></td>
-                            <td class="nowrap">2026/06/16</td>
-                            <td class="nowrap">尹奕竤</td>
-                            <td class="law-text">第二綱第三條第六款</td>
-                            <td>記點乙次</td>
-                            <td style="text-align: center;"><span class="badge status-rejected">申覆駁回/結案</span></td>
-                            <td class="nowrap">系統自動</td>
-                        </tr>
-                        <tr data-user="林易諒">
-                            <td><div class="case-id">ST01YL260616155</div></td>
-                            <td class="nowrap">2026/06/16</td>
-                            <td class="nowrap">林易諒</td>
-                            <td class="law-text">第二綱第三條第六款</td>
-                            <td>記點乙次</td>
-                            <td style="text-align: center;"><span class="badge status-approved">申覆通過/撤銷</span></td>
-                            <td class="nowrap">系統自動</td>
-                        </tr>
+                    <tbody id="recordsBody">
+                        <tr><td colspan="7" class="loading-text">正在即時讀取雲端 CSV 對帳紀錄中...</td></tr>
                     </tbody>
                 </table>
             </div>
         </div>
 
-        <!-- ─── 面板二：申覆紀錄 ─── -->
         <div class="table-panel" id="panel-appeals">
             <div class="table-responsive">
                 <table id="appealsTable">
@@ -382,35 +306,8 @@
                             <th style="width: 10%;">核覆人</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        <!-- 資料結構完全對應您的右半部 K-O 欄位 -->
-                        <tr data-user="洪健棋">
-                            <td><div class="case-id">ST02GK260616712</div></td>
-                            <td class="nowrap">洪健棋</td>
-                            <td class="nowrap">2026/06/16</td>
-                            <td>已於1號前經由網銀轉帳分攤款項，因疏漏表單填寫，現補上水費轉帳明細截圖證明。</td>
-                            <td class="nowrap"><a href="#" style="color:#A36A6A; text-decoration: underline;">查看網銀截圖</a></td>
-                            <td style="text-align: center;"><span class="badge status-pending">審查中</span></td>
-                            <td class="nowrap">郭丹騏</td>
-                        </tr>
-                        <tr data-user="尹奕竤">
-                            <td><div class="case-id">ST01YH260616110</div></td>
-                            <td class="nowrap">尹奕竤</td>
-                            <td class="nowrap">2026/06/16</td>
-                            <td>因出差忘記上傳憑證，補繳紀錄。</td>
-                            <td class="nowrap"><a href="#" style="color:#A36A6A; text-decoration: underline;">查看憑證</a></td>
-                            <td style="text-align: center;"><span class="badge status-closed">申覆駁回</span></td>
-                            <td class="nowrap">郭丹騏</td>
-                        </tr>
-                        <tr data-user="林易諒">
-                            <td><div class="case-id">ST01YL260616155</div></td>
-                            <td class="nowrap">林易諒</td>
-                            <td class="nowrap">2026/06/16</td>
-                            <td>對帳網銀確實有於時限內完成全額分攤轉帳，上傳紀錄供銷帳。</td>
-                            <td class="nowrap"><a href="#" style="color:#A36A6A; text-decoration: underline;">對帳證明.pdf</a></td>
-                            <td style="text-align: center;"><span class="badge status-approved">申覆通過</span></td>
-                            <td class="nowrap">郭丹騏</td>
-                        </tr>
+                    <tbody id="appealsBody">
+                        <tr><td colspan="7" class="loading-text">正在即時讀取雲端 CSV 申覆紀錄中...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -422,12 +319,114 @@
     </div>
 </div>
 
-<!-- ─── 前端即時交互過濾邏輯 JS ─── -->
 <script>
+    // 你的公開 Google Sheets CSV 發布網址
+    const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQkqhXCPp4XiHKCEpI3pz4pzcu3sQreQ_qNRLger00ULCHFr9cTbXHMQqAfk7dLa_gUBAIBSJ5sZM4F/pub?output=csv";
+
     let currentRoommate = "全部";
     let activeTab = "records";
 
-    // 1. 分頁選單切換邏輯
+    // 頁面開啟時，使用純前端非同步 fetch 技術抓取公開 CSV 數據
+    document.addEventListener("DOMContentLoaded", function() {
+        fetch(csvUrl)
+            .then(response => response.text())
+            .then(csvText => {
+                // 使用 PapaParse 處理包含逗號與雙引號包裝的複雜數據
+                Papa.parse(csvText, {
+                    complete: function(results) {
+                        parseAndRenderData(results.data);
+                    },
+                    error: function(err) {
+                        document.getElementById("recordsBody").innerHTML = `<tr><td colspan="7" class="loading-text" style="color:red;">CSV 解析失敗: ${err.message}</td></tr>`;
+                    }
+                });
+            })
+            .catch(error => {
+                document.getElementById("recordsBody").innerHTML = `<tr><td colspan="7" class="loading-text" style="color:red;">無法與 Google 雲端連線: ${error}</td></tr>`;
+            });
+    });
+
+    // 動態配對 5 種狀態的莫蘭迪色標籤類別
+    function getStatusBadgeClass(status) {
+        status = status.trim();
+        if (status === "成案/可申覆") return "status-appealable";
+        if (status === "已結案") return "status-closed";
+        if (status === "申覆中") return "status-pending";
+        if (status.includes("駁回") || status.includes("不成立")) return "status-rejected";
+        if (status.includes("通過") || status.includes("撤銷") || status.includes("成立")) return "status-approved";
+        return "status-rejected";
+    }
+
+    // 解析資料庫陣列並渲染
+    function parseAndRenderData(dataRows) {
+        const recordsBody = document.getElementById("recordsBody");
+        const appealsBody = document.getElementById("appealsBody");
+        
+        let recordsHtml = "";
+        let appealsHtml = "";
+
+        // 試算表第 1 列、第 2 列通常是標題與基準值，數據從索引 2 (第3列) 開始
+        for (let i = 2; i < dataRows.length; i++) {
+            const row = dataRows[i];
+            if (!row || row.length < 2) continue;
+
+            // ─── 1. 解析違規紀錄分頁 (A~J欄 -> 索引 0~9) ───
+            const caseId = row[0] ? row[0].toString().trim() : "";
+            const dateStr = row[1] ? row[1].toString().trim() : "";
+            const name = row[2] ? row[2].toString().trim() : "";
+            const law = row[4] ? row[4].toString().trim() : "";
+            const resultText = row[7] ? row[7].toString().trim() : "";
+            const status = row[8] ? row[8].toString().trim() : "";
+            const reporter = row[9] ? row[9].toString().trim() : "";
+
+            if (caseId !== "" && name !== "") {
+                recordsHtml += `<tr data-user="${name}">
+                    <td><div class="case-id">${caseId}</div></td>
+                    <td class="nowrap">${dateStr}</td>
+                    <td class="nowrap">${name}</td>
+                    <td class="law-text">${law}</td>
+                    <td>${resultText}</td>
+                    <td style="text-align: center;"><span class="badge ${getStatusBadgeClass(status)}">${status}</span></td>
+                    <td class="nowrap">${reporter}</td>
+                </tr>`;
+            }
+
+            // ─── 2. 解析申覆申請分頁 (K~P欄 -> 索引 10~15) ───
+            const appealCaseId = row[10] ? row[10].toString().trim() : "";
+            const appealDate = row[11] ? row[11].toString().trim() : "";
+            const appealDesc = row[12] ? row[12].toString().trim() : "";
+            const appealVoucher = row[13] ? row[13].toString().trim() : "";
+            const appealResult = row[14] ? row[14].toString().trim() : "";
+            const approver = row[15] ? row[15].toString().trim() : "";
+
+            if (appealCaseId !== "" && appealDate !== "") {
+                // 憑證超連結防破版
+                let voucherHtml = '<span style="color:#a0aec0;">-</span>';
+                if (appealVoucher && appealVoucher !== "-") {
+                    if (appealVoucher.substring(0, 4) === "http") {
+                        voucherHtml = `<a href="${appealVoucher}" target="_blank" style="color:#A36A6A; font-weight:bold;">查看憑證 ↗</a>`;
+                    } else {
+                        voucherHtml = `<span class="law-text">${appealVoucher}</span>`;
+                    }
+                }
+
+                appealsHtml += `<tr data-user="${name}">
+                    <td><div class="case-id">${appealCaseId}</div></td>
+                    <td class="nowrap">${name}</td>
+                    <td class="nowrap">${appealDate}</td>
+                    <td>${appealDesc}</td>
+                    <td class="nowrap">${voucherHtml}</td>
+                    <td style="text-align: center;"><span class="badge ${getStatusBadgeClass(appealResult)}">${appealResult}</span></td>
+                    <td class="nowrap">${approver ? approver : "-"}</td>
+                </tr>`;
+            }
+        }
+
+        recordsBody.innerHTML = recordsHtml || '<tr><td colspan="7" class="loading-text">目前尚無任何真實違規紀錄。</td></tr>';
+        appealsBody.innerHTML = appealsHtml || '<tr><td colspan="7" class="loading-text">目前尚無任何真實申覆申請。</td></tr>';
+    }
+
+    // 分頁頁籤切換
     function switchTab(tabName) {
         activeTab = tabName;
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -435,21 +434,18 @@
         
         document.getElementById(`tab-${tabName}`).classList.add('active');
         document.getElementById(`panel-${tabName}`).classList.add('active');
-        
-        // 切換分頁時，自動重新計算過濾狀態
         filterData();
     }
 
-    // 2. 室友按鈕點擊快選
+    // 成員過濾快選
     function filterRoommate(name, btnId) {
         currentRoommate = name;
         document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
         document.getElementById(btnId).classList.add('active');
-        
         filterData();
     }
 
-    // 3. 連動矩陣過濾核心引擎 (支援關鍵字 + 人員雙向連動)
+    // 搜尋引擎核心（連動過濾）
     function filterData() {
         const keyword = document.getElementById("keywordSearch").value.toLowerCase().trim();
         const targetTableId = activeTab === "records" ? "recordsTable" : "appealsTable";
@@ -458,10 +454,9 @@
         rows.forEach(row => {
             const userAttr = row.getAttribute("data-user");
             const rowText = row.innerText.toLowerCase();
+            if (!userAttr) return; // 跳過提示行
 
-            // 條件一：比對人員篩選
             const matchUser = (currentRoommate === "全部" || userAttr === currentRoommate);
-            // 條件二：比對關鍵字
             const matchKeyword = (keyword === "" || rowText.includes(keyword));
 
             if (matchUser && matchKeyword) {
@@ -472,6 +467,5 @@
         });
     }
 </script>
-
 </body>
 </html>
