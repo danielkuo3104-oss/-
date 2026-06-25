@@ -151,8 +151,8 @@
         }
         .table-responsive {
             width: 100%;
-            overflow-x: auto; /* 開啟橫向滾動 */
-            -webkit-overflow-scrolling: touch; /* iOS 順暢滾動機制 */
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
             border: 1px solid var(--border-color);
             border-radius: 8px;
         }
@@ -160,8 +160,8 @@
             width: 100%;
             border-collapse: collapse;
             text-align: left;
-            table-layout: fixed; /* 固定佈局防止內容撐開破版 */
-            min-width: 850px;    /* 保證在手機上擁有足夠的橫向捲動寬度 */
+            table-layout: fixed; /* 固定寬度佈局 */
+            min-width: 900px;    /* 保證手機上有完美的橫向捲動寬度 */
         }
         th {
             background-color: #FAF6F6;
@@ -177,10 +177,16 @@
             color: var(--text-main);
             font-weight: 500;
             border-bottom: 1px solid #F0E6E6;
-            word-break: break-all; /* 防止長文字或長網址爆開 */
         }
         tr.hidden {
             display: none !important;
+        }
+        
+        /* 🎯 🔥 【核心修改】文字過長換行直接截斷改為三個點 ... */
+        .ellipsis-cell {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         
         .case-id {
@@ -211,8 +217,8 @@
             font-weight: bold;
         }
 
-        /* ─── 憑證查看按鈕樣式 ─── */
-        .btn-voucher {
+        /* ─── 詳細內容點擊按鈕樣式 ─── */
+        .btn-detail-link {
             color: #B58D8D;
             text-decoration: none;
             font-weight: bold;
@@ -220,11 +226,11 @@
             border-bottom: 1px dashed #B58D8D;
             transition: color 0.2s;
         }
-        .btn-voucher:hover {
+        .btn-detail-link:hover {
             color: var(--morandi-dark);
         }
 
-        /* ─── 狀態顏色指定 (依據指示修改) ─── */
+        /* ─── 狀態顏色指定 ─── */
         .badge {
             display: inline-block;
             padding: 5px 12px;
@@ -234,7 +240,6 @@
             white-space: nowrap;
             text-align: center;
         }
-        /* 違規紀錄狀態色系 */
         .status-gray { background-color: #EDEAE9; color: #5A5555; }     /* 已結案 */
         .status-blue { background-color: #E1F0FA; color: #1B65A6; }     /* 成案/可申覆 */
         .status-orange { background-color: #FDF0DB; color: #C46D00; }   /* 申覆中 */
@@ -259,7 +264,7 @@
         .modal-box {
             background-color: #ffffff;
             width: 90%;
-            max-width: 500px;
+            max-width: 520px;
             border-radius: 16px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.15);
             overflow: hidden;
@@ -288,8 +293,24 @@
             font-size: 14px;
             line-height: 1.6;
             color: var(--text-main);
-            max-height: 60vh;
+            max-height: 70vh;
             overflow-y: auto;
+        }
+        .modal-field {
+            margin-bottom: 14px;
+        }
+        .modal-label {
+            font-weight: bold;
+            color: var(--morandi-dark);
+            font-size: 13px;
+            margin-bottom: 4px;
+        }
+        .modal-value {
+            background-color: #FAF6F6;
+            padding: 10px 14px;
+            border-radius: 8px;
+            border: 1px solid #F0E6E6;
+            word-break: break-all;
         }
         .voucher-img {
             width: 100%; height: auto; border-radius: 8px;
@@ -344,13 +365,13 @@
                 <table id="recordsTable">
                     <thead>
                         <tr>
-                            <th style="width: 13%;">案件序號</th>
+                            <th style="width: 14%;">案件序號</th>
                             <th style="width: 11%;">立案日期</th>
                             <th style="width: 9%;">違規人</th>
-                            <th style="width: 22%;">違規法源</th>
+                            <th style="width: 26%;">違規法源</th>
                             <th style="width: 16%;">處分結果</th>
-                            <th style="width: 10%; text-align: center;">違規憑證</th>
-                            <th style="width: 11%; text-align: center;">當前狀態</th>
+                            <th style="width: 12%; text-align: center;">當前狀態</th>
+                            <th style="width: 14%; text-align: center;">內容詳情</th>
                             <th style="width: 8%;">舉發人</th>
                         </tr>
                     </thead>
@@ -366,12 +387,12 @@
                 <table id="appealsTable">
                     <thead>
                         <tr>
-                            <th style="width: 15%;">案件序號</th>
+                            <th style="width: 14%;">案件序號</th>
                             <th style="width: 10%;">申覆人</th>
                             <th style="width: 11%;">申覆日期</th>
-                            <th style="width: 30%;">申覆說明事實</th>
-                            <th style="width: 12%; text-align: center;">申覆憑證</th>
+                            <th style="width: 32%;">申覆說明事實</th>
                             <th style="width: 12%; text-align: center;">申覆結果</th>
+                            <th style="width: 13%; text-align: center;">內容詳情</th>
                             <th style="width: 10%;">核覆人</th>
                         </tr>
                     </thead>
@@ -391,7 +412,7 @@
 <div class="modal-overlay" id="voucherModal" onclick="closeModal()">
     <div class="modal-box" onclick="event.stopPropagation()">
         <div class="modal-header">
-            <span id="modalTitle">查看憑證資訊</span>
+            <span id="modalTitle">詳細案情資訊庫</span>
             <button class="modal-close" onclick="closeModal()">&times;</button>
         </div>
         <div class="modal-body" id="modalBody">
@@ -400,7 +421,6 @@
 </div>
 
 <script>
-    // 發布的 Google Sheets CSV 網址
     const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQkqhXCPp4XiHKCEpI3pz4pzcu3sQreQ_qNRLger00ULCHFr9cTbXHMQqAfk7dLa_gUBAIBSJ5sZM4F/pub?gid=96305738&single=true&output=csv";
 
     let currentRoommate = "全部";
@@ -424,7 +444,6 @@
             });
     });
 
-    // 違規紀錄專用狀態顏色配對
     function getRecordBadgeClass(status) {
         status = status.trim();
         if (status === "已結案") return "status-gray";
@@ -432,45 +451,76 @@
         if (status === "申覆中") return "status-orange";
         if (status === "已結案(申覆失敗)") return "status-red";
         if (status === "已撤銷") return "status-green";
-        return "status-gray"; // 預設灰色
+        return "status-gray";
     }
 
-    // 申覆紀錄專用狀態顏色配對（駁回固定為紅色）
     function getAppealBadgeClass(status) {
         status = status.trim();
         if (status.includes("駁回") || status.includes("失敗") || status.includes("不成立")) return "status-red";
         if (status.includes("通過") || status.includes("撤銷") || status.includes("成立")) return "status-green";
-        return "status-orange"; // 審核中或處理中預設橘色
+        return "status-orange";
     }
 
-    // 燈箱彈出視窗觸發機制（代替跳轉）
-    function openVoucher(caseId, type, voucherContent) {
+    // 🎯 🔥 【核心修改】打開綜合詳細內容 + 憑證大整合視窗機制
+    function openDetailModal(caseId, mode, mainText, extraText, voucherUrl) {
         const modal = document.getElementById("voucherModal");
         const title = document.getElementById("modalTitle");
         const body = document.getElementById("modalBody");
 
-        title.innerText = `案件號 [${caseId}] - 檢視${type}`;
-        voucherContent = voucherContent.trim();
+        title.innerText = `案件號 [${caseId}] - 詳細內容檢視`;
+        
+        let htmlContent = "";
 
-        if (voucherContent.substring(0, 4) === "http") {
-            // 如果是圖片網址，直接渲染預覽
-            if (/\.(jpeg|jpg|gif|png|webp)/i.test(voucherContent) || voucherContent.includes("drive.google.com")) {
-                body.innerHTML = `<p>憑證連結：<a href="${voucherContent}" target="_blank" style="color:#8C6A6A; font-weight:bold;">外部開啟原圖 ↗</a></p>
-                                  <img src="${voucherContent}" class="voucher-img" onerror="this.onerror=null; this.src='https://placehold.co/400x300?text=Google+Drive+Preview+Link';">`;
+        if (mode === 'record') {
+            htmlContent = `
+                <div class="modal-field">
+                    <div class="modal-label">📜 完整違規法源事由</div>
+                    <div class="modal-value">${mainText || "無事由說明"}</div>
+                </div>
+                <div class="modal-field">
+                    <div class="modal-label">💼 處分結果明細</div>
+                    <div class="modal-value">${extraText || "無處分結果資訊"}</div>
+                </div>
+            `;
+        } else {
+            htmlContent = `
+                <div class="modal-field">
+                    <div class="modal-label">📝 完整申覆說明事實</div>
+                    <div class="modal-value">${mainText || "無事實說明"}</div>
+                </div>
+            `;
+        }
+
+        // 🎯 🔥 憑證移動至詳細內容內部區塊進行渲染機制
+        htmlContent += `<div class="modal-field" style="margin-top: 18px; border-top: 1px dashed #E2D5D5; padding-top: 14px;">
+                            <div class="modal-label" style="color: #A36A6A;">📎 關聯審查證據 / 違規憑證</div>`;
+        
+        voucherUrl = voucherUrl ? voucherUrl.trim() : "";
+        if (voucherUrl && voucherUrl !== "-") {
+            if (voucherUrl.substring(0, 4) === "http") {
+                if (/\.(jpeg|jpg|gif|png|webp)/i.test(voucherUrl) || voucherUrl.includes("drive.google.com")) {
+                    htmlContent += `
+                        <p style="margin: 4px 0 8px 0;">憑證連結：<a href="${voucherUrl}" target="_blank" style="color:#8C6A6A; font-weight:bold; text-decoration: underline;">在新分頁開啟原圖 ↗</a></p>
+                        <img src="${voucherUrl}" class="voucher-img" onerror="this.onerror=null; this.src='https://placehold.co/400x250?text=Cloud+Drive+Preview+Link';">
+                    `;
+                } else {
+                    htmlContent += `
+                        <p style="margin: 4px 0 6px 0;">本案關聯雲端附件網址，請點擊下方鏈接檢視：</p>
+                        <div style="background:#FAF6F6; padding:10px; border-radius:8px; border:1px dashed var(--border-color); word-break:break-all;">
+                            <a href="${voucherUrl}" target="_blank" style="color:#A36A6A; font-weight:bold; text-decoration: underline;">點此開啟雲端憑證檔案 ↗</a>
+                        </div>
+                        <p style="font-size:11px; color:#8A7E7E; margin: 6px 0 0 0;">原始路徑：${voucherUrl}</p>
+                    `;
+                }
             } else {
-                // 一般網址提供框框顯示與防呆跳轉
-                body.innerHTML = `<p>本憑證為雲端網址，請點擊下方鏈接查看或複製：</p>
-                                  <div style="background:#F9F6F6; padding:12px; border-radius:8px; border:1px dashed var(--border-color); word-break:break-all; margin:10px 0;">
-                                    <a href="${voucherContent}" target="_blank" style="color:#A36A6A; font-weight:bold;">點此開啟憑證頁面 ↗</a>
-                                  </div>
-                                  <p style="font-size:12px; color:#8A7E7E;">網址：${voucherContent}</p>`;
+                htmlContent += `<div class="modal-value" style="font-style: italic; color: #7A6F6F;">${voucherUrl}</div>`;
             }
         } else {
-            // 純文字型描述事由直接列出
-            body.innerHTML = `<p style="font-size:15px; font-weight:500; color:var(--text-main); background:#FAF6F6; padding:15px; border-radius:8px; border:1px solid var(--border-color);">
-                                ${voucherContent || "暫無詳細憑證備註。"}
-                              </p>`;
+            htmlContent += `<div class="modal-value" style="color: #a0aec0; text-align: center;">- 暫無此案件之附加憑證檔案 -</div>`;
         }
+
+        htmlContent += `</div>`;
+        body.innerHTML = htmlContent;
         modal.classList.add("active");
     }
 
@@ -478,7 +528,6 @@
         document.getElementById("voucherModal").classList.remove("active");
     }
 
-    // 解析與動態渲染
     function parseAndRenderData(dataRows) {
         const recordsBody = document.getElementById("recordsBody");
         const appealsBody = document.getElementById("appealsBody");
@@ -495,25 +544,27 @@
             const dateStr = row[1] ? row[1].toString().trim() : "";
             const name = row[2] ? row[2].toString().trim() : "";
             const law = row[4] ? row[4].toString().trim() : "";
-            const recordVoucher = row[6] ? row[6].toString().trim() : ""; // G欄：違規憑證資料 (索引 6)
+            const recordVoucher = row[6] ? row[6].toString().trim() : ""; 
             const resultText = row[7] ? row[7].toString().trim() : "";
             const status = row[8] ? row[8].toString().trim() : "";
             const reporter = row[9] ? row[9].toString().trim() : "";
 
             if (caseId !== "" && name !== "") {
-                let recVoucherHtml = '<span style="color:#a0aec0;">-</span>';
-                if (recordVoucher && recordVoucher !== "-") {
-                    recVoucherHtml = `<span class="btn-voucher" onclick="openVoucher('${caseId}', '違規憑證', \`${recordVoucher.replace(/`/g, '\\`').replace(/\$/g, '\\$')}\`)">查看憑證</span>`;
-                }
+                // 將特殊字元處理防止 JSON 崩裂破壞 HTML 字串
+                const safeLaw = law.replace(/`/g, '\\`').replace(/\$/g, '\\$').replace(/"/g, '&quot;');
+                const safeResult = resultText.replace(/`/g, '\\`').replace(/\$/g, '\\$').replace(/"/g, '&quot;');
+                const safeVoucher = recordVoucher.replace(/`/g, '\\`').replace(/\$/g, '\\$').replace(/"/g, '&quot;');
 
                 recordsHtml += `<tr data-user="${name}">
                     <td><div class="case-id">${caseId}</div></td>
                     <td class="nowrap">${dateStr}</td>
                     <td class="nowrap">${name}</td>
-                    <td class="law-text">${law}</td>
-                    <td>${resultText}</td>
-                    <td style="text-align: center;">${recVoucherHtml}</td>
+                    <td class="law-text ellipsis-cell">${law}</td>
+                    <td class="ellipsis-cell">${resultText}</td>
                     <td style="text-align: center;"><span class="badge ${getRecordBadgeClass(status)}">${status}</span></td>
+                    <td style="text-align: center;">
+                        <span class="btn-detail-link" onclick="openDetailModal('${caseId}', 'record', \`${safeLaw}\`, \`${safeResult}\`, \`${safeVoucher}\`)">詳細內容</span>
+                    </td>
                     <td class="nowrap">${reporter}</td>
                 </tr>`;
             }
@@ -527,18 +578,18 @@
             const approver = row[15] ? row[15].toString().trim() : "";
 
             if (appealCaseId !== "" && appealDate !== "") {
-                let appVoucherHtml = '<span style="color:#a0aec0;">-</span>';
-                if (appealVoucher && appealVoucher !== "-") {
-                    appVoucherHtml = `<span class="btn-voucher" onclick="openVoucher('${appealCaseId}', '申覆憑證', \`${appealVoucher.replace(/`/g, '\\`').replace(/\$/g, '\\$')}\`)">查看憑證</span>`;
-                }
+                const safeDesc = appealDesc.replace(/`/g, '\\`').replace(/\$/g, '\\$').replace(/"/g, '&quot;');
+                const safeAppVoucher = appealVoucher.replace(/`/g, '\\`').replace(/\$/g, '\\$').replace(/"/g, '&quot;');
 
                 appealsHtml += `<tr data-user="${name}">
                     <td><div class="case-id">${appealCaseId}</div></td>
                     <td class="nowrap">${name}</td>
                     <td class="nowrap">${appealDate}</td>
-                    <td>${appealDesc}</td>
-                    <td style="text-align: center;">${appVoucherHtml}</td>
+                    <td class="ellipsis-cell">${appealDesc}</td>
                     <td style="text-align: center;"><span class="badge ${getAppealBadgeClass(appealResult)}">${appealResult}</span></td>
+                    <td style="text-align: center;">
+                        <span class="btn-detail-link" onclick="openDetailModal('${appealCaseId}', 'appeal', \`${safeDesc}\`, '', \`${safeAppVoucher}\`)">詳細內容</span>
+                    </td>
                     <td class="nowrap">${approver ? approver : "-"}</td>
                 </tr>`;
             }
@@ -548,7 +599,6 @@
         appealsBody.innerHTML = appealsHtml || '<tr><td colspan="7" class="loading-text">目前尚無任何申覆申請。</td></tr>';
     }
 
-    // 分頁切換
     function switchTab(tabName) {
         activeTab = tabName;
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -559,7 +609,6 @@
         filterData();
     }
 
-    // 室友快選
     function filterRoommate(name, btnId) {
         currentRoommate = name;
         document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
@@ -567,7 +616,6 @@
         filterData();
     }
 
-    // 關鍵字與名單即時連動篩選
     function filterData() {
         const keyword = document.getElementById("keywordSearch").value.toLowerCase().trim();
         const targetTableId = activeTab === "records" ? "recordsTable" : "appealsTable";
