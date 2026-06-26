@@ -230,6 +230,34 @@
             color: var(--morandi-dark);
         }
 
+        /* ─── 修正需求二：回到主頁實心按鈕樣式 ─── */
+        .btn-home-container {
+            text-align: center;
+            margin-top: 30px;
+        }
+        .btn-home {
+            display: inline-block;
+            background-color: var(--morandi-dark);
+            color: #ffffff;
+            text-decoration: none;
+            padding: 12px 32px;
+            font-size: 15px;
+            font-weight: bold;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(140, 106, 106, 0.2);
+            transition: all 0.2s ease-in-out;
+            border: 1px solid var(--morandi-dark);
+        }
+        .btn-home:hover {
+            background-color: #765656;
+            border-color: #765656;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(140, 106, 106, 0.3);
+        }
+        .btn-home:active {
+            transform: translateY(1px);
+        }
+
         /* ─── 狀態顏色指定 ─── */
         .badge {
             display: inline-block;
@@ -263,8 +291,8 @@
         }
         .modal-box {
             background-color: #ffffff;
-            width: 90%;
-            max-width: 520px;
+            width: 92%;
+            max-width: 560px;
             border-radius: 16px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.15);
             overflow: hidden;
@@ -293,17 +321,11 @@
             font-size: 14px;
             line-height: 1.6;
             color: var(--text-main);
-            max-height: 70vh;
+            max-height: 75vh;
             overflow-y: auto;
         }
         .modal-field {
             margin-bottom: 14px;
-        }
-        .modal-label {
-            font-weight: bold;
-            color: var(--morandi-dark);
-            font-size: 13px;
-            margin-bottom: 4px;
         }
         .modal-value {
             background-color: #FAF6F6;
@@ -312,14 +334,28 @@
             border: 1px solid #F0E6E6;
             word-break: break-all;
         }
-        .voucher-link-item {
-            display: block;
+        
+        /* ─── 修正需求一：憑證單獨展示區塊樣式 ─── */
+        .voucher-display-block {
             background: #ffffff;
-            padding: 10px 14px;
+            padding: 12px;
             border-radius: 8px;
             border: 1px solid var(--border-color);
-            margin-bottom: 8px;
+            margin-top: 10px;
+        }
+        .voucher-title-text {
             font-size: 13px;
+            font-weight: bold;
+            color: var(--morandi-dark);
+            margin-bottom: 6px;
+        }
+        .voucher-preview-area {
+            background: #FAF6F6;
+            border-radius: 6px;
+            padding: 10px;
+            font-size: 13px;
+            color: #5A5555;
+            word-break: break-all;
         }
     </style>
 </head>
@@ -394,7 +430,7 @@
             </div>
         </div>
 
-        <div style="text-align: center;">
+        <div class="btn-home-container">
             <a href="index.html" class="btn-home">回到智慧管理主頁</a>
         </div>
     </div>
@@ -445,7 +481,6 @@
         return "status-gray";
     }
 
-    // 申覆結果欄位顏色控制
     function getAppealBadgeClass(status) {
         status = status.trim();
         if (status.includes("駁回") || status.includes("失敗") || status.includes("不成立")) return "status-red";
@@ -453,21 +488,32 @@
         return "status-orange";
     }
 
-    // 🎯 🔥 修正憑證：移除 <img> 標籤，純粹使用安全的外跳按鈕，解決 Google Drive 阻擋嵌入的破圖問題
-    function buildVoucherItemHtml(url, index) {
+    // 🎯 修正需求一：不開分頁，原地將每個憑證欄位分開排版展示
+    function buildVoucherBlockHtml(url, index) {
         url = url.trim();
         if (!url || url === "-") return "";
         
+        let previewContent = "";
         if (url.substring(0, 4) === "http") {
-            return `<div class="voucher-link-item">
-                <b>憑證附件 ${index}：</b><a href="${url}" target="_blank" style="color:#1b65a6; font-weight:bold; text-decoration:underline;">點此開啟雲端憑證檔案 ↗</a>
-            </div>`;
+            if (url.includes("drive.google.com")) {
+                previewContent = `<div style="font-weight: 500; color: #4A3E3E; margin-bottom: 4px;">雲端單據連結：</div>
+                                  <div style="background:#fff; border:1px solid #E2D5D5; padding:8px; border-radius:6px; font-size:12px; color:#1b65a6; word-break:break-all;">${url}</div>
+                                  <p style="font-size:12px; color:#7A6F6F; margin: 6px 0 0 0;">(提示：此為 Google 雲端安全加密檔案。如需完整權限審閱，請複製此網址代入瀏覽器。)</p>`;
+            } else if (/\.(jpeg|jpg|gif|png)$/i.test(url)) {
+                previewContent = `<img src="${url}" style="max-width:100%; border-radius:6px; margin-top:5px; border:1px solid #E2D5D5;" alt="憑證附件 ${index}">`;
+            } else {
+                previewContent = `<div style="font-weight: 500; color: #1b65a6; word-break:break-all;">${url}</div>`;
+            }
         } else {
-            return `<div class="voucher-link-item"><b>憑證附件 ${index}：</b> <span style="color:#7A6F6F; font-style:italic;">${url}</span></div>`;
+            previewContent = `<span style="color:#7A6F6F; font-style:italic;">${url}</span>`;
         }
+
+        return `<div class="voucher-display-block">
+            <div class="voucher-title-text">審查憑證附件紀錄 (${index})</div>
+            <div class="voucher-preview-area">${previewContent}</div>
+        </div>`;
     }
 
-    // 打開綜合詳細內容 + 憑證大整合視窗機制
     function openDetailModal(caseId, mode, mainText, extraText, v1, v2, v3) {
         const modal = document.getElementById("voucherModal");
         const title = document.getElementById("modalTitle");
@@ -497,19 +543,19 @@
             `;
         }
 
-        // 讀取並組合多重憑證
+        // 讀取並個別、分開展示 3 個憑證區塊
         let vouchersHtml = "";
-        vouchersHtml += buildVoucherItemHtml(v1, 1);
-        vouchersHtml += buildVoucherItemHtml(v2, 2);
-        vouchersHtml += buildVoucherItemHtml(v3, 3);
+        vouchersHtml += buildVoucherBlockHtml(v1, 1);
+        vouchersHtml += buildVoucherBlockHtml(v2, 2);
+        vouchersHtml += buildVoucherBlockHtml(v3, 3);
 
-        htmlContent += `<div class="modal-field" style="margin-top: 18px; border-top: 1px dashed #E2D5D5; padding-top: 14px;">
-                            <div class="modal-title" style="font-weight:bold; color:#A36A6A; font-size:13px; margin-bottom:6px;">關聯審查證據 / 違規憑證庫</div>`;
+        htmlContent += `<div style="margin-top: 18px; border-top: 1px dashed #E2D5D5; padding-top: 14px;">
+                            <div style="font-weight:bold; color:#A36A6A; font-size:13px; margin-bottom:4px;">關聯審查證據 / 違規憑證庫</div>`;
         
         if (vouchersHtml !== "") {
             htmlContent += vouchersHtml;
         } else {
-            htmlContent += `<div class="modal-value" style="color: #a0aec0; text-align: center;">- 系統自動核算或暫無附加憑證檔案 -</div>`;
+            htmlContent += `<div class="modal-value" style="color: #a0aec0; text-align: center; font-style: italic;">- 系統自動核算或暫無附加憑證檔案 -</div>`;
         }
         htmlContent += `</div>`;
 
@@ -532,13 +578,11 @@
             const row = dataRows[i];
             if (!row || row.length < 2) continue;
 
-            // ─── 1. 解析違規紀錄分頁 ───
             const caseId = row[0] ? row[0].toString().trim() : "";
             const dateStr = row[1] ? row[1].toString().trim() : "";
             const name = row[2] ? row[2].toString().trim() : "";
             const law = row[4] ? row[4].toString().trim() : "";
             
-            // 讀取 3 個違規憑證
             const rv1 = row[6] ? row[6].toString().trim() : ""; 
             const rv2 = row[7] ? row[7].toString().trim() : ""; 
             const rv3 = row[8] ? row[8].toString().trim() : ""; 
@@ -568,12 +612,10 @@
                 </tr>`;
             }
 
-            // ─── 2. 解析申覆申請分頁 ───
             const appealCaseId = row[12] ? row[12].toString().trim() : "";
             const appealDate = row[13] ? row[13].toString().trim() : "";
             const appealDesc = row[14] ? row[14].toString().trim() : "";
             
-            // 讀取 3 個申覆憑證
             const av1 = row[15] ? row[15].toString().trim() : ""; 
             const av2 = row[16] ? row[16].toString().trim() : ""; 
             const av3 = row[17] ? row[17].toString().trim() : ""; 
@@ -615,7 +657,6 @@
         filterData();
     }
 
-    // 室友快選
     function filterRoommate(name, btnId) {
         currentRoommate = name;
         document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
