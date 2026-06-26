@@ -151,8 +151,8 @@
         }
         .table-responsive {
             width: 100%;
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
+            overflow-x: auto; 
+            -webkit-overflow-scrolling: touch; 
             border: 1px solid var(--border-color);
             border-radius: 8px;
         }
@@ -160,8 +160,8 @@
             width: 100%;
             border-collapse: collapse;
             text-align: left;
-            table-layout: fixed; /* 固定寬度佈局 */
-            min-width: 900px;    /* 保證手機上有完美的橫向捲動寬度 */
+            table-layout: fixed; 
+            min-width: 950px;    
         }
         th {
             background-color: #FAF6F6;
@@ -181,8 +181,8 @@
         tr.hidden {
             display: none !important;
         }
-        
-        /* 🎯 🔥 【核心修改】文字過長換行直接截斷改為三個點 ... */
+
+        /* 文字過長換行直接截斷改為三個點 ... */
         .ellipsis-cell {
             white-space: nowrap;
             overflow: hidden;
@@ -217,13 +217,13 @@
             font-weight: bold;
         }
 
-        /* ─── 詳細內容點擊按鈕樣式 ─── */
+        /* 詳細內容點擊按鈕樣式 */
         .btn-detail-link {
-            color: #B58D8D;
+            color: #1b65a6;
             text-decoration: none;
             font-weight: bold;
             cursor: pointer;
-            border-bottom: 1px dashed #B58D8D;
+            border-bottom: 1px dashed #1b65a6;
             transition: color 0.2s;
         }
         .btn-detail-link:hover {
@@ -244,7 +244,7 @@
         .status-blue { background-color: #E1F0FA; color: #1B65A6; }     /* 成案/可申覆 */
         .status-orange { background-color: #FDF0DB; color: #C46D00; }   /* 申覆中 */
         .status-red { background-color: #FCE8E6; color: #C5221F; }      /* 已結案(申覆失敗) / 駁回 */
-        .status-green { background-color: #E6F4EA; color: #137333; }    /* 已撤銷 */
+        .status-green { background-color: #E6F4EA; color: #137333; }    /* 已撤銷 / 成立 */
 
         /* ─── 彈出視窗 (Modal Lightbox) ─── */
         .modal-overlay {
@@ -264,7 +264,7 @@
         .modal-box {
             background-color: #ffffff;
             width: 90%;
-            max-width: 520px;
+            max-width: 540px;
             border-radius: 16px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.15);
             overflow: hidden;
@@ -312,9 +312,19 @@
             border: 1px solid #F0E6E6;
             word-break: break-all;
         }
+        .voucher-link-item {
+            display: block;
+            background: #ffffff;
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
         .voucher-img {
             width: 100%; height: auto; border-radius: 8px;
-            border: 1px solid var(--border-color); margin-top: 10px;
+            border: 1px solid var(--border-color); margin-top: 8px;
+            max-height: 250px; object-fit: contain; background: #000;
         }
 
         .btn-home {
@@ -365,13 +375,13 @@
                 <table id="recordsTable">
                     <thead>
                         <tr>
-                            <th style="width: 14%;">案件序號</th>
+                            <th style="width: 16%;">案件序號</th>
                             <th style="width: 11%;">立案日期</th>
-                            <th style="width: 9%;">違規人</th>
-                            <th style="width: 26%;">違規法源</th>
-                            <th style="width: 16%;">處分結果</th>
-                            <th style="width: 12%; text-align: center;">當前狀態</th>
-                            <th style="width: 14%; text-align: center;">內容詳情</th>
+                            <th style="width: 10%;">違規人</th>
+                            <th style="width: 28%;">違規法源</th>
+                            <th style="width: 12%;">處分結果</th>
+                            <th style="width: 11%; text-align: center;">當前狀態</th>
+                            <th style="width: 14%; text-align: center;">檔案詳情</th>
                             <th style="width: 8%;">舉發人</th>
                         </tr>
                     </thead>
@@ -387,12 +397,12 @@
                 <table id="appealsTable">
                     <thead>
                         <tr>
-                            <th style="width: 14%;">案件序號</th>
+                            <th style="width: 16%;">案件序號</th>
                             <th style="width: 10%;">申覆人</th>
                             <th style="width: 11%;">申覆日期</th>
-                            <th style="width: 32%;">申覆說明事實</th>
+                            <th style="width: 33%;">申覆說明事實</th>
                             <th style="width: 12%; text-align: center;">申覆結果</th>
-                            <th style="width: 13%; text-align: center;">內容詳情</th>
+                            <th style="width: 15%; text-align: center;">檔案詳情</th>
                             <th style="width: 10%;">核覆人</th>
                         </tr>
                     </thead>
@@ -421,6 +431,7 @@
 </div>
 
 <script>
+    // 確切綁定您提供的新版多重憑證 CSV 網址
     const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQkqhXCPp4XiHKCEpI3pz4pzcu3sQreQ_qNRLger00ULCHFr9cTbXHMQqAfk7dLa_gUBAIBSJ5sZM4F/pub?gid=96305738&single=true&output=csv";
 
     let currentRoommate = "全部";
@@ -461,13 +472,32 @@
         return "status-orange";
     }
 
-    // 🎯 🔥 【核心修改】打開綜合詳細內容 + 憑證大整合視窗機制
-    function openDetailModal(caseId, mode, mainText, extraText, voucherUrl) {
+    // 🎯 🔥 處理單個憑證字串並生成預覽或連結的 HTML
+    function buildVoucherItemHtml(url, index) {
+        url = url.trim();
+        if (!url || url === "-") return "";
+        
+        if (url.substring(0, 4) === "http") {
+            let isImg = /\.(jpeg|jpg|gif|png|webp)/i.test(url) || url.includes("drive.google.com");
+            let renderHtml = `<div class="voucher-link-item">
+                <b>憑證附件 ${index}：</b><a href="${url}" target="_blank" style="color:#8C6A6A; font-weight:bold; text-decoration:underline;">點此開啟原檔 ↗</a>`;
+            if (isImg) {
+                renderHtml += `<br><img src="${url}" class="voucher-img" onerror="this.onerror=null; this.src='https://placehold.co/450x180?text=證據預覽載入中...';">`;
+            }
+            renderHtml += `</div>`;
+            return renderHtml;
+        } else {
+            return `<div class="voucher-link-item"><b>憑證附件 ${index}：</b> <span style="color:#7A6F6F; font-style:italic;">${url}</span></div>`;
+        }
+    }
+
+    // 🎯 🔥 【大整合機制】點擊詳細內容，一併吐出被截斷的文字以及 3 個憑證
+    function openDetailModal(caseId, mode, mainText, extraText, v1, v2, v3) {
         const modal = document.getElementById("voucherModal");
         const title = document.getElementById("modalTitle");
         const body = document.getElementById("modalBody");
 
-        title.innerText = `案件號 [${caseId}] - 詳細內容檢視`;
+        title.innerText = `案件號 [${caseId}] - 詳細內容與證據檢視`;
         
         let htmlContent = "";
 
@@ -491,35 +521,22 @@
             `;
         }
 
-        // 🎯 🔥 憑證移動至詳細內容內部區塊進行渲染機制
-        htmlContent += `<div class="modal-field" style="margin-top: 18px; border-top: 1px dashed #E2D5D5; padding-top: 14px;">
-                            <div class="modal-label" style="color: #A36A6A;">📎 關聯審查證據 / 違規憑證</div>`;
-        
-        voucherUrl = voucherUrl ? voucherUrl.trim() : "";
-        if (voucherUrl && voucherUrl !== "-") {
-            if (voucherUrl.substring(0, 4) === "http") {
-                if (/\.(jpeg|jpg|gif|png|webp)/i.test(voucherUrl) || voucherUrl.includes("drive.google.com")) {
-                    htmlContent += `
-                        <p style="margin: 4px 0 8px 0;">憑證連結：<a href="${voucherUrl}" target="_blank" style="color:#8C6A6A; font-weight:bold; text-decoration: underline;">在新分頁開啟原圖 ↗</a></p>
-                        <img src="${voucherUrl}" class="voucher-img" onerror="this.onerror=null; this.src='https://placehold.co/400x250?text=Cloud+Drive+Preview+Link';">
-                    `;
-                } else {
-                    htmlContent += `
-                        <p style="margin: 4px 0 6px 0;">本案關聯雲端附件網址，請點擊下方鏈接檢視：</p>
-                        <div style="background:#FAF6F6; padding:10px; border-radius:8px; border:1px dashed var(--border-color); word-break:break-all;">
-                            <a href="${voucherUrl}" target="_blank" style="color:#A36A6A; font-weight:bold; text-decoration: underline;">點此開啟雲端憑證檔案 ↗</a>
-                        </div>
-                        <p style="font-size:11px; color:#8A7E7E; margin: 6px 0 0 0;">原始路徑：${voucherUrl}</p>
-                    `;
-                }
-            } else {
-                htmlContent += `<div class="modal-value" style="font-style: italic; color: #7A6F6F;">${voucherUrl}</div>`;
-            }
-        } else {
-            htmlContent += `<div class="modal-value" style="color: #a0aec0; text-align: center;">- 暫無此案件之附加憑證檔案 -</div>`;
-        }
+        // 🎯 讀取並組合多重憑證
+        let vouchersHtml = "";
+        vouchersHtml += buildVoucherItemHtml(v1, 1);
+        vouchersHtml += buildVoucherItemHtml(v2, 2);
+        vouchersHtml += buildVoucherItemHtml(v3, 3);
 
+        htmlContent += `<div class="modal-field" style="margin-top: 18px; border-top: 1px dashed #E2D5D5; padding-top: 14px;">
+                            <div class="modal-label" style="color: #A36A6A;">📎 關聯審查證據 / 違規憑證庫</div>`;
+        
+        if (vouchersHtml !== "") {
+            htmlContent += vouchersHtml;
+        } else {
+            htmlContent += `<div class="modal-value" style="color: #a0aec0; text-align: center;">- 系統自動核算或暫無附加憑證檔案 -</div>`;
+        }
         htmlContent += `</div>`;
+
         body.innerHTML = htmlContent;
         modal.classList.add("active");
     }
@@ -539,21 +556,27 @@
             const row = dataRows[i];
             if (!row || row.length < 2) continue;
 
-            // ─── 1. 解析違規紀錄分頁 (A~J欄) ───
+            // ─── 1. 解析違規紀錄分頁 (A~L欄 -> 憑證在 G, H, I 欄) ───
             const caseId = row[0] ? row[0].toString().trim() : "";
             const dateStr = row[1] ? row[1].toString().trim() : "";
             const name = row[2] ? row[2].toString().trim() : "";
             const law = row[4] ? row[4].toString().trim() : "";
-            const recordVoucher = row[6] ? row[6].toString().trim() : ""; 
-            const resultText = row[7] ? row[7].toString().trim() : "";
-            const status = row[8] ? row[8].toString().trim() : "";
-            const reporter = row[9] ? row[9].toString().trim() : "";
+            
+            // 讀取新增的 3 個違規憑證
+            const rv1 = row[6] ? row[6].toString().trim() : ""; // 憑證1 (G)
+            const rv2 = row[7] ? row[7].toString().trim() : ""; // 憑證2 (H)
+            const rv3 = row[8] ? row[8].toString().trim() : ""; // 憑證3 (I)
+            
+            const resultText = row[9] ? row[9].toString().trim() : "";  // 處分結果挪移到 J 欄
+            const status = row[10] ? row[10].toString().trim() : "";    // 狀態在 K 欄
+            const reporter = row[11] ? row[11].toString().trim() : "";  // 舉發人在 L 欄
 
             if (caseId !== "" && name !== "") {
-                // 將特殊字元處理防止 JSON 崩裂破壞 HTML 字串
                 const safeLaw = law.replace(/`/g, '\\`').replace(/\$/g, '\\$').replace(/"/g, '&quot;');
                 const safeResult = resultText.replace(/`/g, '\\`').replace(/\$/g, '\\$').replace(/"/g, '&quot;');
-                const safeVoucher = recordVoucher.replace(/`/g, '\\`').replace(/\$/g, '\\$').replace(/"/g, '&quot;');
+                const safeRv1 = rv1.replace(/`/g, '\\`').replace(/\$/g, '\\$').replace(/"/g, '&quot;');
+                const safeRv2 = rv2.replace(/`/g, '\\`').replace(/\$/g, '\\$').replace(/"/g, '&quot;');
+                const safeRv3 = rv3.replace(/`/g, '\\`').replace(/\$/g, '\\$').replace(/"/g, '&quot;');
 
                 recordsHtml += `<tr data-user="${name}">
                     <td><div class="case-id">${caseId}</div></td>
@@ -563,23 +586,30 @@
                     <td class="ellipsis-cell">${resultText}</td>
                     <td style="text-align: center;"><span class="badge ${getRecordBadgeClass(status)}">${status}</span></td>
                     <td style="text-align: center;">
-                        <span class="btn-detail-link" onclick="openDetailModal('${caseId}', 'record', \`${safeLaw}\`, \`${safeResult}\`, \`${safeVoucher}\`)">詳細內容</span>
+                        <span class="btn-detail-link" onclick="openDetailModal('${caseId}', 'record', \`${safeLaw}\`, \`${safeResult}\`, \`${safeRv1}\`, \`${safeRv2}\`, \`${safeRv3}\`)">詳細內容</span>
                     </td>
                     <td class="nowrap">${reporter}</td>
                 </tr>`;
             }
 
-            // ─── 2. 解析申覆申請分頁 (K~P欄) ───
-            const appealCaseId = row[10] ? row[10].toString().trim() : "";
-            const appealDate = row[11] ? row[11].toString().trim() : "";
-            const appealDesc = row[12] ? row[12].toString().trim() : "";
-            const appealVoucher = row[13] ? row[13].toString().trim() : "";
-            const appealResult = row[14] ? row[14].toString().trim() : "";
-            const approver = row[15] ? row[15].toString().trim() : "";
+            // ─── 2. 解析申覆申請分頁 (M~R欄 -> 案號在 M，憑證在 P, Q, R) ───
+            const appealCaseId = row[12] ? row[12].toString().trim() : "";
+            const appealDate = row[13] ? row[13].toString().trim() : "";
+            const appealDesc = row[14] ? row[14].toString().trim() : "";
+            
+            // 讀取新增的 3 個申覆憑證
+            const av1 = row[15] ? row[15].toString().trim() : ""; // 申覆憑證1 (P)
+            const av2 = row[16] ? row[16].toString().trim() : ""; // 申覆憑證2 (Q)
+            const av3 = row[17] ? row[17].toString().trim() : ""; // 申覆憑證3 (R)
+            
+            const appealResult = row[18] ? row[18].toString().trim() : ""; // 申覆結果在 S 欄
+            const approver = row[19] ? row[19].toString().trim() : "";     // 核覆人在 T 欄
 
             if (appealCaseId !== "" && appealDate !== "") {
                 const safeDesc = appealDesc.replace(/`/g, '\\`').replace(/\$/g, '\\$').replace(/"/g, '&quot;');
-                const safeAppVoucher = appealVoucher.replace(/`/g, '\\`').replace(/\$/g, '\\$').replace(/"/g, '&quot;');
+                const safeAv1 = av1.replace(/`/g, '\\`').replace(/\$/g, '\\$').replace(/"/g, '&quot;');
+                const safeAv2 = av2.replace(/`/g, '\\`').replace(/\$/g, '\\$').replace(/"/g, '&quot;');
+                const safeAv3 = av3.replace(/`/g, '\\`').replace(/\$/g, '\\$').replace(/"/g, '&quot;');
 
                 appealsHtml += `<tr data-user="${name}">
                     <td><div class="case-id">${appealCaseId}</div></td>
@@ -588,7 +618,7 @@
                     <td class="ellipsis-cell">${appealDesc}</td>
                     <td style="text-align: center;"><span class="badge ${getAppealBadgeClass(appealResult)}">${appealResult}</span></td>
                     <td style="text-align: center;">
-                        <span class="btn-detail-link" onclick="openDetailModal('${appealCaseId}', 'appeal', \`${safeDesc}\`, '', \`${safeAppVoucher}\`)">詳細內容</span>
+                        <span class="btn-detail-link" onclick="openDetailModal('${appealCaseId}', 'appeal', \`${safeDesc}\`, '', \`${safeAv1}\`, \`${safeAv2}\`, \`${safeAv3}\`)">詳細內容</span>
                     </td>
                     <td class="nowrap">${approver ? approver : "-"}</td>
                 </tr>`;
