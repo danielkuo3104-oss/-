@@ -230,7 +230,7 @@
             color: var(--morandi-dark);
         }
 
-        /* ─── 修正需求二：回到主頁實心按鈕樣式 ─── */
+        /* 下方回到主頁實心按鈕樣式 */
         .btn-home-container {
             text-align: center;
             margin-top: 30px;
@@ -253,9 +253,6 @@
             border-color: #765656;
             transform: translateY(-1px);
             box-shadow: 0 6px 16px rgba(140, 106, 106, 0.3);
-        }
-        .btn-home:active {
-            transform: translateY(1px);
         }
 
         /* ─── 狀態顏色指定 ─── */
@@ -292,7 +289,7 @@
         .modal-box {
             background-color: #ffffff;
             width: 92%;
-            max-width: 560px;
+            max-width: 540px;
             border-radius: 16px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.15);
             overflow: hidden;
@@ -335,27 +332,29 @@
             word-break: break-all;
         }
         
-        /* ─── 修正需求一：憑證單獨展示區塊樣式 ─── */
-        .voucher-display-block {
+        /* 憑證外跳連結樣式 */
+        .voucher-link-block {
             background: #ffffff;
             padding: 12px;
             border-radius: 8px;
             border: 1px solid var(--border-color);
             margin-top: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
-        .voucher-title-text {
+        .voucher-link-text {
             font-size: 13px;
             font-weight: bold;
-            color: var(--morandi-dark);
-            margin-bottom: 6px;
+            color: var(--text-main);
         }
-        .voucher-preview-area {
-            background: #FAF6F6;
-            border-radius: 6px;
-            padding: 10px;
-            font-size: 13px;
-            color: #5A5555;
-            word-break: break-all;
+        .voucher-go-btn {
+            color: #1b65a6;
+            text-decoration: underline;
+            font-weight: bold;
+        }
+        .voucher-go-btn:hover {
+            color: var(--morandi-dark);
         }
     </style>
 </head>
@@ -488,30 +487,22 @@
         return "status-orange";
     }
 
-    // 🎯 修正需求一：不開分頁，原地將每個憑證欄位分開排版展示
-    function buildVoucherBlockHtml(url, index) {
+    // 🎯 修正核心：建立點此連結的形式，使其自動開啟新分頁跳轉
+    function buildVoucherLinkHtml(url, index) {
         url = url.trim();
         if (!url || url === "-") return "";
         
-        let previewContent = "";
         if (url.substring(0, 4) === "http") {
-            if (url.includes("drive.google.com")) {
-                previewContent = `<div style="font-weight: 500; color: #4A3E3E; margin-bottom: 4px;">雲端單據連結：</div>
-                                  <div style="background:#fff; border:1px solid #E2D5D5; padding:8px; border-radius:6px; font-size:12px; color:#1b65a6; word-break:break-all;">${url}</div>
-                                  <p style="font-size:12px; color:#7A6F6F; margin: 6px 0 0 0;">(提示：此為 Google 雲端安全加密檔案。如需完整權限審閱，請複製此網址代入瀏覽器。)</p>`;
-            } else if (/\.(jpeg|jpg|gif|png)$/i.test(url)) {
-                previewContent = `<img src="${url}" style="max-width:100%; border-radius:6px; margin-top:5px; border:1px solid #E2D5D5;" alt="憑證附件 ${index}">`;
-            } else {
-                previewContent = `<div style="font-weight: 500; color: #1b65a6; word-break:break-all;">${url}</div>`;
-            }
+            return `<div class="voucher-link-block">
+                <div class="voucher-link-text">審查憑證附件紀錄 (${index})</div>
+                <a href="${url}" target="_blank" class="voucher-go-btn">點此檢視憑證檔案庫 ↗</a>
+            </div>`;
         } else {
-            previewContent = `<span style="color:#7A6F6F; font-style:italic;">${url}</span>`;
+            return `<div class="voucher-link-block">
+                <div class="voucher-link-text">審查憑證附件紀錄 (${index})</div>
+                <span style="color:#7A6F6F; font-style:italic; font-size:13px;">${url}</span>
+            </div>`;
         }
-
-        return `<div class="voucher-display-block">
-            <div class="voucher-title-text">審查憑證附件紀錄 (${index})</div>
-            <div class="voucher-preview-area">${previewContent}</div>
-        </div>`;
     }
 
     function openDetailModal(caseId, mode, mainText, extraText, v1, v2, v3) {
@@ -543,11 +534,11 @@
             `;
         }
 
-        // 讀取並個別、分開展示 3 個憑證區塊
+        // 讀取並整合多重憑證連結
         let vouchersHtml = "";
-        vouchersHtml += buildVoucherBlockHtml(v1, 1);
-        vouchersHtml += buildVoucherBlockHtml(v2, 2);
-        vouchersHtml += buildVoucherBlockHtml(v3, 3);
+        vouchersHtml += buildVoucherLinkHtml(v1, 1);
+        vouchersHtml += buildVoucherLinkHtml(v2, 2);
+        vouchersHtml += buildVoucherLinkHtml(v3, 3);
 
         htmlContent += `<div style="margin-top: 18px; border-top: 1px dashed #E2D5D5; padding-top: 14px;">
                             <div style="font-weight:bold; color:#A36A6A; font-size:13px; margin-bottom:4px;">關聯審查證據 / 違規憑證庫</div>`;
