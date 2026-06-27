@@ -265,11 +265,13 @@
             white-space: nowrap;
             text-align: center;
         }
-        .status-gray { background-color: #EDEAE9; color: #5A5555; }     /* 已結案 */
-        .status-blue { background-color: #E1F0FA; color: #1B65A6; }     /* 成案/可申覆 */
-        .status-orange { background-color: #FDF0DB; color: #C46D00; }   /* 申覆中 / 案件處理中 */
-        .status-red { background-color: #FCE8E6; color: #C5221F; }       /* 已結案(申覆失敗) / 駁回 */
-        .status-green { background-color: #E6F4EA; color: #137333; }    /* 已撤銷 */
+        /* 嚴格狀態顏色映射 */
+        .status-orange { background-color: #FFF0E0; color: #E67E22; }    /* 包含「申覆中」：橘色 */
+        .status-blue { background-color: #E1F0FA; color: #1B65A6; }      /* 可申覆：藍色 */
+        .status-gray { background-color: #EDEAE9; color: #5A5555; }      /* 已結案：灰色 / 其他未知：灰色 */
+        .status-navy { background-color: #E2E8F0; color: #1A365D; }      /* 疑義案件：藏青色 */
+        .status-red { background-color: #FCE8E6; color: #C5221F; }       /* 駁回 */
+        .status-green { background-color: #E6F4EA; color: #137333; }     /* 已撤銷 */
 
         /* ─── 彈出視窗 (Modal Lightbox) ─── */
         .modal-overlay {
@@ -476,11 +478,17 @@
 
     function getRecordBadgeClass(status) {
         status = status.trim();
-        if (status === "已結案") return "status-gray";
-        if (status === "成案/可申覆") return "status-blue";
-        if (status === "申覆中" || status === "成案/疑義案件") return "status-orange";
-        if (status === "已結案(申覆失敗)" || status === "駁回") return "status-red";
+        // 1. 優先精確攔截文字中包涵「申覆中」的任何衍生狀態（如：申覆中/值日暫停）
+        if (status.indexOf("申覆中") !== -1) return "status-orange";
+        
+        // 2. 其餘狀態條件嚴格比對
+        if (status === "可申覆" || status === "成案/可申覆") return "status-blue";
+        if (status === "已結案" || status === "已結案(申覆失敗)") return "status-gray";
+        if (status === "疑義案件" || status === "成案/疑義案件") return "status-navy";
+        if (status === "駁回") return "status-red";
         if (status === "已撤銷") return "status-green";
+        
+        // 3. 其他未知原因或未列出之狀態一律保底歸入灰色
         return "status-gray";
     }
 
