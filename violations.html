@@ -267,7 +267,7 @@
         }
         .status-gray { background-color: #EDEAE9; color: #5A5555; }     /* 已結案 */
         .status-blue { background-color: #E1F0FA; color: #1B65A6; }     /* 成案/可申覆 */
-        .status-orange { background-color: #FDF0DB; color: #C46D00; }   /* 申覆中 */
+        .status-orange { background-color: #FDF0DB; color: #C46D00; }   /* 申覆中 / 案件處理中 */
         .status-red { background-color: #FCE8E6; color: #C5221F; }      /* 已結案(申覆失敗) / 駁回 */
         .status-green { background-color: #E6F4EA; color: #137333; }    /* 已撤銷 */
 
@@ -323,6 +323,12 @@
         }
         .modal-field {
             margin-bottom: 14px;
+        }
+        .modal-title-label {
+            font-weight: bold;
+            color: var(--morandi-dark);
+            font-size: 13px;
+            margin-bottom: 4px;
         }
         .modal-value {
             background-color: #FAF6F6;
@@ -394,12 +400,11 @@
                             <th style="width: 16%;">案件序號</th>
                             <th style="width: 11%;">立案日期</th>
                             <th style="width: 10%;">違規人</th>
-                            <th style="width: 28%;">違規法源</th>
-                            <th style="width: 12%;">處分結果</th>
+                            <th style="width: 26%;">違規法源</th>
+                            <th style="width: 11%;">處分結果</th>
                             <th style="width: 11%; text-align: center;">當前狀態</th>
                             <th style="width: 14%; text-align: center;">內容詳情</th>
-                            <th style="width: 8%;">舉發人</th>
-                        </tr>
+                            <th style="width: 11%;">備註</th> </tr>
                     </thead>
                     <tbody id="recordsBody">
                         <tr><td colspan="8" class="loading-text">正在即時讀取雲端 CSV 對帳紀錄中...</td></tr>
@@ -441,8 +446,7 @@
             <span id="modalTitle">詳細案情資訊庫</span>
             <button class="modal-close" onclick="closeModal()">&times;</button>
         </div>
-        <div class="modal-body" id="modalBody">
-            </div>
+        <div class="modal-body" id="modalBody"></div>
     </div>
 </div>
 
@@ -474,8 +478,8 @@
         status = status.trim();
         if (status === "已結案") return "status-gray";
         if (status === "成案/可申覆") return "status-blue";
-        if (status === "申覆中") return "status-orange";
-        if (status === "已結案(申覆失敗)") return "status-red";
+        if (status === "申覆中" || status === "成案/疑義案件") return "status-orange";
+        if (status === "已結案(申覆失敗)" || status === "駁回") return "status-red";
         if (status === "已撤銷") return "status-green";
         return "status-gray";
     }
@@ -487,10 +491,9 @@
         return "status-orange";
     }
 
-    // 🎯 修正核心：建立點此連結的形式，使其自動開啟新分頁跳轉
     function buildVoucherLinkHtml(url, index) {
         url = url.trim();
-        if (!url || url === "-") return "";
+        if (!url || url === "-" || url === "系統自動") return "";
         
         if (url.substring(0, 4) === "http") {
             return `<div class="voucher-link-block">
@@ -505,7 +508,8 @@
         }
     }
 
-    function openDetailModal(caseId, mode, mainText, extraText, v1, v2, v3) {
+    // 🎯 修正核心：展開詳細 Modal 視窗（加入備註、核覆日期、核覆說明等新欄位）
+    function openDetailModal(caseId, mode, mainText, extraText, v1, v2, v3, noteOrDate, appealReply) {
         const modal = document.getElementById("voucherModal");
         const title = document.getElementById("modalTitle");
         const body = document.getElementById("modalBody");
@@ -517,19 +521,31 @@
         if (mode === 'record') {
             htmlContent = `
                 <div class="modal-field">
-                    <div class="modal-title" style="font-weight:bold; color:var(--morandi-dark); font-size:13px; margin-bottom:4px;">完整違規法源事由</div>
+                    <div class="modal-title-label">完整違規法源事由</div>
                     <div class="modal-value">${mainText || "無事由說明"}</div>
                 </div>
                 <div class="modal-field">
-                    <div class="modal-title" style="font-weight:bold; color:var(--morandi-dark); font-size:13px; margin-bottom:4px;">處分結果明細</div>
+                    <div class="modal-title-label">處分結果明細</div>
                     <div class="modal-value">${extraText || "無處分結果資訊"}</div>
+                </div>
+                <div class="modal-field">
+                    <div class="modal-title-label">管理審查備註說明</div>
+                    <div class="modal-value">${noteOrDate || "- 無特別備註紀錄 -"}</div>
                 </div>
             `;
         } else {
             htmlContent = `
                 <div class="modal-field">
-                    <div class="modal-title" style="font-weight:bold; color:var(--morandi-dark); font-size:13px; margin-bottom:4px;">完整申覆說明事實</div>
+                    <div class="modal-title-label">完整申覆說明事實</div>
                     <div class="modal-value">${mainText || "無事實說明"}</div>
+                </div>
+                <div class="modal-field">
+                    <div class="modal-title-label">申覆核覆日期</div>
+                    <div class="modal-value">${noteOrDate || "- 暫無核覆日期紀錄 -"}</div>
+                </div>
+                <div class="modal-field">
+                    <div class="modal-title-label">核覆意見與決議說明</div>
+                    <div class="modal-value">${appealReply || "- 審查小組評估中 -"}</div>
                 </div>
             `;
         }
@@ -569,6 +585,7 @@
             const row = dataRows[i];
             if (!row || row.length < 2) continue;
 
+            // ─── 違規處分對齊 ───
             const caseId = row[0] ? row[0].toString().trim() : "";
             const dateStr = row[1] ? row[1].toString().trim() : "";
             const name = row[2] ? row[2].toString().trim() : "";
@@ -580,11 +597,12 @@
             
             const resultText = row[9] ? row[9].toString().trim() : "";  
             const status = row[10] ? row[10].toString().trim() : "";    
-            const reporter = row[11] ? row[11].toString().trim() : "";  
+            const noteText = row[11] ? row[11].toString().trim() : "";  // 🎯 修正：L欄(11)此處改綁定為備註欄位
 
             if (caseId !== "" && name !== "") {
                 const safeLaw = law.replace(/`/g, '\\`').replace(/\$/g, '\\$').replace(/"/g, '&quot;');
                 const safeResult = resultText.replace(/`/g, '\\`').replace(/\$/g, '\\$').replace(/"/g, '&quot;');
+                const safeNote = noteText.replace(/`/g, '\\`').replace(/\$/g, '\\$').replace(/"/g, '&quot;');
                 const safeRv1 = rv1.replace(/`/g, '\\`').replace(/\$/g, '\\$').replace(/"/g, '&quot;');
                 const safeRv2 = rv2.replace(/`/g, '\\`').replace(/\$/g, '\\$').replace(/"/g, '&quot;');
                 const safeRv3 = rv3.replace(/`/g, '\\`').replace(/\$/g, '\\$').replace(/"/g, '&quot;');
@@ -597,12 +615,13 @@
                     <td class="ellipsis-cell">${resultText}</td>
                     <td style="text-align: center;"><span class="badge ${getRecordBadgeClass(status)}">${status}</span></td>
                     <td style="text-align: center;">
-                        <span class="btn-detail-link" onclick="openDetailModal('${caseId}', 'record', \`${safeLaw}\`, \`${safeResult}\`, \`${safeRv1}\`, \`${safeRv2}\`, \`${safeRv3}\`)">詳細內容</span>
+                        <span class="btn-detail-link" onclick="openDetailModal('${caseId}', 'record', \`${safeLaw}\`, \`${safeResult}\`, \`${safeRv1}\`, \`${safeRv2}\`, \`${safeRv3}\`, \`${safeNote}\`, '')">詳細內容</span>
                     </td>
-                    <td class="nowrap">${reporter}</td>
+                    <td class="ellipsis-cell">${noteText ? noteText : "-"}</td>
                 </tr>`;
             }
 
+            // ─── 申覆申請對齊 ───
             const appealCaseId = row[12] ? row[12].toString().trim() : "";
             const appealDate = row[13] ? row[13].toString().trim() : "";
             const appealDesc = row[14] ? row[14].toString().trim() : "";
@@ -613,9 +632,14 @@
             
             const appealResult = row[18] ? row[18].toString().trim() : ""; 
             const approver = row[19] ? row[19].toString().trim() : ""; 
+            
+            const replyDate = row[20] ? row[20].toString().trim() : "";  // 🎯 新增：U欄(20) 核覆日期
+            const replyDesc = row[21] ? row[21].toString().trim() : "";  // 🎯 新增：V欄(21) 核覆說明
 
             if (appealCaseId !== "" && appealDate !== "") {
                 const safeDesc = appealDesc.replace(/`/g, '\\`').replace(/\$/g, '\\$').replace(/"/g, '&quot;');
+                const safeReplyDate = replyDate.replace(/`/g, '\\`').replace(/\$/g, '\\$').replace(/"/g, '&quot;');
+                const safeReplyDesc = replyDesc.replace(/`/g, '\\`').replace(/\$/g, '\\$').replace(/"/g, '&quot;');
                 const safeAv1 = av1.replace(/`/g, '\\`').replace(/\$/g, '\\$').replace(/"/g, '&quot;');
                 const safeAv2 = av2.replace(/`/g, '\\`').replace(/\$/g, '\\$').replace(/"/g, '&quot;');
                 const safeAv3 = av3.replace(/`/g, '\\`').replace(/\$/g, '\\$').replace(/"/g, '&quot;');
@@ -627,7 +651,7 @@
                     <td class="ellipsis-cell">${appealDesc}</td>
                     <td style="text-align: center;"><span class="badge ${getAppealBadgeClass(appealResult)}">${appealResult}</span></td>
                     <td style="text-align: center;">
-                        <span class="btn-detail-link" onclick="openDetailModal('${appealCaseId}', 'appeal', \`${safeDesc}\`, '', \`${safeAv1}\`, \`${safeAv2}\`, \`${safeAv3}\`)">詳細內容</span>
+                        <span class="btn-detail-link" onclick="openDetailModal('${appealCaseId}', 'appeal', \`${safeDesc}\`, '', \`${safeAv1}\`, \`${safeAv2}\`, \`${safeAv3}\`, \`${safeReplyDate}\`, \`${safeReplyDesc}\`)">詳細內容</span>
                     </td>
                     <td class="nowrap">${approver ? approver : "-"}</td>
                 </tr>`;
@@ -638,6 +662,7 @@
         appealsBody.innerHTML = appealsHtml || '<tr><td colspan="7" class="loading-text">目前尚無任何申覆申請。</td></tr>';
     }
 
+    // 篩選與面板控制邏輯保持不變
     function switchTab(tabName) {
         activeTab = tabName;
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
