@@ -922,6 +922,8 @@
                 const dispWater = globalParsedData[currentWaterIdx]; 
                 const dispGas = globalParsedData[currentGasIdx];
 
+                const prevMonthItem = lastIdx > 0 ? globalParsedData[lastIdx - 1] : latest;
+
                 const eleRemark = (eleIdx !== lastIdx) ? `<div style="font-size: 11px; color: #b56a6a; margin-top: 8px; font-weight: 600;">* 當月無帳單，顯示 ${dispEle.month} 費用</div>` : "";
                 const waterRemark = (currentWaterIdx !== lastIdx) ? `<div style="font-size: 11px; color: #b56a6a; margin-top: 8px; font-weight: 600;">* 當月無帳單，顯示 ${dispWater.month} 費用</div>` : "";
                 const gasRemark = (currentGasIdx !== lastIdx) ? `<div style="font-size: 11px; color: #b56a6a; margin-top: 8px; font-weight: 600;">* 當月無帳單，顯示 ${dispGas.month} 費用</div>` : "";
@@ -990,9 +992,9 @@
                         <div class="gray-title">歷月電表抄錄</div>
                         <div class="stats-grid">
                             <div class="stat-card gray-card" onclick="openRoomDetails('meter')">
-                                <div class="stat-label" style="color: #7e8794;">當月消耗用電總值 (${latest.month})</div>
-                                <div class="stat-value">${latest.deltaMeters["總和"]} 度</div>
-                                <div class="stat-sub" style="color: #9ba4b0;">點擊展開各房當月實際「抄錄數值」與「使用度數」</div>
+                                <div class="stat-label" style="color: #7e8794;">前月消耗用電總值 (${prevMonthItem.month})</div>
+                                <div class="stat-value">${prevMonthItem.deltaMeters["總和"]} 度</div>
+                                <div class="stat-sub" style="color: #9ba4b0;">點擊展開各房歷月實際「抄錄數值」與「使用度數」</div>
                             </div>
                         </div>
                         <div class="chart-card meter-chart-spacer" style="background: #f4f6f8; border-color: #d2dae2;"><div class="chart-container" style="height: 220px;"><canvas id="meterChart"></canvas></div></div>
