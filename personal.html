@@ -465,6 +465,7 @@
                 ];
             }
 
+            // 🎯 找到 personalChartInstance = new Chart(ctx, { ... }); 的地方並替換為以下內容：
             personalChartInstance = new Chart(ctx, {
                 type: 'line',
                 data: {
@@ -475,7 +476,18 @@
                     responsive: true, 
                     maintainAspectRatio: false,
                     scales: {
-                        y: { ticks: { callback: yCallback } }
+                        y: { 
+                            beginAtZero: true, // 👈 🎯 關鍵修正 1：讓 Y 軸強迫從 0 開始，資料就不會擠在同一水平線上被細分
+                            ticks: { 
+                                callback: function(val) {
+                                    // 👈 🎯 關鍵修正 2：如果切換到度數模式，強制四捨五入至小數點後一位，消滅醜陋的長浮點數
+                                    if (currentChartMode === 'meter') {
+                                        return Number(val).toFixed(1) + ' 度';
+                                    }
+                                    return 'NT$ ' + val.toLocaleString();
+                                } 
+                            } 
+                        }
                     }
                 }
             });
