@@ -884,7 +884,6 @@
                     const btnWOut   = wbOut   ? `<span class="receipt-link-btn" onclick="openImageModal('${wbOut}', '', '${monthVal} 外房水費憑證')">水費</span>` : "<span style='color:#cbd1d6;'>-</span>";
                     const btnWProof = wbProof ? `<span class="receipt-link-btn" style="color:#527996; background:#edf3f7; border-color:#cedde7;" onclick="openImageModal('${wbProof}', '', '${monthVal} 水費繳款完成證明')">水費收據</span>` : "<span style='color:#cbd1d6;'>-</span>";
 
-                    // 🎯 電費憑證按鈕美化：改為橘色系樣式（字體與邊框為 #d97736，背景 #fdf6f0）
                     const btnEBig   = ebBig   ? `<span class="receipt-link-btn" style="color:#d97736; background:#fdf6f0; border-color:#f9e3d5;" onclick="openImageModal('${ebBig}', '', '${monthVal} 內大電費憑證')">電費</span>` : "<span style='color:#cbd1d6;'>-</span>";
                     const btnESmall = ebSmall ? `<span class="receipt-link-btn" style="color:#d97736; background:#fdf6f0; border-color:#f9e3d5;" onclick="openImageModal('${ebSmall}', '', '${monthVal} 內小電費憑證')">電費</span>` : "<span style='color:#cbd1d6;'>-</span>";
                     const btnEMid   = ebMid   ? `<span class="receipt-link-btn" style="color:#d97736; background:#fdf6f0; border-color:#f9e3d5;" onclick="openImageModal('${ebMid}', '', '${monthVal} 中房電費憑證')">電費</span>` : "<span style='color:#cbd1d6;'>-</span>";
@@ -923,6 +922,9 @@
                 const dispGas = globalParsedData[currentGasIdx];
 
                 const prevMonthItem = lastIdx > 0 ? globalParsedData[lastIdx - 1] : latest;
+
+                // 🎯 修正：將前月用電總和轉為浮點數並除以 10
+                const prevMonthDeltaSum = prevMonthItem.deltaMeters["總和"] !== "0" ? (parseFloat(prevMonthItem.deltaMeters["總和"]) / 10).toFixed(1) : "0.0";
 
                 const eleRemark = (eleIdx !== lastIdx) ? `<div style="font-size: 11px; color: #b56a6a; margin-top: 8px; font-weight: 600;">* 當月無帳單，顯示 ${dispEle.month} 費用</div>` : "";
                 const waterRemark = (currentWaterIdx !== lastIdx) ? `<div style="font-size: 11px; color: #b56a6a; margin-top: 8px; font-weight: 600;">* 當月無帳單，顯示 ${dispWater.month} 費用</div>` : "";
@@ -993,7 +995,7 @@
                         <div class="stats-grid">
                             <div class="stat-card gray-card" onclick="openRoomDetails('meter')">
                                 <div class="stat-label" style="color: #7e8794;">前月消耗用電總值 (${prevMonthItem.month})</div>
-                                <div class="stat-value">${prevMonthItem.deltaMeters["總和"]} 度</div>
+                                <div class="stat-value">${prevMonthDeltaSum} 度</div>
                                 <div class="stat-sub" style="color: #9ba4b0;">點擊展開各房歷月實際「抄錄數值」與「使用度數」</div>
                             </div>
                         </div>
@@ -1061,34 +1063,27 @@
                     options: { responsive: true, maintainAspectRatio: false, scales: { x: { display: false }, y: { ticks: { callback: val => 'NT$ ' + val.toLocaleString() } } } }
                 });
 
+                // 🎯 修正：將原本傳入的陣列數值全部除以 10
                 const correctedMeterDeltaData = meterDeltaTotal.map(val => val !== null ? val / 10 : null);
 
-new Chart(document.getElementById('meterChart').getContext('2d'), {
-    type: 'line',
-    data: { 
-        labels: labels, 
-        datasets: [{ 
-            label: '全戶用電淨增加 (度)', 
-            data: correctedMeterDeltaData, // 👈 這裡換成除以 10 後的正確數據
-            borderColor: '#7e8794', 
-            backgroundColor: 'rgba(126, 135, 148, 0.04)', 
-            borderWidth: 2, 
-            pointBackgroundColor: '#626973', 
-            fill: true, 
-            tension: 0.2, 
-            spanGaps: true 
-        }]
-    },
-    options: { 
-        responsive: true, 
-        maintainAspectRatio: false, 
-        plugins: { legend: { display: false } }, 
-        scales: { 
-            x: { display: false }, 
-            y: { ticks: { callback: val => val + ' 度' } } 
-        } 
-    }
-});
+                new Chart(document.getElementById('meterChart').getContext('2d'), {
+                    type: 'line',
+                    data: { labels: labels, datasets: [{ label: '全戶用電淨增加 (度)', data: correctedMeterDeltaData, borderColor: '#7e8794', backgroundColor: 'rgba(126, 135, 148, 0.04)', borderWidth: 2, pointBackgroundColor: '#626973', fill: true, tension: 0.2, spanGaps: true }]},
+                    options: { 
+                        responsive: true, 
+                        maintainAspectRatio: false, 
+                        plugins: { legend: { display: false } }, 
+                        scales: { 
+                            x: { display: false }, 
+                            y: { 
+                                beginAtZero: true, // 🎯 修正：讓 Y 軸從 0 開始，避免單一數據時尺度極度擠壓
+                                ticks: { 
+                                    callback: val => Number(val).toFixed(1) + ' 度' // 🎯 修正：強制四捨五入到小數點第一位，防止顯示無意義的精密浮點數
+                                } 
+                            } 
+                        } 
+                    }
+                });
 
                 loadDutyStatus();
                 loadDynamicRules(); 
