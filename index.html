@@ -1061,11 +1061,34 @@
                     options: { responsive: true, maintainAspectRatio: false, scales: { x: { display: false }, y: { ticks: { callback: val => 'NT$ ' + val.toLocaleString() } } } }
                 });
 
-                new Chart(document.getElementById('meterChart').getContext('2d'), {
-                    type: 'line',
-                    data: { labels: labels, datasets: [{ label: '全戶用電淨增加 (度)', data: meterDeltaTotal, borderColor: '#7e8794', backgroundColor: 'rgba(126, 135, 148, 0.04)', borderWidth: 2, pointBackgroundColor: '#626973', fill: true, tension: 0.2, spanGaps: true }]},
-                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { ticks: { callback: val => val + ' 度' } } } }
-                });
+                const correctedMeterDeltaData = meterDeltaTotal.map(val => val !== null ? val / 10 : null);
+
+new Chart(document.getElementById('meterChart').getContext('2d'), {
+    type: 'line',
+    data: { 
+        labels: labels, 
+        datasets: [{ 
+            label: '全戶用電淨增加 (度)', 
+            data: correctedMeterDeltaData, // 👈 這裡換成除以 10 後的正確數據
+            borderColor: '#7e8794', 
+            backgroundColor: 'rgba(126, 135, 148, 0.04)', 
+            borderWidth: 2, 
+            pointBackgroundColor: '#626973', 
+            fill: true, 
+            tension: 0.2, 
+            spanGaps: true 
+        }]
+    },
+    options: { 
+        responsive: true, 
+        maintainAspectRatio: false, 
+        plugins: { legend: { display: false } }, 
+        scales: { 
+            x: { display: false }, 
+            y: { ticks: { callback: val => val + ' 度' } } 
+        } 
+    }
+});
 
                 loadDutyStatus();
                 loadDynamicRules(); 
