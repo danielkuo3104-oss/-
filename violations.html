@@ -332,12 +332,14 @@
             font-size: 13px;
             margin-bottom: 4px;
         }
+        /* 🎯 找到 .modal-value 區塊並加上 white-space 設定 */
         .modal-value {
             background-color: #FAF6F6;
             padding: 10px 14px;
             border-radius: 8px;
             border: 1px solid #F0E6E6;
             word-break: break-all;
+            white-space: pre-line; /* 👈 🎯 關鍵修正：讓 HTML 能夠識別並自動渲染 \n 換行 */
         }
         
         /* 憑證外跳連結樣式 */
