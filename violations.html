@@ -538,6 +538,17 @@
 
         title.innerText = `案件號 [${caseId}] - 詳細內容與證據檢視`;
         
+        // 🎯 終極修正：將可能遺失換行符號的備註文字，透過 JavaScript 強制把關鍵字前面塞入 <br> 換行
+        let formattedNote = (noteOrDate || "- 無特別備註紀錄 -").toString();
+        formattedNote = formattedNote
+            .replace(/\[系統自動/g, '<br><br>[系統自動') // 遇到新段落，先空一行再換行
+            .replace(/提出時間：/g, '<br>提出時間：')
+            .replace(/是否申覆成功：/g, '<br>是否申覆成功：')
+            .replace(/核覆結果：/g, '<br>核覆結果：')
+            .replace(/核覆意見：/g, '<br>核覆意見：')
+            .replace(/核覆時間：/g, '<br>核覆時間：')
+            .replace(/簽結人員：/g, '<br>簽結人員：');
+
         let htmlContent = "";
 
         if (mode === 'record') {
@@ -552,10 +563,17 @@
                 </div>
                 <div class="modal-field">
                     <div class="modal-title-label">管理審查備註說明</div>
-                    <div class="modal-value">${noteOrDate || "- 無特別備註紀錄 -"}</div>
+                    <div class="modal-value">${formattedNote}</div> 
                 </div>
             `;
         } else {
+            // 同理，如果申覆那邊也有擠在一起的可能，一併做取代處理
+            let formattedReply = (appealReply || "- 審查小組評估中 -").toString()
+                .replace(/核覆結果：/g, '<br>核覆結果：')
+                .replace(/核覆意見：/g, '<br>核覆意見：')
+                .replace(/核覆時間：/g, '<br>核覆時間：')
+                .replace(/簽結人員：/g, '<br>簽結人員：');
+
             htmlContent = `
                 <div class="modal-field">
                     <div class="modal-title-label">完整申覆說明事實</div>
@@ -567,7 +585,7 @@
                 </div>
                 <div class="modal-field">
                     <div class="modal-title-label">核覆意見與決議說明</div>
-                    <div class="modal-value">${appealReply || "- 審查小組評估中 -"}</div>
+                    <div class="modal-value">${formattedReply}</div>
                 </div>
             `;
         }
