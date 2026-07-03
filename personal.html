@@ -76,14 +76,14 @@
             background: #f8fafc; border: 1px solid #e2e8f0;
             padding: 16px 20px; border-radius: 16px; display: flex; flex-direction: column; gap: 12px;
             box-shadow: 0 2px 8px rgba(148, 163, 184, 0.04); cursor: pointer; text-decoration: none;
-            transition: all 0.2s ease; min-width: 320px;
+            transition: all 0.2s ease; max-width: 100%; box-sizing: border-box;
         }
         .profile-violation-dashboard:hover {
             transform: translateY(-2px); background-color: #f1f5f9; border-color: #cbd5e1;
             box-shadow: 0 4px 12px rgba(148, 163, 184, 0.12);
         }
         .violation-dash-group {
-            display: flex; justify-content: space-between; gap: 16px;
+            display: flex; justify-content: space-between; gap: 16px; width: 100%;
         }
         .violation-dash-group.top-row {
             border-bottom: 1px dashed #e2e8f0; padding-bottom: 10px;
@@ -100,14 +100,14 @@
         .violation-dash-value {
             font-size: 15px; font-weight: 700; color: #475569;
         }
-        /* 色彩微調 - 保持優雅不突兀 */
+        /* 色彩微調 */
         .appealable .violation-dash-value { color: #527996; } 
         .settled .violation-dash-value { color: #bc6c3a; }     
         .processing .violation-dash-value { color: #7e878f; }  
         .pts-total .violation-dash-value { color: #b56a6a; font-size: 16px; }
 
         .violation-dash-clean {
-            color: #437353; font-size: 13px; font-weight: 600; padding: 6px 16px; background: #edf7f1; border-radius: 20px; text-align: center;
+            color: #437353; font-size: 13px; font-weight: 600; padding: 6px 16px; background: #edf7f1; border-radius: 20px; text-align: center; width: 100%; box-sizing: border-box;
         }
 
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; margin-bottom: 0; }
@@ -190,6 +190,7 @@
         .modal-row-summary { display:flex; justify-content:space-between; padding:14px 0 4px 0; font-size:14px; font-weight:700; color:#4a515a; border-top:2px dashed #cbd1d6; margin-top:10px; }
         .close-btn { width:100%; background:#69779b; color:white; border:none; padding:12px; border-radius:12px; font-size:14px; font-weight:600; cursor:pointer; margin-top:20px; transition:background 0.2s; }
 
+        /* 📱 手機 RWD 自動縮合、防溢出樣式調整 */
         @media (max-width: 768px) {
             .header-banner { padding: 35px 20px 45px 20px; }
             .header-banner h1 { font-size: 22px; }
@@ -203,7 +204,19 @@
             .chart-container { height: 280px; }
             
             .profile-header-flex { flex-direction: column; align-items: flex-start; gap: 14px; }
-            .profile-violation-dashboard { width: 100%; box-sizing: border-box; }
+            
+            /* 🎯 關鍵修正：手機版改為上下垂直排列，防寬度溢出 */
+            .profile-violation-dashboard { width: 100%; box-sizing: border-box; padding: 14px; }
+            .violation-dash-group { flex-direction: column; gap: 8px; }
+            .violation-dash-group.top-row { border-bottom: none; padding-bottom: 0; margin-bottom: 0; }
+            .violation-dash-item { text-align: left; display: flex; justify-content: space-between; width: 100%; padding: 2px 0; }
+            .violation-dash-item:not(:last-child)::after { display: none; } /* 隱藏水平分隔線 */
+            .violation-dash-label { margin-bottom: 0; }
+            
+            /* 在手機版兩組數據中間補一條精緻水平虛線 */
+            .violation-dash-group.top-row::after {
+                content: ''; width: 100%; border-top: 1px dashed #e2e8f0; margin-top: 6px; margin-bottom: 2px; display: block;
+            }
 
             .total-summary-box {
                 grid-template-columns: repeat(2, 1fr); gap: 24px 16px; padding: 20px;
@@ -361,7 +374,6 @@
             }
         }
 
-        // 🎯 模糊包含（包含就好）核心篩選邏輯修正
         async function fetchLiveCases() {
             try {
                 const response = await fetch(urlViolationInfo);
@@ -377,23 +389,18 @@
                     const cells = lines[i].split(",").map(c => c.replace(/["']/g, '').trim());
                     if (cells.length < 11) continue;
 
-                    const tenantName = cells[2]; // C欄：姓名
-                    const status = cells[10];     // K欄：狀態
+                    const tenantName = cells[2]; 
+                    const status = cells[10];     
 
                     const roomKey = Object.keys(tenantNames).find(key => tenantNames[key] === tenantName);
                     if (!roomKey) continue;
 
-                    // 🎯 1. 只要包含「可申覆」，就計入可申覆案件
                     if (status.indexOf("可申覆") !== -1) {
                         liveCaseCounts[roomKey].canAppeal++;
                     }
-                    
-                    // 🎯 2. 只要包含「申覆中」，就計入申覆中案件
                     if (status.indexOf("申覆中") !== -1) {
                         liveCaseCounts[roomKey].processing++;
                     }
-
-                    // 🎯 3. 違規案件數：包含 "可申覆" + 包含 "已結案" + 包含 "申覆中" 皆納入統計
                     if (status.indexOf("可申覆") !== -1 || status.indexOf("已結案") !== -1 || status.indexOf("申覆中") !== -1) {
                         liveCaseCounts[roomKey].settled++;
                     }
@@ -500,6 +507,7 @@
             });
         }
 
+        // 🎯 渲染與排版整合修正（已移除括號代號標籤）
         function renderPersonalSection() {
             const roomKey = document.getElementById('personalTenantSelect').value;
             if(!roomKey || globalParsedData.length === 0) return;
@@ -548,15 +556,15 @@
                         </div>
                         <div class="violation-dash-group">
                             <div class="violation-dash-item">
-                                <div class="violation-dash-label">未處分點數 (i)</div>
+                                <div class="violation-dash-label">未處分點數</div>
                                 <div class="violation-dash-value">${pData.unhandled}</div>
                             </div>
                             <div class="violation-dash-item">
-                                <div class="violation-dash-label">已處分點數 (j)</div>
+                                <div class="violation-dash-label">已處分點數</div>
                                 <div class="violation-dash-value">${pData.handled}</div>
                             </div>
                             <div class="violation-dash-item">
-                                <div class="violation-dash-label">正在處分 (k)</div>
+                                <div class="violation-dash-label">正在處分</div>
                                 <div class="violation-dash-value">${pData.processing}</div>
                             </div>
                             <div class="violation-dash-item pts-total">
