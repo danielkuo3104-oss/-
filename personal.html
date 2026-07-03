@@ -71,28 +71,36 @@
         .profile-title-name { font-size: 24px; font-weight: 700; color: #69779b; }
         .profile-subtitle-room { font-size: 14px; color: #8a929a; font-weight: 500; margin-top: 4px; }
         
-        /* 🎯 升級版：進階莫蘭迪複合式違規點數看板 */
+        /* 🎯 質感升級：高雅莫蘭迪融入式違規統計看板 */
         .profile-violation-dashboard {
-            background: #fcf9f7; border: 1px solid rgba(188, 108, 58, 0.15);
-            padding: 12px 18px; border-radius: 16px; display: flex; flex-direction: column; gap: 6px;
-            box-shadow: 0 4px 12px rgba(188, 108, 58, 0.03); cursor: pointer; text-decoration: none;
-            transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s;
+            background: #f8fafc; border: 1px solid #e2e8f0;
+            padding: 16px 20px; border-radius: 16px; display: flex; align-items: center; gap: 24px;
+            box-shadow: 0 2px 8px rgba(148, 163, 184, 0.05); cursor: pointer; text-decoration: none;
+            transition: all 0.2s ease;
         }
         .profile-violation-dashboard:hover {
-            transform: translateY(-2px); background-color: #fdf5f0;
-            box-shadow: 0 6px 16px rgba(188, 108, 58, 0.08);
+            transform: translateY(-2px); background-color: #f1f5f9; border-color: #cbd5e1;
+            box-shadow: 0 4px 12px rgba(148, 163, 184, 0.12);
         }
-        .violation-dash-row {
-            display: flex; justify-content: space-between; gap: 24px; font-size: 12px; font-weight: 500; color: #727a82;
+        .violation-dash-item {
+            text-align: center; position: relative;
         }
-        .violation-dash-row span.val { font-weight: 700; }
-        .violation-dash-row.total {
-            border-top: 1px dashed rgba(188, 108, 58, 0.25); margin-top: 4px; padding-top: 4px;
-            color: #bc6c3a; font-size: 13px; font-weight: 600;
+        .violation-dash-item:not(:last-child)::after {
+            content: ''; position: absolute; right: -12px; top: 20%; height: 60%; width: 1px; background: #e2e8f0;
         }
-        .violation-dash-row.total span.val { font-size: 14px; }
-        .violation-dash-row.clean-status {
-            color: #437353; font-size: 13px; font-weight: 600; padding: 4px 10px;
+        .violation-dash-label {
+            font-size: 11px; color: #94a3b8; font-weight: 600; margin-bottom: 4px; letter-spacing: 0.5px;
+        }
+        .violation-dash-value {
+            font-size: 16px; font-weight: 700; color: #475569;
+        }
+        /* 個別強調色彩 - 融入莫蘭迪不突兀 */
+        .violation-dash-item.appealable .violation-dash-value { color: #527996; }   /* 藍灰 */
+        .violation-dash-item.settled .violation-dash-value { color: #bc6c3a; }      /* 磚橘 */
+        .violation-dash-item.processing .violation-dash-value { color: #7e878f; }   /* 高級灰 */
+
+        .violation-dash-clean {
+            color: #437353; font-size: 13px; font-weight: 600; padding: 4px 12px; background: #edf7f1; border-radius: 20px;
         }
 
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; margin-bottom: 0; }
@@ -109,7 +117,6 @@
         .stat-card:hover { transform: translateY(-4px); box-shadow: 0 12px 24px rgba(140, 149, 159, 0.15); }
         .stat-label { font-size: 13px; color: #8a929a; margin-bottom: 10px; font-weight: 500; letter-spacing: 0.5px; }
         .stat-value { font-size: 24px; font-weight: 700; color: #3a414a; }
-        .stat-sub { font-size: 12px; color: #9ba3ab; margin-top: 8px; line-height: 1.5; }
         
         /* 🟥 房租專用莫蘭迪紅色系卡片樣式 */
         .stat-card.current-rent { background: linear-gradient(135deg, #ffffff 0%, #fbf5f5 100%); border: 1px solid rgba(181, 106, 106, 0.2); }
@@ -149,16 +156,13 @@
         .morandi-table { width: 100%; border-collapse: collapse; font-size: 14px; text-align: left; }
         .morandi-table th, .morandi-table td { padding: 16px 20px; border-bottom: 1px solid #f0f2f5; }
         .morandi-table th { background: #f8fafc; color: #8a929a; font-weight: 600; }
-        .morandi-table tr:last-child td { border-bottom: none; }
         
-        /* 🎨 彙整清單數字獨立色彩指定 */
         .td-rent { color: #b56a6a; font-weight: 600; }
         .td-water { color: #42637a; font-weight: 600; }
         .td-ele { color: #bc6c3a; font-weight: 600; }
         .td-gas { color: #917B7A; font-weight: 600; }
         .table-total-bold { font-weight: 700; color: #6e916e; }
 
-        /* 🚀 彙整數據欄位排版設定 */
         .total-summary-box {
             margin-top: 20px; background: #ffffff; padding: 24px; border-radius: 20px;
             border: 1px solid #e1e4e8; box-shadow: 0 6px 18px rgba(0,0,0,0.02);
@@ -168,11 +172,9 @@
         .summary-item-value { font-size: 16px; font-weight: 700; }
         .summary-item-total { border-left: 1px dashed #cbd1d6; padding-left: 20px; }
 
-        /* 頁尾版權與換行版本號樣式區 */
         .copyright { font-size: 11px; color: #9ba3ab; text-align: center; letter-spacing: 0.5px; margin-top: 30px; line-height: 1.8; }
         .version-tag { display: inline-block; background: #edf2ee; color: #437353; padding: 1px 8px; border-radius: 4px; font-weight: 600; font-size: 10.5px; margin-top: 4px; border: 1px solid #d0ded4; }
 
-        /* 彈出視窗樣式 */
         .modal-overlay { position: fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.4); display:none; justify-content:center; align-items:center; z-index:1000; backdrop-filter: blur(4px); }
         .modal-overlay.active { display:flex; }
         .modal-box { background:#ffffff; width:90%; max-width:500px; border-radius:24px; padding:28px; box-shadow:0 12px 30px rgba(0,0,0,0.15); max-height:80vh; overflow-y:auto; }
@@ -180,7 +182,6 @@
         .modal-row { display:flex; justify-content:space-between; padding:10px 0; font-size:13px; color:#5a6168; border-bottom:1px solid #f0f2f5; }
         .modal-row-summary { display:flex; justify-content:space-between; padding:14px 0 4px 0; font-size:14px; font-weight:700; color:#4a515a; border-top:2px dashed #cbd1d6; margin-top:10px; }
         .close-btn { width:100%; background:#69779b; color:white; border:none; padding:12px; border-radius:12px; font-size:14px; font-weight:600; cursor:pointer; margin-top:20px; transition:background 0.2s; }
-        .close-btn:hover { background:#586585; }
 
         @media (max-width: 768px) {
             .header-banner { padding: 35px 20px 45px 20px; }
@@ -195,20 +196,13 @@
             .chart-container { height: 280px; }
             
             .profile-header-flex { flex-direction: column; align-items: flex-start; gap: 14px; }
-            .profile-violation-dashboard { width: 100%; box-sizing: border-box; }
+            .profile-violation-dashboard { width: 100%; box-sizing: border-box; justify-content: space-around; }
 
-            /* 🚀 歷月總花費累計獨立自成一行 */
             .total-summary-box {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 24px 16px; padding: 20px;
+                grid-template-columns: repeat(2, 1fr); gap: 24px 16px; padding: 20px;
             }
             .summary-item-total {
-                border-left: none; 
-                padding-left: 0;
-                grid-column: span 2; /* 滿格拉橫全寬 */
-                border-top: 1px dashed #cbd1d6;
-                padding-top: 16px;
-                margin-top: 4px;
+                border-left: none; padding-left: 0; grid-column: span 2; border-top: 1px dashed #cbd1d6; padding-top: 16px; margin-top: 4px;
             }
         }
     </style>
@@ -286,33 +280,20 @@
     </div>
 </div>
 
-<script>
-    function toggleMenu() {
-        document.getElementById('fabMenu').classList.toggle('active');
-    }
-
-    document.addEventListener("DOMContentLoaded", function() {
-        const isHome = (typeof isHomePage !== 'undefined') ? isHomePage : false;
-        const homeLink = document.getElementById('homeMenuLink');
-        
-        if (!isHome && homeLink) {
-            homeLink.style.display = 'block';
-        }
-    });
-</script>
-
     <script>
         const urlPrimary = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQkqhXCPp4XiHKCEpI3pz4pzcu3sQreQ_qNRLger00ULCHFr9cTbXHMQqAfk7dLa_gUBAIBSJ5sZM4F/pub?gid=0&single=true&output=csv";
-        const urlTenantInfo = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQkqhXCPp4XiHKCEpI3pz4pzcu3sQreQ_qNRLger00ULCHFr9cTbXHMQqAfk7dLa_gUBAIBSJ5sZM4F/pub?gid=1423212010&single=true&output=csv";
+        
+        // 🎯 串接你提供的「違規處分」活頁 CSV 資料源
+        const urlViolationInfo = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQkqhXCPp4XiHKCEpI3pz4pzcu3sQreQ_qNRLger00ULCHFr9cTbXHMQqAfk7dLa_gUBAIBSJ5sZM4F/pub?gid=96305738&single=true&output=csv";
 
         const tenantNames = { "內大": "洪健棋", "內小": "郭丹騏", "中": "尹奕竤", "外": "林易諒" };
         
-        // 🎯 升級全功能違規點數快取物件
-        let tenantViolations = { 
-            "內大": { unhandled: 0, handled: 0, processing: 0, total: 0 }, 
-            "內小": { unhandled: 0, handled: 0, processing: 0, total: 0 }, 
-            "中": { unhandled: 0, handled: 0, processing: 0, total: 0 }, 
-            "外": { unhandled: 0, handled: 0, processing: 0, total: 0 } 
+        // 🎯 儲存房客個人的即時案件統計快取（可申覆、已結案、申覆中）
+        let liveTenantViolations = { 
+            "內大": { canAppeal: 0, settled: 0, processing: 0 }, 
+            "內小": { canAppeal: 0, settled: 0, processing: 0 }, 
+            "中": { canAppeal: 0, settled: 0, processing: 0 }, 
+            "外": { canAppeal: 0, settled: 0, processing: 0 } 
         };
         let globalParsedData = []; 
         let personalChartInstance = null;
@@ -339,40 +320,49 @@
             });
         }
 
-        async function fetchTenantViolations() {
+        // 🎯 【全能升級】直接從違規處分分頁 CSV 實時抓取並分類統計三大狀態件數
+        async function fetchLiveViolations() {
             try {
-                const response = await fetch(urlTenantInfo);
+                const response = await fetch(urlViolationInfo);
                 const csvText = await response.text();
                 if (csvText.includes("<!doctype html")) return;
 
+                // 重置計數器
+                Object.keys(liveTenantViolations).forEach(k => {
+                    liveTenantViolations[k] = { canAppeal: 0, settled: 0, processing: 0 };
+                });
+
                 const lines = csvText.replace(/\r/g, "").split("\n").map(line => line.trim()).filter(line => line);
                 
-                for (let i = 1; i < lines.length; i++) {
+                for (let i = 2; i < lines.length; i++) { // 從數據列開始
                     const cells = lines[i].split(",").map(c => c.replace(/["']/g, '').trim());
-                    const roomKey = cells[0]; 
-                    
-                    // 🎯 對齊試算表核心欄位索引：I欄為[8]、J欄為[9]、K欄為[10]
-                    if (tenantViolations[roomKey] !== undefined) {
-                        const unhandled = parseInt(cells[8]) || 0;
-                        const handled = parseInt(cells[9]) || 0;
-                        const processing = parseInt(cells[10]) || 0;
-                        
-                        tenantViolations[roomKey] = {
-                            unhandled: unhandled,
-                            handled: handled,
-                            processing: processing,
-                            total: unhandled + handled + processing // i + j + k 歷史累計
-                        };
+                    if (cells.length < 11) continue;
+
+                    const tenantName = cells[2]; // C欄：違規人/被舉發人 (索引 2)
+                    const status = cells[10];     // K欄：狀態 (索引 10)
+
+                    // 比對姓名找出對應的房間代碼 (RoomKey)
+                    const roomKey = Object.keys(tenantNames).find(key => tenantNames[key] === tenantName);
+                    if (!roomKey) continue;
+
+                    // 依據狀態即時累加分類
+                    if (status === "成案/可申覆") {
+                        liveTenantViolations[roomKey].canAppeal++;
+                    } else if (status === "已結案") {
+                        liveTenantViolations[roomKey].settled++;
+                    } else if (status === "申覆中") {
+                        liveTenantViolations[roomKey].processing++;
                     }
                 }
             } catch (e) {
-                console.error("動態違規次數抓取失敗：", e);
+                console.error("即時違規案件分頁載入失敗：", e);
             }
         }
 
         async function loadDataAndRender() {
             try {
-                await fetchTenantViolations();
+                // 優先加載即時違規活頁統計
+                await fetchLiveViolations();
 
                 const response = await fetch(urlPrimary);
                 const csvText = await response.text();
@@ -508,7 +498,7 @@
             if(!roomKey || globalParsedData.length === 0) return;
 
             const name = tenantNames[roomKey];
-            const vData = tenantViolations[roomKey] || { unhandled: 0, handled: 0, processing: 0, total: 0 };
+            const vData = liveTenantViolations[roomKey] || { canAppeal: 0, settled: 0, processing: 0 };
             const latest = globalParsedData[globalParsedData.length - 1];
 
             const currentRent = latest.rents[roomKey] || 0;
@@ -527,20 +517,28 @@
             const totalGasSum = globalParsedData.reduce((sum, d) => sum + d.gasPerRoom, 0);
             const overallGrandTotal = totalRentSum + totalWaterSum + totalEleSum + totalGasSum;
 
-            // 🎯 【全新升級】莫蘭迪多維度點數資訊面板
+            // 🎯 【完美整合】融入式莫蘭迪案件即時統計區塊
             let violationElement = "";
-            if (vData.total === 0) {
+            if (vData.canAppeal === 0 && vData.settled === 0 && vData.processing === 0) {
                 violationElement = `
                     <a href="violations.html" class="profile-violation-dashboard">
-                        <div class="violation-dash-row clean-status">✓ 良好無違規紀錄</div>
+                        <div class="violation-dash-clean">✓ 良好無違規紀錄</div>
                     </a>`;
             } else {
                 violationElement = `
                     <a href="violations.html" class="profile-violation-dashboard" title="點擊前往違規紀錄中心">
-                        <div class="violation-dash-row"><span>未處分點數：</span><span class="val">${vData.unhandled} 點</span></div>
-                        <div class="violation-dash-row"><span>已處分點數：</span><span class="val">${vData.handled} 點</span></div>
-                        <div class="violation-dash-row"><span>正在處分：</span><span class="val">${vData.processing} 點</span></div>
-                        <div class="violation-dash-row total"><span>歷史違規點數累計：</span><span class="val">${vData.total} 點</span></div>
+                        <div class="violation-dash-item appealable">
+                            <div class="violation-dash-label">可申覆</div>
+                            <div class="violation-dash-value">${vData.canAppeal} <span style="font-size:11px; font-weight:500;">件</span></div>
+                        </div>
+                        <div class="violation-dash-item settled">
+                            <div class="violation-dash-label">違規案</div>
+                            <div class="violation-dash-value">${vData.settled} <span style="font-size:11px; font-weight:500;">件</span></div>
+                        </div>
+                        <div class="violation-dash-item processing">
+                            <div class="violation-dash-label">申覆中</div>
+                            <div class="violation-dash-value">${vData.processing} <span style="font-size:11px; font-weight:500;">件</span></div>
+                        </div>
                     </a>`;
             }
 
