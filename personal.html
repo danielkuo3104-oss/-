@@ -67,14 +67,34 @@
         /* 個人頁面元件 */
         .tenant-selector-box { background: #ffffff; border-radius: 14px; padding: 14px 20px; border: 1px solid #e1e4e8; font-size: 14px; color: #4a515a; width: 100%; max-width: 300px; outline: none; cursor: pointer; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.02); }
         .profile-card { background: #ffffff; border-radius: 24px; padding: 28px; border: 1px solid #e1e4e8; box-shadow: 0 6px 18px rgba(0,0,0,0.02); margin-bottom: 30px; }
-        .profile-header-flex { display: flex; justify-content: space-between; align-items: center; }
+        .profile-header-flex { display: flex; justify-content: space-between; align-items: center; gap: 20px; }
         .profile-title-name { font-size: 24px; font-weight: 700; color: #69779b; }
         .profile-subtitle-room { font-size: 14px; color: #8a929a; font-weight: 500; margin-top: 4px; }
         
-        /* 🎨 莫蘭迪無違規與低調違規標籤 */
-        .profile-violation-clean { background: #ebf5ee; color: #437353; padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; box-shadow: inset 0 1px 2px rgba(0,0,0,0.02); }
-        .profile-violation-warn { background: #fdf5f2; color: #bc6c3a; padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; box-shadow: inset 0 1px 2px rgba(0,0,0,0.02); }
-        
+        /* 🎯 升級版：進階莫蘭迪複合式違規點數看板 */
+        .profile-violation-dashboard {
+            background: #fcf9f7; border: 1px solid rgba(188, 108, 58, 0.15);
+            padding: 12px 18px; border-radius: 16px; display: flex; flex-direction: column; gap: 6px;
+            box-shadow: 0 4px 12px rgba(188, 108, 58, 0.03); cursor: pointer; text-decoration: none;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s;
+        }
+        .profile-violation-dashboard:hover {
+            transform: translateY(-2px); background-color: #fdf5f0;
+            box-shadow: 0 6px 16px rgba(188, 108, 58, 0.08);
+        }
+        .violation-dash-row {
+            display: flex; justify-content: space-between; gap: 24px; font-size: 12px; font-weight: 500; color: #727a82;
+        }
+        .violation-dash-row span.val { font-weight: 700; }
+        .violation-dash-row.total {
+            border-top: 1px dashed rgba(188, 108, 58, 0.25); margin-top: 4px; padding-top: 4px;
+            color: #bc6c3a; font-size: 13px; font-weight: 600;
+        }
+        .violation-dash-row.total span.val { font-size: 14px; }
+        .violation-dash-row.clean-status {
+            color: #437353; font-size: 13px; font-weight: 600; padding: 4px 10px;
+        }
+
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; margin-bottom: 0; }
         
         @media (min-width: 769px) {
@@ -174,7 +194,10 @@
             .chart-card { padding: 16px; border-radius: 18px; margin-top: 16px; }
             .chart-container { height: 280px; }
             
-            /* 🚀 修正：手機端歷月總花費累計獨立自成一行 */
+            .profile-header-flex { flex-direction: column; align-items: flex-start; gap: 14px; }
+            .profile-violation-dashboard { width: 100%; box-sizing: border-box; }
+
+            /* 🚀 歷月總花費累計獨立自成一行 */
             .total-summary-box {
                 grid-template-columns: repeat(2, 1fr);
                 gap: 24px 16px; padding: 20px;
@@ -269,7 +292,6 @@
     }
 
     document.addEventListener("DOMContentLoaded", function() {
-        // 確保防錯：如果外部沒有定義 isHomePage，自動給予 false 安全降級
         const isHome = (typeof isHomePage !== 'undefined') ? isHomePage : false;
         const homeLink = document.getElementById('homeMenuLink');
         
@@ -285,7 +307,13 @@
 
         const tenantNames = { "內大": "洪健棋", "內小": "郭丹騏", "中": "尹奕竤", "外": "林易諒" };
         
-        let tenantViolations = { "內大": "0", "內小": "0", "中": "0", "外": "0" };
+        // 🎯 升級全功能違規點數快取物件
+        let tenantViolations = { 
+            "內大": { unhandled: 0, handled: 0, processing: 0, total: 0 }, 
+            "內小": { unhandled: 0, handled: 0, processing: 0, total: 0 }, 
+            "中": { unhandled: 0, handled: 0, processing: 0, total: 0 }, 
+            "外": { unhandled: 0, handled: 0, processing: 0, total: 0 } 
+        };
         let globalParsedData = []; 
         let personalChartInstance = null;
         let currentChartMode = 'cost'; 
@@ -323,8 +351,18 @@
                     const cells = lines[i].split(",").map(c => c.replace(/["']/g, '').trim());
                     const roomKey = cells[0]; 
                     
-                    if (tenantViolations[roomKey] !== undefined && cells[5] !== undefined) {
-                        tenantViolations[roomKey] = cells[5] || "0";
+                    // 🎯 對齊試算表核心欄位索引：I欄為[8]、J欄為[9]、K欄為[10]
+                    if (tenantViolations[roomKey] !== undefined) {
+                        const unhandled = parseInt(cells[8]) || 0;
+                        const handled = parseInt(cells[9]) || 0;
+                        const processing = parseInt(cells[10]) || 0;
+                        
+                        tenantViolations[roomKey] = {
+                            unhandled: unhandled,
+                            handled: handled,
+                            processing: processing,
+                            total: unhandled + handled + processing // i + j + k 歷史累計
+                        };
                     }
                 }
             } catch (e) {
@@ -351,7 +389,7 @@
                 const deltaIdx = { "內大": 7, "內小": 8, "中": 9, "外": 10 };
                 const roomCostIdx = { "內大": 12, "內小": 13, "中": 14, "外": 15 };
                 const rentCostIdx = { "內大": 23, "內小": 24, "中": 25, "外": 26 };
-                const gasIdx = 56; // 🎯 BE 欄：總表瓦斯費
+                const gasIdx = 56; // BE 欄
 
                 globalParsedData = [];
 
@@ -365,7 +403,7 @@
                     const waterPerRoom = Math.floor(waterVal / 4);
 
                     const gasVal = parseFloat(cells[gasIdx]) || 0;
-                    const gasPerRoom = Math.floor(gasVal / 4); // 🎯 瓦斯費比照水費均分四房
+                    const gasPerRoom = Math.floor(gasVal / 4);
 
                     globalParsedData.push({
                         month: monthVal,
@@ -411,61 +449,37 @@
             if(!roomKey || globalParsedData.length === 0) return;
 
             const ctx = document.getElementById('personalTrendChart').getContext('2d');
-            
             if(personalChartInstance) personalChartInstance.destroy();
 
             let datasets = [];
-            let yCallback = val => val;
-
             if (currentChartMode === 'cost') {
-                yCallback = val => 'NT$ ' + val.toLocaleString();
                 datasets = [
                     { 
                         label: '水費金額', 
                         data: globalParsedData.map(d => d.waterPerRoom > 0 ? d.waterPerRoom : null), 
-                        borderColor: '#a5c0d1', 
-                        backgroundColor: 'transparent', 
-                        borderWidth: 2.5, 
-                        tension: 0.2,
-                        spanGaps: true 
+                        borderColor: '#a5c0d1', backgroundColor: 'transparent', borderWidth: 2.5, tension: 0.2, spanGaps: true 
                     },
                     { 
                         label: '電費金額', 
                         data: globalParsedData.map(d => (d.rooms[roomKey] || 0) > 0 ? d.rooms[roomKey] : null), 
-                        borderColor: '#d97736', 
-                        backgroundColor: 'transparent', 
-                        borderWidth: 2.5, 
-                        tension: 0.2,
-                        spanGaps: true 
+                        borderColor: '#d97736', backgroundColor: 'transparent', borderWidth: 2.5, tension: 0.2, spanGaps: true 
                     },
                     { 
-                        // 🎯 趨勢圖導入莫蘭迪粉瓦斯費曲線
                         label: '瓦斯費金額', 
                         data: globalParsedData.map(d => d.gasPerRoom > 0 ? d.gasPerRoom : null), 
-                        borderColor: '#917B7A', 
-                        backgroundColor: 'transparent', 
-                        borderWidth: 2.5, 
-                        tension: 0.2,
-                        spanGaps: true 
+                        borderColor: '#917B7A', backgroundColor: 'transparent', borderWidth: 2.5, tension: 0.2, spanGaps: true 
                     }
                 ];
             } else {
-                yCallback = val => val + ' 度';
                 datasets = [
                     { 
                         label: '房間用電 (度)', 
                         data: globalParsedData.map(d => d.deltaMeters[roomKey] > 0 ? d.deltaMeters[roomKey] : null), 
-                        borderColor: '#9ba3ab', 
-                        backgroundColor: 'rgba(155, 163, 171, 0.08)', 
-                        borderWidth: 2.5, 
-                        tension: 0.2,
-                        fill: true,
-                        spanGaps: true 
+                        borderColor: '#9ba3ab', backgroundColor: 'rgba(155, 163, 171, 0.08)', borderWidth: 2.5, tension: 0.2, fill: true, spanGaps: true 
                     }
                 ];
             }
 
-            // 🎯 找到 personalChartInstance = new Chart(ctx, { ... }); 的地方並替換為以下內容：
             personalChartInstance = new Chart(ctx, {
                 type: 'line',
                 data: {
@@ -473,17 +487,13 @@
                     datasets: datasets
                 },
                 options: { 
-                    responsive: true, 
-                    maintainAspectRatio: false,
+                    responsive: true, maintainAspectRatio: false,
                     scales: {
                         y: { 
-                            beginAtZero: true, // 👈 🎯 關鍵修正 1：讓 Y 軸強迫從 0 開始，資料就不會擠在同一水平線上被細分
+                            beginAtZero: true,
                             ticks: { 
                                 callback: function(val) {
-                                    // 👈 🎯 關鍵修正 2：如果切換到度數模式，強制四捨五入至小數點後一位，消滅醜陋的長浮點數
-                                    if (currentChartMode === 'meter') {
-                                        return Number(val).toFixed(1) + ' 度';
-                                    }
+                                    if (currentChartMode === 'meter') return Number(val).toFixed(1) + ' 度';
                                     return 'NT$ ' + val.toLocaleString();
                                 } 
                             } 
@@ -498,13 +508,13 @@
             if(!roomKey || globalParsedData.length === 0) return;
 
             const name = tenantNames[roomKey];
-            const violations = tenantViolations[roomKey];
+            const vData = tenantViolations[roomKey] || { unhandled: 0, handled: 0, processing: 0, total: 0 };
             const latest = globalParsedData[globalParsedData.length - 1];
 
             const currentRent = latest.rents[roomKey] || 0;
             const currentEle = latest.rooms[roomKey] || 0;
             const currentWater = latest.waterPerRoom;
-            const currentGas = latest.gasPerRoom; // 🎯 瓦斯費
+            const currentGas = latest.gasPerRoom;
 
             const validMeterEntries = globalParsedData.filter(d => (d.deltaMeters[roomKey] || 0) > 0);
             const avgMeterVal = validMeterEntries.length > 0 
@@ -514,12 +524,25 @@
             const totalRentSum = globalParsedData.reduce((sum, d) => sum + (d.rents[roomKey] || 0), 0);
             const totalWaterSum = globalParsedData.reduce((sum, d) => sum + d.waterPerRoom, 0);
             const totalEleSum = globalParsedData.reduce((sum, d) => sum + (d.rooms[roomKey] || 0), 0);
-            const totalGasSum = globalParsedData.reduce((sum, d) => sum + d.gasPerRoom, 0); // 🎯 歷月瓦斯
+            const totalGasSum = globalParsedData.reduce((sum, d) => sum + d.gasPerRoom, 0);
             const overallGrandTotal = totalRentSum + totalWaterSum + totalEleSum + totalGasSum;
 
-            const violationElement = (violations === "0" || !violations) 
-                ? `<div class="profile-violation-clean">✓ 良好無違規紀錄</div>`
-                : `<div class="profile-violation-warn">⚠️ 違規次數：${violations} 次</div>`;
+            // 🎯 【全新升級】莫蘭迪多維度點數資訊面板
+            let violationElement = "";
+            if (vData.total === 0) {
+                violationElement = `
+                    <a href="violations.html" class="profile-violation-dashboard">
+                        <div class="violation-dash-row clean-status">✓ 良好無違規紀錄</div>
+                    </a>`;
+            } else {
+                violationElement = `
+                    <a href="violations.html" class="profile-violation-dashboard" title="點擊前往違規紀錄中心">
+                        <div class="violation-dash-row"><span>未處分點數：</span><span class="val">${vData.unhandled} 點</span></div>
+                        <div class="violation-dash-row"><span>已處分點數：</span><span class="val">${vData.handled} 點</span></div>
+                        <div class="violation-dash-row"><span>正在處分：</span><span class="val">${vData.processing} 點</span></div>
+                        <div class="violation-dash-row total"><span>歷史違規點數累計：</span><span class="val">${vData.total} 點</span></div>
+                    </a>`;
+            }
 
             const displayArea = document.getElementById('personalDisplayArea');
             displayArea.innerHTML = `
@@ -555,7 +578,6 @@
                         <div class="stat-label">本月瓦斯費 (點擊看歷史)</div>
                         <div class="stat-value">NT$ ${currentGas.toLocaleString()}</div>
                     </div>
-                    <!-- 🎯 關鍵修正：移入同一個 grid 內，使其在電腦端自動維持等寬，且在手機端自動換行至下一列 -->
                     <div class="stat-card current-meter" onclick="openPersonalHistoryPop('meter', '${roomKey}')">
                         <div class="stat-label">平均用電度數 (點擊看抄錄值)</div>
                         <div class="stat-value">${avgMeterVal} <span style="font-size: 14px; font-weight: 500;">度</span></div>
