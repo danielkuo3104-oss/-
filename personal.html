@@ -130,17 +130,17 @@
         .stat-card.current-rent .stat-value { color: #b56a6a; }
         .stat-card.current-rent .stat-label { color: #b56a6a; font-weight: 600; }
 
-        .stat-card.current-water { background: linear-gradient(135deg, #ffffff 0%, #edf3f7 100%); border: 1px solid rgba(82, 121, 150, 0.18); }
+        .stat-card.current-water { background: linear-gradient(135deg, #ffffff 0%, #edf3f7 100%); border: solid 1px rgba(82, 121, 150, 0.18); }
         .stat-card.current-water .stat-value { color: #527996; }
-        .stat-card.current-ele { background: linear-gradient(135deg, #ffffff 0%, #fdf6f0 100%); border: 1px solid rgba(217, 119, 54, 0.15); }
+        .stat-card.current-ele { background: linear-gradient(135deg, #ffffff 0%, #fdf6f0 100%); border: solid 1px rgba(217, 119, 54, 0.15); }
         .stat-card.current-ele .stat-value { color: #d97736; }
         
         /* 🎯 瓦斯費專用莫蘭迪粉色系卡片樣式 */
-        .stat-card.current-gas { background: linear-gradient(135deg, #ffffff 0%, #f7f2f1 100%); border: 1px solid rgba(145, 123, 122, 0.2); }
+        .stat-card.current-gas { background: linear-gradient(135deg, #ffffff 0%, #f7f2f1 100%); border: solid 1px rgba(145, 123, 122, 0.2); }
         .stat-card.current-gas .stat-value { color: #917B7A; }
 
         /* 🔒 平均用電度數專用莫蘭迪高級灰色系卡片樣式 */
-        .stat-card.current-meter { background: linear-gradient(135deg, #ffffff 0%, #f2f4f7 100%); border: 1px solid rgba(138, 146, 154, 0.25); }
+        .stat-card.current-meter { background: linear-gradient(135deg, #ffffff 0%, #f2f4f7 100%); border: solid 1px rgba(138, 146, 154, 0.25); }
         .stat-card.current-meter .stat-value { color: #5a616a; }
 
         .chart-card { background: #ffffff; border-radius: 20px; padding: 24px; box-shadow: 0 8px 20px rgba(140, 149, 159, 0.08); border: 1px solid #e1e4e8; margin-bottom: 0; }
@@ -294,7 +294,6 @@
 
         const tenantNames = { "內大": "洪健棋", "內小": "郭丹騏", "中": "尹奕竤", "外": "林易諒" };
         
-        // 🎯 綜合快取結構
         let tenantViolations = { 
             "內大": { unhandled: 0, handled: 0, processing: 0, total: 0 }, 
             "內小": { unhandled: 0, handled: 0, processing: 0, total: 0 }, 
@@ -333,7 +332,6 @@
             });
         }
 
-        // 1. 抓取房客資訊區的點數 (I, J, K 欄)
         async function fetchTenantPoints() {
             try {
                 const response = await fetch(urlTenantInfo);
@@ -346,15 +344,15 @@
                     const roomKey = cells[0]; 
                     
                     if (tenantViolations[roomKey] !== undefined) {
-                        const unhandled = parseInt(cells[8]) || 0;  // I 欄
-                        const handled = parseInt(cells[9]) || 0;    // J 欄
-                        const processing = parseInt(cells[10]) || 0; // K 欄
+                        const unhandled = parseInt(cells[8]) || 0;  
+                        const handled = parseInt(cells[9]) || 0;    
+                        const processing = parseInt(cells[10]) || 0; 
                         
                         tenantViolations[roomKey] = {
                             unhandled: unhandled,
                             handled: handled,
                             processing: processing,
-                            total: unhandled + handled + processing // i+j+k
+                            total: unhandled + handled + processing 
                         };
                     }
                 }
@@ -363,7 +361,7 @@
             }
         }
 
-        // 2. 抓取違規處分頁的即時案件數 (狀態統計)
+        // 🎯 模糊包含（包含就好）核心篩選邏輯修正
         async function fetchLiveCases() {
             try {
                 const response = await fetch(urlViolationInfo);
@@ -379,15 +377,26 @@
                     const cells = lines[i].split(",").map(c => c.replace(/["']/g, '').trim());
                     if (cells.length < 11) continue;
 
-                    const tenantName = cells[2]; // C欄
-                    const status = cells[10];     // K欄
+                    const tenantName = cells[2]; // C欄：姓名
+                    const status = cells[10];     // K欄：狀態
 
                     const roomKey = Object.keys(tenantNames).find(key => tenantNames[key] === tenantName);
                     if (!roomKey) continue;
 
-                    if (status === "成案/可申覆") liveCaseCounts[roomKey].canAppeal++;
-                    else if (status === "已結案") liveCaseCounts[roomKey].settled++;
-                    else if (status === "申覆中") liveCaseCounts[roomKey].processing++;
+                    // 🎯 1. 只要包含「可申覆」，就計入可申覆案件
+                    if (status.indexOf("可申覆") !== -1) {
+                        liveCaseCounts[roomKey].canAppeal++;
+                    }
+                    
+                    // 🎯 2. 只要包含「申覆中」，就計入申覆中案件
+                    if (status.indexOf("申覆中") !== -1) {
+                        liveCaseCounts[roomKey].processing++;
+                    }
+
+                    // 🎯 3. 違規案件數：包含 "可申覆" + 包含 "已結案" + 包含 "申覆中" 皆納入統計
+                    if (status.indexOf("可申覆") !== -1 || status.indexOf("已結案") !== -1 || status.indexOf("申覆中") !== -1) {
+                        liveCaseCounts[roomKey].settled++;
+                    }
                 }
             } catch (e) {
                 console.error("案件數抓取失敗：", e);
@@ -496,8 +505,8 @@
             if(!roomKey || globalParsedData.length === 0) return;
 
             const name = tenantNames[roomKey];
-            const pData = tenantViolations[roomKey] || { unhandled: 0, handled: 0, processing: 0, total: 0 }; // 點數區資料
-            const cData = liveCaseCounts[roomKey] || { canAppeal: 0, settled: 0, processing: 0 };          // 案件數區資料
+            const pData = tenantViolations[roomKey] || { unhandled: 0, handled: 0, processing: 0, total: 0 }; 
+            const cData = liveCaseCounts[roomKey] || { canAppeal: 0, settled: 0, processing: 0 };          
             const latest = globalParsedData[globalParsedData.length - 1];
 
             const currentRent = latest.rents[roomKey] || 0;
@@ -514,7 +523,6 @@
             const totalGasSum = globalParsedData.reduce((sum, d) => sum + d.gasPerRoom, 0);
             const overallGrandTotal = totalRentSum + totalWaterSum + totalEleSum + totalGasSum;
 
-            // 🎯 【黃金比例二合一】上排：案件進度 / 下排：對應點數統計
             let violationElement = "";
             if (pData.total === 0 && cData.canAppeal === 0 && cData.settled === 0 && cData.processing === 0) {
                 violationElement = `
@@ -524,14 +532,13 @@
             } else {
                 violationElement = `
                     <a href="violations.html" class="profile-violation-dashboard" title="點擊前往違規紀錄中心">
-                        <!-- 第一排：案件數量狀態統計 -->
                         <div class="violation-dash-group top-row">
                             <div class="violation-dash-item appealable">
                                 <div class="violation-dash-label">可申覆案件</div>
                                 <div class="violation-dash-value">${cData.canAppeal} <span style="font-size:10px; font-weight:500;">件</span></div>
                             </div>
                             <div class="violation-dash-item settled">
-                                <div class="violation-dash-label">違規案件</div>
+                                <div class="violation-dash-label">違規案件數</div>
                                 <div class="violation-dash-value">${cData.settled} <span style="font-size:10px; font-weight:500;">件</span></div>
                             </div>
                             <div class="violation-dash-item processing">
@@ -539,7 +546,6 @@
                                 <div class="violation-dash-value">${cData.processing} <span style="font-size:10px; font-weight:500;">件</span></div>
                             </div>
                         </div>
-                        <!-- 第二排：原本的房客點數統計區（對應 i, j, k 與歷史總計） -->
                         <div class="violation-dash-group">
                             <div class="violation-dash-item">
                                 <div class="violation-dash-label">未處分點數 (i)</div>
