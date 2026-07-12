@@ -206,15 +206,24 @@
             </div>
         </div>
 
-        <!-- 🕒 大看板區 -->
+        <!-- 🕒 大看板區 (依據 v2.1.4D 最新規範順序編排) -->
         <div class="hero-banner">
-            <!-- 優先大字顯現原始排班序號 -->
-            <div class="hero-code-display" id="bannerRawCode">DS----IP----</div>
+            <!-- 1. 日期與星期 -->
+            <div class="hero-date" id="bannerFullDate">----年--月--日 週-</div>
+            
+            <!-- 2. 原始排班序號 -->
+            <div class="hero-code-display" id="bannerRawCode" style="margin-top: 5px; margin-bottom: 10px; font-size: 16px;">DS----IP----</div>
+            
+            <!-- 3. 週次與時間區間膠囊 -->
             <div class="hero-capsule-row">
-                <span class="hero-capsule hero-capsule-week" id="bannerWeekNumCapsule">----年 --週</span>
+                <span class="hero-capsule hero-capsule-week" id="bannerWeekNumCapsule">----年 第--週</span>
                 <span class="hero-capsule hero-capsule-date" id="bannerIntervalCapsule">--/-- ~ --/--</span>
             </div>
+            
+            <!-- 4. 當週值日人 -->
             <div class="hero-main" id="bannerCurrentWorker">當週值日：讀取中...</div>
+            
+            <!-- 5. 下週預計人 -->
             <div class="hero-sub" id="bannerNextWorker">下週預計：讀取中...</div>
         </div>
 
@@ -436,27 +445,33 @@
                 updateTimeEl.innerText = `更新時間 ${simDateTime.getFullYear()}/${formatPad(simDateTime.getMonth()+1)}/${formatPad(simDateTime.getDate())} ${formatPad(simDateTime.getHours())}:${formatPad(simDateTime.getMinutes())}`;
             }
             
+            // 🔥 1. 格式化為：2026年7月12日 週日 (不加括號)
             const fullDateEl = document.getElementById('bannerFullDate');
             if (fullDateEl) {
-                fullDateEl.innerText = `${simDateTime.getFullYear()}年${simDateTime.getMonth()+1}月${simDateTime.getDate()}日 (週${['日','一','二','三','四','五','六'][simDateTime.getDay()]})`;
+                const dayName = ['週日','週一','週二','週三','週四','週五','週六'][simDateTime.getDay()];
+                fullDateEl.innerText = `${simDateTime.getFullYear()}年${simDateTime.getMonth()+1}月${simDateTime.getDate()}日 ${dayName}`;
             }
             
             let currentOnDuty = parsedSchedule[0];
             let wInfo = parseWeekInfoFromCode(currentOnDuty.code);
             
-            // 🔥 修正：大看板的核心資訊元件全面加入安全保護，確保資料正常覆寫
+            // 🔥 2. 填入原始排班序號：DS2629IP11YH
             const rawCodeEl = document.getElementById('bannerRawCode');
             if (rawCodeEl) rawCodeEl.innerText = currentOnDuty.code;
 
+            // 🔥 3. 填入週次膠囊：2026年 第29週
             const weekCapsuleEl = document.getElementById('bannerWeekNumCapsule');
-            if (weekCapsuleEl) weekCapsuleEl.innerText = `${wInfo.year}年 ${wInfo.week}週`;
+            if (weekCapsuleEl) weekCapsuleEl.innerText = `${wInfo.year}年 第${wInfo.week}週`;
 
+            // 🔥 4. 填入時間區間膠囊：7/13 ~ 7/17
             const intervalCapsuleEl = document.getElementById('bannerIntervalCapsule');
             if (intervalCapsuleEl) intervalCapsuleEl.innerText = currentOnDuty.interval;
 
+            // 🔥 5. 填入當週值日主標：當週值日：尹奕竤
             const currentWorkerEl = document.getElementById('bannerCurrentWorker');
             if (currentWorkerEl) currentWorkerEl.innerText = `當週值日：${currentOnDuty.worker}`;
 
+            // 🔥 6. 填入下週預計副標：下週預計：郭丹騏
             const nextWorkerEl = document.getElementById('bannerNextWorker');
             if (nextWorkerEl) nextWorkerEl.innerText = `下週預計：${parsedSchedule[1] ? parsedSchedule[1].worker : '無'}`;
 
