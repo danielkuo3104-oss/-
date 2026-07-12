@@ -541,17 +541,35 @@
             renderLeaveTable();
         }
 
-        function formatLeaveWeekString(rawWeekStr) {
-            let s = rawWeekStr.toString().replace(/\s+/g, '');
-            if(s.includes("-")) {
-                let parts = s.split("-");
-                let startW = parts[0].length >= 4 ? parseInt(parts[0].substring(2,4), 10) : parts[0];
-                let endW = parts[1].length >= 4 ? parseInt(parts[1].substring(2,4), 10) : parts[1];
-                return `${startW}週 - ${endW}週`;
-            } else {
-                let singleW = s.length >= 4 ? parseInt(s.substring(2,4), 10) : s;
-                return `${singleW}週`;
-            }
+        function renderLeaveTable() {
+            let start = (currentLeavePage - 1) * 5;
+            let end = start + 5;
+            let sliced = parsedLeaves.slice(start, end);
+
+            let leaveHtml = "";
+            sliced.forEach(l => {
+                let badgeCls = "badge-gray";
+                if(l.status === "審核通過") badgeCls = "badge-green";
+                // 🔥 修正：執行完畢改為水泥淺灰色
+                if(l.status === "執行完畢") badgeCls = "badge-gray";
+                if(l.status === "審核未過") badgeCls = "badge-red";
+
+                // 假別對應霧感色彩包裹
+                let typeCls = "badge-gray";
+                if(l.type === "長假") typeCls = "badge-purple";
+                else if(l.type === "預先假") typeCls = "badge-green";
+                else if(l.type === "臨時假") typeCls = "badge-orange";
+
+                leaveHtml += `<tr>
+                    <td><strong>${l.applicant}</strong></td>
+                    <td><span class="badge ${typeCls}" style="font-size:11px; padding:2px 8px;">${l.type}</span></td>
+                    <td style="font-weight:600; color:#5D6D7E;">${formatLeaveWeekString(l.weeks)}</td>
+                    <td><span class="badge ${badgeCls}">${l.status}</span></td>
+                </tr>`;
+            });
+            
+            if(leaveHtml === "") leaveHtml = `<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">暫無更多異動紀錄</td></tr>`;
+            document.getElementById('leaveTableBody').innerHTML = leaveHtml;
         }
 
         function renderLeaveTable() {
