@@ -36,7 +36,7 @@
         /* 頂部導航 - 紫色調風格 */
         .nav-header {
             background-color: var(--card-bg);
-            padding: 15px;
+            padding: 12px 15px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -47,14 +47,16 @@
             backdrop-filter: blur(10px);
             border-bottom: 2px solid rgba(139, 122, 147, 0.1);
         }
-        .nav-title-group { display: flex; align-items: center; gap: 10px; }
+        .nav-title-group { display: flex; flex-direction: column; gap: 4px; }
         .nav-title { font-size: 18px; font-weight: bold; color: var(--mora-purple-text); }
+        /* 灰色更新時間膠囊全新改版樣式 */
+        .update-time-row { font-size: 11px; color: #626D78; font-weight: bold; background: #EAECEE; padding: 3px 10px; border-radius: 20px; letter-spacing: 0.3px; display: inline-block; width: fit-content; }
         .back-btn { background: #cbd1d6; color: #5a6168; border: none; padding: 6px 12px; border-radius: 12px; font-size: 14px; text-decoration: none; font-weight: 500; }
 
         .container { padding: 15px; max-width: 600px; margin: 0 auto; padding-bottom: 40px; }
 
         /* 開發者面板樣式優化 */
-        .dev-toggle-container { margin-bottom: 15px; text-align: right; }
+        .dev-toggle-container { margin-bottom: 12px; text-align: right; }
         .dev-toggle-btn { background: #A89BB0; color: white; border: none; padding: 6px 12px; border-radius: 10px; font-size: 12px; font-weight: bold; cursor: pointer; }
         .test-panel { background: #F0EDF2; border-radius: var(--radius-main); padding: 15px; margin-bottom: 20px; border: 1px dashed var(--mora-purple-text); }
         .test-title { font-size: 13px; font-weight: bold; color: var(--mora-purple-text); margin-top: 0; margin-bottom: 10px; }
@@ -72,8 +74,7 @@
             border: 1px solid rgba(255, 255, 255, 0.7);
             backdrop-filter: blur(10px);
         }
-        .card-title { font-size: 16px; font-weight: 600; margin-top: 0; margin-bottom: 15px; color: #4A515A; display: flex; justify-content: space-between; align-items: center; }
-        .update-time { font-size: 11px; color: #7F8C8D; font-weight: bold; background: #EAECEE; padding: 3px 10px; border-radius: 12px; letter-spacing: 0.5px; }
+        .card-title { font-size: 16px; font-weight: 600; margin-top: 0; margin-bottom: 15px; color: #4A515A; }
 
         /* 霧感與鮮豔膠囊組合 */
         .badge { display: inline-block; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; text-align: center; line-height: 1.4; }
@@ -85,15 +86,15 @@
         .badge-red { background-color: #FDE8E8; color: #C81E1E; }
         .badge-gray { background-color: #ECEFF1; color: #78909C; }
 
-        /* 大看板區高質感改造 */
-        .hero-banner { background: var(--card-bg); text-align: center; padding: 25px 15px; border-radius: var(--radius-main); margin-bottom: 20px; box-shadow: 0 4px 16px rgba(0,0,0,0.02); border: 1px solid rgba(255,255,255,0.8); }
-        .hero-date { font-size: 13px; color: #5B636A; margin-bottom: 12px; font-weight: bold; letter-spacing: 0.5px; }
-        .hero-capsule-row { display: flex; justify-content: center; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
-        .hero-capsule { background: #ECEFF1; color: #37474F; font-size: 12px; font-weight: bold; padding: 4px 12px; border-radius: 20px; border: 1px solid rgba(0,0,0,0.03); }
+        /* 大看板區高質感結構調整 */
+        .hero-banner { background: var(--card-bg); text-align: center; padding: 22px 15px; border-radius: var(--radius-main); margin-bottom: 20px; box-shadow: 0 4px 16px rgba(0,0,0,0.02); border: 1px solid rgba(255,255,255,0.8); }
+        .hero-code-display { font-size: 16px; font-weight: bold; color: #566573; margin-bottom: 6px; font-family: monospace; letter-spacing: 0.5px; }
+        .hero-capsule-row { display: flex; justify-content: center; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+        .hero-capsule { background: #ECEFF1; color: #37474F; font-size: 12px; font-weight: bold; padding: 4px 12px; border-radius: 20px; border: 1px solid rgba(0,0,0,0.02); }
         .hero-capsule-week { background: #F2EFF5; color: var(--mora-purple-text); }
         .hero-capsule-date { background: #EBF5FB; color: #2874A6; }
-        .hero-main { font-size: 22px; font-weight: bold; color: #2C3E50; margin: 5px 0; letter-spacing: 0.5px; background: rgba(40, 116, 166, 0.05); padding: 10px; border-radius: 12px; display: inline-block; width: 90%; box-sizing: border-box; }
-        .hero-sub { font-size: 14px; color: #7F8C8D; font-weight: 500; margin-top: 8px; }
+        .hero-main { font-size: 22px; font-weight: bold; color: #2C3E50; margin: 4px 0; background: rgba(40, 116, 166, 0.04); padding: 10px; border-radius: 12px; display: inline-block; width: 95%; box-sizing: border-box; }
+        .hero-sub { font-size: 14px; color: #7F8C8D; font-weight: 500; margin-top: 6px; }
 
         /* 按鈕功能重綁與調色 */
         .action-btn {
@@ -105,22 +106,20 @@
         .btn-view-blue { background: var(--mora-blue); box-shadow: 0 4px 12px rgba(94, 117, 138, 0.25); margin-bottom: 20px; }
         .action-btn:active { opacity: 0.85; }
 
+        /* 排班表內部精緻調班備註按鈕樣式 */
+        .table-memo-btn { background: #EBF0F5; color: #5E758A; border: 1px solid #D5DBDB; padding: 4px 8px; border-radius: 8px; font-size: 11px; font-weight: bold; cursor: pointer; transition: background 0.1s; }
+        .table-memo-btn:active { background: #D5DBDB; }
+
         /* 統計列表 */
         .stat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
         .stat-item { background: #F8FAFA; border-radius: 12px; padding: 12px; border: 1px solid #EAECEE; text-align: center; }
         .stat-name { font-size: 14px; font-weight: bold; margin-bottom: 4px; color: #2C3E50; }
         .stat-details { font-size: 11px; color: var(--text-muted); line-height: 1.5; margin-bottom: 4px; }
 
-        /* 資料表格手排優化 */
+        /* 資料表格優化平衡 */
         .data-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; table-layout: fixed; }
         .data-table th { padding: 10px; background: #ECEFF1; color: #5A6B7C; font-weight: 600; }
         .data-table td { padding: 12px 10px; border-bottom: 1px solid #EAECEE; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
-        /* 註記字數防溢出多端適配設定 */
-        .td-memo { max-width: 110px; cursor: pointer; color: var(--mora-blue); text-decoration: underline; font-weight: 500; }
-        @media (min-width: 601px) {
-            .td-memo:hover { color: #2C3E50; font-weight: bold; }
-        }
 
         /* 分頁 */
         .pagination { display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px; }
@@ -128,20 +127,17 @@
 
         .hidden { display: none !important; }
 
-        /* 彈出視窗與優化打勾藍色覆寫 */
+        /* 彈出視窗 */
         .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.4); z-index: 200; padding: 15px; display: flex; align-items: center; justify-content: center; }
         .modal-content { background: #fff; width: 100%; max-width: 500px; border-radius: var(--radius-main); max-height: 85vh; overflow-y: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.15); border: 1px solid rgba(0,0,0,0.05); }
         .form-header { background: #ECEFF1; padding: 15px; font-weight: bold; font-size: 15px; display: flex; justify-content: space-between; border-bottom: 1px solid #D5DBDB; align-items: center; }
         
-        /* 手機版表單元資料排版寬鬆防擠壓優化 */
         .form-meta-container { display: flex; flex-direction: column; gap: 6px; padding: 12px 15px; background: #F8FAFC; border-bottom: 1px solid #E2E8F0; font-size: 12px; font-weight: bold; color: #4A515A; }
         .form-body { padding: 20px; }
         .form-group { margin-bottom: 20px; }
         .form-label { display: block; font-size: 14px; font-weight: 600; margin-bottom: 8px; color: #34495E; }
         
-        /* 覆寫原生勾選與單選之預設藍色，同步為高質感莫蘭迪粉紫 */
         input[type="radio"], input[type="checkbox"], select { accent-color: var(--mora-purple-text); }
-
         .form-select { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #cbd1d6; font-size: 15px; background-color: #FAFAFA; box-sizing: border-box; }
         .radio-group, .check-group { display: flex; flex-direction: column; gap: 10px; }
         .radio-label, .check-label { display: flex; align-items: center; padding: 12px; background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 10px; cursor: pointer; font-size: 14px; box-sizing: border-box; }
@@ -167,8 +163,8 @@
     <div class="nav-header">
         <div class="nav-title-group">
             <div class="nav-title">宿舍值日中心</div>
-            <!-- 灰色膠囊詳細註明之更新時間移置此處 -->
-            <span class="update-time" id="statUpdateTime">更新於 --:--</span>
+            <!-- 灰色更新時間格式進化 -->
+            <div class="update-time-row" id="statUpdateTime">更新時間 ----/--/-- --:--</div>
         </div>
         <a href="index.html" class="back-btn">返回主頁</a>
     </div>
@@ -212,8 +208,8 @@
 
         <!-- 🕒 大看板區 -->
         <div class="hero-banner">
-            <div class="hero-date" id="bannerFullDate">----年--月--日 (週-)</div>
-            <!-- 匡出當週值日與第幾週的精緻膠囊包裹區 -->
+            <!-- 優先大字顯現原始排班序號 -->
+            <div class="hero-code-display" id="bannerRawCode">DS----IP----</div>
             <div class="hero-capsule-row">
                 <span class="hero-capsule hero-capsule-week" id="bannerWeekNumCapsule">----年 --週</span>
                 <span class="hero-capsule hero-capsule-date" id="bannerIntervalCapsule">--/-- ~ --/--</span>
@@ -226,7 +222,7 @@
         <button class="action-btn btn-log-green" onclick="initiateLogSystem()">工作日誌登錄</button>
         <button class="action-btn btn-view-blue" onclick="toggleLogCenterView()">歷史日誌紀錄查閱區</button>
 
-        <!-- 📊 個人統計區 (正名為 房客值日彙整) -->
+        <!-- 📊 個人統計彙整區 -->
         <div class="card">
             <div class="card-title">房客值日彙整</div>
             <div class="stat-grid" id="statGridContainer"></div>
@@ -240,9 +236,9 @@
                     <thead>
                         <tr>
                             <th style="width: 75px;">狀態</th>
-                            <th style="width: 100px;">值日區間</th>
+                            <th style="width: 105px;">值日區間</th>
                             <th style="width: 90px;">預計值日生</th>
-                            <th style="width: 120px;">排班備註</th>
+                            <th style="width: 80px; text-align: right; padding-right: 15px;">排班備註</th>
                         </tr>
                     </thead>
                     <tbody id="scheduleTableBody"></tbody>
@@ -272,9 +268,9 @@
             </div>
         </div>
 
-        <!-- 雙層紫色高質感頁尾宣告區 -->
+        <!-- 雙層頁尾宣告區 -->
         <div class="footer-copyright">
-            <span class="footer-version">v2.1.2D</span><br>
+            <span class="footer-version">v2.1.3D</span><br>
             宿舍智慧居住管理看板系統<br>
             Copyright © Daniel. All Rights Reserved.
         </div>
@@ -288,7 +284,6 @@
                 <span id="formTitleText">工作日誌回報填寫</span>
                 <button class="back-btn" style="padding:4px 10px; font-size:12px;" onclick="closeLogModal()">關閉</button>
             </div>
-            <!-- 手機版防擠壓排列優化元數據區 -->
             <div class="form-meta-container">
                 <div id="formMetaDate">日期：----/--/--</div>
                 <div id="formMetaInfo" style="color:var(--mora-purple-text);">使用版本: --</div>
@@ -296,7 +291,6 @@
             <div class="form-body" id="formDynamicBody"></div>
             <div class="form-footer">
                 <button class="f-btn f-btn-cancel" onclick="closeLogModal()">取消</button>
-                <!-- 下一步驟正名為 下一步 -->
                 <button class="f-btn f-btn-next" id="formActionBtn" onclick="handleFormNextStep()">下一步</button>
             </div>
         </div>
@@ -327,7 +321,6 @@
 
     <script>
         const SHOW_DEV_PANEL_BUTTON = true;
-
         const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQkqhXCPp4XiHKCEpI3pz4pzcu3sQreQ_qNRLger00ULCHFr9cTbXHMQqAfk7dLa_gUBAIBSJ5sZM4F/pub?gid=1984800604&single=true&output=csv";
         
         let globalRawData = [];
@@ -395,7 +388,7 @@
                 parsedStats[name].backup = globalRawData[15][colIdx] || 0;
             }
 
-            // 3. 解析請假與異動紀錄 (納入已執行完畢，跳過處分)
+            // 3. 🔥 精確倒序（最新申請的顯示在最上面）
             parsedLeaves = [];
             for(let i = 1; i < globalRawData.length; i++) {
                 let row = globalRawData[i];
@@ -405,8 +398,9 @@
                     });
                 }
             }
+            parsedLeaves.reverse(); // 執行陣列反轉拋轉倒序
 
-            // 4. 解析 AK / AL 欄問卷
+            // 4. 解析問卷
             dynamicFormMeta.version = globalRawData[1][36] || "未知版本";
             dynamicFormMeta.questions = [];
             for(let i = 1; i < globalRawData.length; i++) {
@@ -421,7 +415,6 @@
             populateLogCenterDropdowns();
         }
 
-        // 智慧解析序號獲取週次與年份 (34碼為年，56碼為週)
         function parseWeekInfoFromCode(codeStr) {
             if(!codeStr || codeStr.length < 6) return { year: "2026", week: "00" };
             let yearPart = "20" + codeStr.substring(2, 4);
@@ -436,19 +429,24 @@
             const mockTimeStr = document.getElementById('mockTime').value;
             const simDateTime = new Date(`${mockDateStr}T${mockTimeStr}`);
 
+            // 填入全新包裝的格式化更新時間膠囊
+            const formatPad = (n) => n.toString().padStart(2, '0');
+            document.getElementById('statUpdateTime').innerText = `更新時間 ${simDateTime.getFullYear()}/${formatPad(simDateTime.getMonth()+1)}/${formatPad(simDateTime.getDate())} ${formatPad(simDateTime.getHours())}:${formatPad(simDateTime.getMinutes())}`;
+            
             document.getElementById('bannerFullDate').innerText = `${simDateTime.getFullYear()}年${simDateTime.getMonth()+1}月${simDateTime.getDate()}日 (週${['日','一','二','三','四','五','六'][simDateTime.getDay()]})`;
             
             let currentOnDuty = parsedSchedule[0];
             let wInfo = parseWeekInfoFromCode(currentOnDuty.code);
             
-            // 填入全新包裝的膠囊核心看版資訊
+            // 看板上方優先注入顯示原始序號
+            document.getElementById('bannerRawCode').innerText = currentOnDuty.code;
             document.getElementById('bannerWeekNumCapsule').innerText = `${wInfo.year}年 ${wInfo.week}週`;
             document.getElementById('bannerIntervalCapsule').innerText = currentOnDuty.interval;
 
             document.getElementById('bannerCurrentWorker').innerText = `當週值日：${currentOnDuty.worker}`;
             document.getElementById('bannerNextWorker').innerText = `下週預計：${parsedSchedule[1] ? parsedSchedule[1].worker : '無'}`;
 
-            // 渲染值日排班表格膠囊
+            // 渲染值日排班表格膠囊 (優化：備註完全改用展開按鈕，防表格不平衡)
             let schedHtml = "";
             parsedSchedule.forEach(s => {
                 let bCls = "badge-gray";
@@ -457,9 +455,10 @@
                 else if (s.status === "調班") bCls = "badge-orange";
                 else if (s.status === "代班中") bCls = "badge-yellow";
 
-                // 沒備註就完全空白
-                let cleanMemo = (s.memo === "=" || s.memo === "—" || s.memo === "") ? "" : s.memo;
-                let memoTd = cleanMemo ? `<td class="td-memo" onclick="alert('完整排班備註：\\n${cleanMemo}')">${cleanMemo}</td>` : `<td></td>`;
+                let cleanMemo = (s.memo === "=" || s.memo === "—" || s.memo === "") ? "" : s.memo.replace(/'/g, "\\'");
+                let memoTd = cleanMemo 
+                    ? `<td style="text-align: right; padding-right: 15px;"><button class="table-memo-btn" onclick="alert('排班備註明細：\\n${cleanMemo}')">查看備註</button></td>` 
+                    : `<td></td>`;
 
                 schedHtml += `<tr>
                     <td><span class="badge ${bCls}">${s.status}</span></td>
@@ -479,7 +478,6 @@
                 if(name === currentOnDuty.worker) {
                     statusBadge = `<span class="badge badge-blue" style="background-color:var(--mora-blue-intense); color:white;">正在值日</span>`;
                 } else {
-                    // 🔥 完美 BUG 修復：嚴格比對請假週次範圍是否包含當前 29 週，且狀態需為審核通過或執行完畢
                     let matchLeave = parsedLeaves.find(l => {
                         return l.applicant === name && 
                                (l.status === "審核通過" || l.status === "執行完畢") && 
@@ -505,12 +503,8 @@
             document.getElementById('statGridContainer').innerHTML = statHtml;
 
             renderLeaveTable();
-
-            const now = new Date();
-            document.getElementById('statUpdateTime').innerText = `更新於 ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
         }
 
-        // 週次文字格式化精製拆解器 (例如: 2628 -> 28週, 2620-2633 -> 20週-33週)
         function formatLeaveWeekString(rawWeekStr) {
             let s = rawWeekStr.toString().replace(/\s+/g, '');
             if(s.includes("-")) {
@@ -536,7 +530,6 @@
                 if(l.status === "執行完畢") badgeCls = "badge-blue";
                 if(l.status === "審核未過") badgeCls = "badge-red";
 
-                // 假別也用對應霧感色彩包裹
                 let typeCls = "badge-gray";
                 if(l.type === "長假") typeCls = "badge-purple";
                 else if(l.type === "預先假") typeCls = "badge-green";
@@ -582,7 +575,6 @@
                 if (hour < 18) {
                     alert("⚠️ [系統提示] 目前時間尚未進入常規晚間回報時段 (晚上 18:00 後)，系統仍開放進入，填寫時請確認資料是否完整。");
                 }
-
                 if (makeupMode === "never") {
                     alert("❌ [權限遭拒] 管理員已全面關閉補填功能，目前無法補登前日資訊。");
                     return;
@@ -634,7 +626,6 @@
             userAnswers = {};
             
             const mockDateStr = document.getElementById('mockDate').value;
-            // 注入優化後的寬鬆元數據大間距欄位
             document.getElementById('formMetaDate').innerText = `回報日期：${mockDateStr}`;
             document.getElementById('formMetaInfo').innerText = `使用問卷版本號: ${dynamicFormMeta.version} (${currentFormModeLabel})`;
             document.getElementById('logFormModal').classList.remove('hidden');
@@ -699,7 +690,6 @@
             if (currentFormPageIndex === formPagesData.length - 1) {
                 document.getElementById('formActionBtn').innerText = "提交日誌表格";
             } else {
-                // 下一步驟 改成 下一步
                 document.getElementById('formActionBtn').innerText = "下一步";
             }
         }
@@ -756,7 +746,6 @@
                 finalJsonString = JSON.stringify(augmentedAnswers);
             }
 
-            // 🔥 實體部署連結更新綁定
             const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzU_H6ld7TeMZAg6avRGDehYfN0ybUs9Na9-LLPUs7f0pJndTSdAoD1TKZ4VLgO9VbK/exec";
 
             document.getElementById('formActionBtn').innerText = "連線傳輸中...";
@@ -854,7 +843,6 @@
             document.getElementById('logViewerCanvas').innerHTML = html;
         }
 
-        // 輔助排班與請假週次範圍比對核心認定函數 (支援單一週次與 2620-2633 跨週拆解判定)
         function isWeekInLeaveRange(targetWeek, weekStr) {
             let s = weekStr.toString().replace(/\s+/g, ''); 
             if (s.includes("-")) {
