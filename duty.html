@@ -206,13 +206,14 @@
             </div>
         </div>
 
-        <!-- 🕒 大看板區 (依據 v2.1.6D 莫蘭迪極簡儀表板規範重構) -->
-        <div class="hero-banner" style="background: var(--card-bg); padding: 22px 20px; border-radius: var(--radius-main); margin-bottom: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.02); border: 1px solid rgba(255,255,255,0.8); box-sizing: border-box;">
+        <!-- 🕒 大看板區 (依據 v2.1.7D 日期單獨置頂置中規範重構) -->
+        <div class="hero-banner" style="background: var(--card-bg); padding: 22px 20px; border-radius: var(--radius-main); margin-bottom: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.02); border: 1px solid rgba(255,255,255,0.8); box-sizing: border-box; display: flex; flex-direction: column; gap: 15px;">
             
-            <!-- 頂部系統元數據整合區塊 (統一水泥霧灰色調，以細線優雅對稱分隔) -->
-            <div style="background: #F4F6F7; border-radius: 12px; padding: 12px; font-size: 12px; color: #566573; font-weight: bold; display: flex; flex-direction: column; gap: 6px; border: 1px solid #EAECEE; text-align: left; margin-bottom: 18px;">
-                <div style="display: flex; justify-content: space-between;"><span style="color:#7A868C;">當前時間</span><span id="bannerFullDate">—年—月—日 週—</span></div>
-                <div style="height: 1px; background: rgba(0,0,0,0.04); margin: 2px 0;"></div>
+            <!-- 1. 當前日期單獨拿放置頂、置中、粗體 (移除灰色區塊重複項目) -->
+            <div id="bannerFullDate" style="text-align: center; font-size: 16px; font-weight: bold; color: #2C3E50; letter-spacing: 0.5px; margin-bottom: 2px;">----年--月--日 週-</div>
+            
+            <!-- 2. 系統元數據整合區塊 (移除常規時間，結構更顯洗鍊) -->
+            <div style="background: #F4F6F7; border-radius: 12px; padding: 12px; font-size: 12px; color: #566573; font-weight: bold; display: flex; flex-direction: column; gap: 6px; border: 1px solid #EAECEE; text-align: left;">
                 <div style="display: flex; justify-content: space-between;"><span style="color:#7A868C;">排班序號</span><span id="bannerRawCode" style="font-family: monospace;">DS--------</span></div>
                 <div style="height: 1px; background: rgba(0,0,0,0.04); margin: 2px 0;"></div>
                 <div style="display: flex; justify-content: space-between;"><span style="color:#7A868C;">年度週次</span><span id="bannerWeekNumCapsule">—年 第—週</span></div>
@@ -220,7 +221,7 @@
                 <div style="display: flex; justify-content: space-between;"><span style="color:#7A868C;">值日區間</span><span id="bannerIntervalCapsule">—/— ~ —/—</span></div>
             </div>
             
-            <!-- 中央雙軌值日生前後滾動卡片 (大面積藍色覆寫，加強視覺核心) -->
+            <!-- 3. 中央雙軌值日生前後滾動卡片 -->
             <div style="background: rgba(40, 116, 166, 0.05); border-radius: 14px; padding: 18px 15px; border: 1px solid rgba(40, 116, 166, 0.1); width: 100%; box-sizing: border-box; text-align: center;">
                 <div id="bannerCurrentWorker" style="font-size: 22px; font-weight: bold; color: var(--mora-blue-intense); letter-spacing: 0.5px;">當週值日：讀取中...</div>
                 <div style="width: 40px; height: 2px; background: rgba(40, 116, 166, 0.15); margin: 12px auto;"></div>
@@ -281,7 +282,7 @@
 
         <!-- 雙層頁尾宣告區 -->
         <div class="footer-copyright">
-            <span class="footer-version">v2.1.6D</span><br>
+            <span class="footer-version">v2.1.7D</span><br>
             宿舍智慧居住管理看板系統<br>
             Copyright © Daniel. All Rights Reserved.
         </div>
@@ -447,7 +448,7 @@
                 updateTimeEl.innerText = `更新時間 ${simDateTime.getFullYear()}/${formatPad(simDateTime.getMonth()+1)}/${formatPad(simDateTime.getDate())} ${formatPad(simDateTime.getHours())}:${formatPad(simDateTime.getMinutes())}`;
             }
             
-            // 1. 格式化寫入儀表板：日期與星期
+            // 1. 格式化寫入置頂置中區：日期與星期 (例: 2026年7月12日 週日)
             const fullDateEl = document.getElementById('bannerFullDate');
             if (fullDateEl) {
                 const dayName = ['週日','週一','週二','週三','週四','週五','週六'][simDateTime.getDay()];
@@ -469,11 +470,11 @@
             const intervalCapsuleEl = document.getElementById('bannerIntervalCapsule');
             if (intervalCapsuleEl) intervalCapsuleEl.innerText = currentOnDuty.interval;
 
-            // 5. 格式化寫入儀表板：當週值日生主卡片
+            // 5. 格式化寫入主卡片：當週值日生
             const currentWorkerEl = document.getElementById('bannerCurrentWorker');
             if (currentWorkerEl) currentWorkerEl.innerText = `當週值日：${currentOnDuty.worker}`;
 
-            // 6. 格式化寫入儀表板：下週預計生副標
+            // 6. 格式化寫入副標：下週預計生
             const nextWorkerEl = document.getElementById('bannerNextWorker');
             if (nextWorkerEl) nextWorkerEl.innerText = `下週預計：${parsedSchedule[1] ? parsedSchedule[1].worker : '無'}`;
 
