@@ -240,7 +240,7 @@
             <div class="stat-grid" id="statGridContainer"></div>
         </div>
 
-        <!-- 🏎️ 值日排班資訊區 -->
+        <!-- 🏎️ 值日排班資訊區 (依據 v2.2.0D 備註欄縮減置中規範優化) -->
         <div class="card">
             <div class="card-title">值日排班資訊</div>
             <div style="overflow-x: auto;">
@@ -250,7 +250,8 @@
                             <th style="width: 75px;">狀態</th>
                             <th style="width: 105px;">值日區間</th>
                             <th style="width: 90px;">預計值日生</th>
-                            <th style="width: 80px; text-align: right; padding-right: 15px;">排班備註</th>
+                            <!-- 縮小欄位寬度並強制設定置中 -->
+                            <th style="width: 80px; text-align: center;">排班備註</th>
                         </tr>
                     </thead>
                     <tbody id="scheduleTableBody"></tbody>
@@ -283,7 +284,7 @@
 
         <!-- 雙層頁尾宣告區 -->
         <div class="footer-copyright">
-            <span class="footer-version">v2.1.9D</span><br>
+            <span class="footer-version">v2.1.10D</span><br>
             宿舍智慧居住管理看板系統<br>
             Copyright © Daniel. All Rights Reserved.
         </div>
@@ -484,7 +485,7 @@
             const nextWorkerEl = document.getElementById('bannerNextWorker');
             if (nextWorkerEl) nextWorkerEl.innerText = `下週預計：${parsedSchedule[1] ? parsedSchedule[1].worker : '無'}`;
 
-            // 渲染值日排班表格膠囊 (優化：備註完全改用展開按鈕，防表格不平衡)
+            // 渲染值日排班表格膠囊 (優化：沒備註用淺灰寫 -無-，有了話就用連結寫 點此查看)
             let schedHtml = "";
             parsedSchedule.forEach(s => {
                 let bCls = "badge-gray";
@@ -494,9 +495,14 @@
                 else if (s.status === "代班中") bCls = "badge-yellow";
 
                 let cleanMemo = (s.memo === "=" || s.memo === "—" || s.memo === "") ? "" : s.memo.replace(/'/g, "\\'");
-                let memoTd = cleanMemo 
-                    ? `<td style="text-align: right; padding-right: 15px;"><button class="table-memo-btn" onclick="alert('排班備註明細：\\n${cleanMemo}')">查看備註</button></td>` 
-                    : `<td></td>`;
+                
+                // 根據有沒有備註資料，動態生成對應的文字或超連結樣式，並且文字一律居中
+                let memoTd = "";
+                if (cleanMemo) {
+                    memoTd = `<td style="text-align: center;"><span style="color: var(--mora-blue); text-decoration: underline; font-weight: bold; cursor: pointer; font-size: 13px;" onclick="alert('排班備註明細：\\n${cleanMemo}')">點此查看</span></td>`;
+                } else {
+                    memoTd = `<td style="text-align: center; color: #BDC3C7; font-size: 13px; font-weight: 500;">-無-</td>`;
+                }
 
                 schedHtml += `<tr>
                     <td><span class="badge ${bCls}">${s.status}</span></td>
