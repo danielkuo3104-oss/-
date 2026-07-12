@@ -258,17 +258,18 @@
             </div>
         </div>
 
-        <!-- 🏖️ 請假與異動紀錄區 -->
+        <!-- 🏖️ 請假與異動紀錄區 (依據 v2.1.9D 納入申請日期規範) -->
         <div class="card">
             <div class="card-title">請假與異動紀錄</div>
             <div style="overflow-x: auto;">
-                <table class="data-table">
+                <table class="data-table" style="width: 100%; min-width: 400px;">
                     <thead>
                         <tr>
-                            <th style="width: 80px;">申請人</th>
-                            <th style="width: 85px;">假別</th>
-                            <th style="width: 120px;">週次/區間</th>
-                            <th style="width: 85px;">狀態</th>
+                            <th style="width: 85px;">申請日期</th>
+                            <th style="width: 70px;">申請人</th>
+                            <th style="width: 75px;">假別</th>
+                            <th style="width: 100px;">週次/區間</th>
+                            <th style="width: 70px;">狀態</th>
                         </tr>
                     </thead>
                     <tbody id="leaveTableBody"></tbody>
@@ -282,7 +283,7 @@
 
         <!-- 雙層頁尾宣告區 -->
         <div class="footer-copyright">
-            <span class="footer-version">v2.1.7D</span><br>
+            <span class="footer-version">v2.1.9D</span><br>
             宿舍智慧居住管理看板系統<br>
             Copyright © Daniel. All Rights Reserved.
         </div>
@@ -400,17 +401,22 @@
                 parsedStats[name].backup = globalRawData[15][colIdx] || 0;
             }
 
-            // 3. 🔥 精確倒序（最新申請的顯示在最上面）
+            // 3. 🔥 解析請假與異動紀錄：精確撈取 G 欄 (欄位索引 6) 作為申請日期，並完美倒序
             parsedLeaves = [];
             for(let i = 1; i < globalRawData.length; i++) {
                 let row = globalRawData[i];
-                if(row && row[6] && row[8] !== "值日處分" && row[8] !== "" && row[6].toString().startsWith("202")) {
+                // 檢查 H 欄有申請人、I 欄有假別，且 G 欄是合法的日期開頭
+                if(row && row[6] && row[7] && row[8] !== "值日處分" && row[8] !== "" && row[6].toString().startsWith("202")) {
                     parsedLeaves.push({
-                        applicant: row[7], type: row[8], weeks: row[9].toString().trim(), status: row[10]
+                        applyDate: row[6].toString().trim(), // 🔥 新增：撈取 G 欄作為申請日期
+                        applicant: row[7], 
+                        type: row[8], 
+                        weeks: row[9].toString().trim(), 
+                        status: row[10]
                     });
                 }
             }
-            parsedLeaves.reverse(); // 執行陣列反轉拋轉倒序
+            parsedLeaves.reverse(); // 執行陣列反轉拋轉倒序，最新申請在最上面
 
             // 4. 解析問卷
             dynamicFormMeta.version = globalRawData[1][36] || "未知版本";
@@ -550,17 +556,19 @@
             sliced.forEach(l => {
                 let badgeCls = "badge-gray";
                 if(l.status === "審核通過") badgeCls = "badge-green";
-                // 🔥 修正：執行完畢改為水泥淺灰色
-                if(l.status === "執行完畢") badgeCls = "badge-gray";
+                if(l.status === "執行完畢") badgeCls = "badge-gray"; // 執行完畢維持灰色
                 if(l.status === "審核未過") badgeCls = "badge-red";
 
-                // 假別對應霧感色彩包裹
                 let typeCls = "badge-gray";
                 if(l.type === "長假") typeCls = "badge-purple";
                 else if(l.type === "預先假") typeCls = "badge-green";
                 else if(l.type === "臨時假") typeCls = "badge-orange";
 
+                // 將帶有時戳的日期格式優化截斷，只顯示年/月/日 (例如 2026/5/25)
+                let cleanApplyDate = l.applyDate.split(" ")[0].replace(/-/g, "/");
+
                 leaveHtml += `<tr>
+                    <td style="color:var(--text-muted); font-weight:500;">${cleanApplyDate}</td>
                     <td><strong>${l.applicant}</strong></td>
                     <td><span class="badge ${typeCls}" style="font-size:11px; padding:2px 8px;">${l.type}</span></td>
                     <td style="font-weight:600; color:#5D6D7E;">${formatLeaveWeekString(l.weeks)}</td>
@@ -568,7 +576,7 @@
                 </tr>`;
             });
             
-            if(leaveHtml === "") leaveHtml = `<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">暫無更多異動紀錄</td></tr>`;
+            if(leaveHtml === "") leaveHtml = `<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">暫無更多異動紀錄</td></tr>`;
             document.getElementById('leaveTableBody').innerHTML = leaveHtml;
         }
 
