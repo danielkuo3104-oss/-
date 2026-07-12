@@ -13,10 +13,12 @@
             --text-dark: #3A4145;
             --text-muted: #7A868C;
             --mora-blue: #5E758A;
+            --mora-blue-intense: #2874A6;
             --mora-green: #7D8C77;
+            --mora-green-intense: #2E7D32;
             --mora-orange: #BD8366;
+            --mora-orange-intense: #A04000;
             --mora-purple: #86778C;
-            --mora-red: #A67272;
             --mora-yellow: #D4AC0D;
             --mora-purple-text: #8B7A93;
             --radius-main: 16px;
@@ -45,6 +47,7 @@
             backdrop-filter: blur(10px);
             border-bottom: 2px solid rgba(139, 122, 147, 0.1);
         }
+        .nav-title-group { display: flex; align-items: center; gap: 10px; }
         .nav-title { font-size: 18px; font-weight: bold; color: var(--mora-purple-text); }
         .back-btn { background: #cbd1d6; color: #5a6168; border: none; padding: 6px 12px; border-radius: 12px; font-size: 14px; text-decoration: none; font-weight: 500; }
 
@@ -70,7 +73,7 @@
             backdrop-filter: blur(10px);
         }
         .card-title { font-size: 16px; font-weight: 600; margin-top: 0; margin-bottom: 15px; color: #4A515A; display: flex; justify-content: space-between; align-items: center; }
-        .update-time { font-size: 11px; color: var(--mora-purple-text); font-weight: 500; background: #F3EFF5; padding: 2px 8px; border-radius: 8px; }
+        .update-time { font-size: 11px; color: #7F8C8D; font-weight: bold; background: #EAECEE; padding: 3px 10px; border-radius: 12px; letter-spacing: 0.5px; }
 
         /* 霧感與鮮豔膠囊組合 */
         .badge { display: inline-block; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; text-align: center; line-height: 1.4; }
@@ -82,11 +85,15 @@
         .badge-red { background-color: #FDE8E8; color: #C81E1E; }
         .badge-gray { background-color: #ECEFF1; color: #78909C; }
 
-        /* 大看板區 */
-        .hero-banner { background: linear-gradient(135deg, #EBE8EE 0%, #D5D8DC 100%); text-align: center; padding: 25px 15px; border-radius: var(--radius-main); margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.5); }
-        .hero-date { font-size: 13px; color: #5B636A; margin-bottom: 5px; font-weight: bold; letter-spacing: 0.5px; }
-        .hero-main { font-size: 24px; font-weight: bold; color: #2C3E50; margin: 8px 0; letter-spacing: 0.5px; }
-        .hero-sub { font-size: 14px; color: #7F8C8D; font-weight: 500; }
+        /* 大看板區高質感改造 */
+        .hero-banner { background: var(--card-bg); text-align: center; padding: 25px 15px; border-radius: var(--radius-main); margin-bottom: 20px; box-shadow: 0 4px 16px rgba(0,0,0,0.02); border: 1px solid rgba(255,255,255,0.8); }
+        .hero-date { font-size: 13px; color: #5B636A; margin-bottom: 12px; font-weight: bold; letter-spacing: 0.5px; }
+        .hero-capsule-row { display: flex; justify-content: center; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+        .hero-capsule { background: #ECEFF1; color: #37474F; font-size: 12px; font-weight: bold; padding: 4px 12px; border-radius: 20px; border: 1px solid rgba(0,0,0,0.03); }
+        .hero-capsule-week { background: #F2EFF5; color: var(--mora-purple-text); }
+        .hero-capsule-date { background: #EBF5FB; color: #2874A6; }
+        .hero-main { font-size: 22px; font-weight: bold; color: #2C3E50; margin: 5px 0; letter-spacing: 0.5px; background: rgba(40, 116, 166, 0.05); padding: 10px; border-radius: 12px; display: inline-block; width: 90%; box-sizing: border-box; }
+        .hero-sub { font-size: 14px; color: #7F8C8D; font-weight: 500; margin-top: 8px; }
 
         /* 按鈕功能重綁與調色 */
         .action-btn {
@@ -121,14 +128,20 @@
 
         .hidden { display: none !important; }
 
-        /* 彈出視窗 */
+        /* 彈出視窗與優化打勾藍色覆寫 */
         .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.4); z-index: 200; padding: 15px; display: flex; align-items: center; justify-content: center; }
         .modal-content { background: #fff; width: 100%; max-width: 500px; border-radius: var(--radius-main); max-height: 85vh; overflow-y: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.15); border: 1px solid rgba(0,0,0,0.05); }
         .form-header { background: #ECEFF1; padding: 15px; font-weight: bold; font-size: 15px; display: flex; justify-content: space-between; border-bottom: 1px solid #D5DBDB; align-items: center; }
+        
+        /* 手機版表單元資料排版寬鬆防擠壓優化 */
+        .form-meta-container { display: flex; flex-direction: column; gap: 6px; padding: 12px 15px; background: #F8FAFC; border-bottom: 1px solid #E2E8F0; font-size: 12px; font-weight: bold; color: #4A515A; }
         .form-body { padding: 20px; }
         .form-group { margin-bottom: 20px; }
         .form-label { display: block; font-size: 14px; font-weight: 600; margin-bottom: 8px; color: #34495E; }
         
+        /* 覆寫原生勾選與單選之預設藍色，同步為高質感莫蘭迪粉紫 */
+        input[type="radio"], input[type="checkbox"], select { accent-color: var(--mora-purple-text); }
+
         .form-select { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #cbd1d6; font-size: 15px; background-color: #FAFAFA; box-sizing: border-box; }
         .radio-group, .check-group { display: flex; flex-direction: column; gap: 10px; }
         .radio-label, .check-label { display: flex; align-items: center; padding: 12px; background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 10px; cursor: pointer; font-size: 14px; box-sizing: border-box; }
@@ -144,7 +157,7 @@
         .view-label { color: var(--text-muted); font-weight: 500; padding-right: 10px; }
         .view-val { font-weight: 600; color: var(--text-dark); text-align: right; }
 
-        /* 雙層高質感紫色頁尾 */
+        /* 雙層高質感頁尾宣告區 */
         .footer-copyright { text-align: center; padding: 25px 15px 35px 15px; font-size: 12px; color: #A49BB0; border-top: 1px solid rgba(139, 122, 147, 0.08); line-height: 1.6; font-weight: 500; }
         .footer-version { color: var(--mora-purple-text); font-weight: bold; font-size: 12px; margin-bottom: 4px; display: inline-block; background: #F2EFF4; padding: 1px 10px; border-radius: 20px; }
     </style>
@@ -152,7 +165,11 @@
 <body>
 
     <div class="nav-header">
-        <div class="nav-title">宿舍值日中心</div>
+        <div class="nav-title-group">
+            <div class="nav-title">宿舍值日中心</div>
+            <!-- 灰色膠囊詳細註明之更新時間移置此處 -->
+            <span class="update-time" id="statUpdateTime">更新於 --:--</span>
+        </div>
         <a href="index.html" class="back-btn">返回主頁</a>
     </div>
 
@@ -196,7 +213,11 @@
         <!-- 🕒 大看板區 -->
         <div class="hero-banner">
             <div class="hero-date" id="bannerFullDate">----年--月--日 (週-)</div>
-            <div class="hero-sub" id="bannerWeekNum">當前為：第 -- 週</div>
+            <!-- 匡出當週值日與第幾週的精緻膠囊包裹區 -->
+            <div class="hero-capsule-row">
+                <span class="hero-capsule hero-capsule-week" id="bannerWeekNumCapsule">----年 --週</span>
+                <span class="hero-capsule hero-capsule-date" id="bannerIntervalCapsule">--/-- ~ --/--</span>
+            </div>
             <div class="hero-main" id="bannerCurrentWorker">當週值日：讀取中...</div>
             <div class="hero-sub" id="bannerNextWorker">下週預計：讀取中...</div>
         </div>
@@ -205,12 +226,9 @@
         <button class="action-btn btn-log-green" onclick="initiateLogSystem()">工作日誌登錄</button>
         <button class="action-btn btn-view-blue" onclick="toggleLogCenterView()">歷史日誌紀錄查閱區</button>
 
-        <!-- 📊 個人統計區 -->
+        <!-- 📊 個人統計區 (正名為 房客值日彙整) -->
         <div class="card">
-            <div class="card-title">
-                <span>房客值日記帳統計</span>
-                <span class="update-time" id="statUpdateTime">更新於 --:--</span>
-            </div>
+            <div class="card-title">房客值日彙整</div>
             <div class="stat-grid" id="statGridContainer"></div>
         </div>
 
@@ -239,10 +257,10 @@
                 <table class="data-table">
                     <thead>
                         <tr>
-                            <th>申請人</th>
-                            <th>假別</th>
-                            <th>週次/區間</th>
-                            <th>狀態</th>
+                            <th style="width: 80px;">申請人</th>
+                            <th style="width: 85px;">假別</th>
+                            <th style="width: 120px;">週次/區間</th>
+                            <th style="width: 85px;">狀態</th>
                         </tr>
                     </thead>
                     <tbody id="leaveTableBody"></tbody>
@@ -268,11 +286,17 @@
         <div class="modal-content">
             <div class="form-header">
                 <span id="formTitleText">工作日誌回報填寫</span>
-                <span style="font-size: 11px; color: var(--text-muted); background: #fff; padding: 2px 6px; border-radius: 6px;" id="formMetaInfo">版本: --</span>
+                <button class="back-btn" style="padding:4px 10px; font-size:12px;" onclick="closeLogModal()">關閉</button>
+            </div>
+            <!-- 手機版防擠壓排列優化元數據區 -->
+            <div class="form-meta-container">
+                <div id="formMetaDate">日期：----/--/--</div>
+                <div id="formMetaInfo" style="color:var(--mora-purple-text);">使用版本: --</div>
             </div>
             <div class="form-body" id="formDynamicBody"></div>
             <div class="form-footer">
                 <button class="f-btn f-btn-cancel" onclick="closeLogModal()">取消</button>
+                <!-- 下一步驟正名為 下一步 -->
                 <button class="f-btn f-btn-next" id="formActionBtn" onclick="handleFormNextStep()">下一步</button>
             </div>
         </div>
@@ -302,7 +326,6 @@
     </div>
 
     <script>
-        // ⚙️ 核心硬派面板按鈕總控制閥 (如果是 false 則連按鈕切換鈕都不顯示)
         const SHOW_DEV_PANEL_BUTTON = true;
 
         const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQkqhXCPp4XiHKCEpI3pz4pzcu3sQreQ_qNRLger00ULCHFr9cTbXHMQqAfk7dLa_gUBAIBSJ5sZM4F/pub?gid=1984800604&single=true&output=csv";
@@ -320,15 +343,12 @@
         let dynamicFormMeta = { version: "", questions: [] };
 
         document.addEventListener("DOMContentLoaded", function() {
-            // 控制調試按鈕的可見性
             if (!SHOW_DEV_PANEL_BUTTON) {
                 document.getElementById('devToggleBtnWrapper').classList.add('hidden');
             }
-            
             const t = new Date();
             document.getElementById('mockDate').value = t.toISOString().split('T')[0];
             document.getElementById('mockTime').value = t.toTimeString().substring(0,5);
-            
             fetchDormitoryData();
         });
 
@@ -381,7 +401,7 @@
                 let row = globalRawData[i];
                 if(row && row[6] && row[8] !== "值日處分" && row[8] !== "" && row[6].toString().startsWith("202")) {
                     parsedLeaves.push({
-                        applicant: row[7], type: row[8], weeks: row[9], status: row[10]
+                        applicant: row[7], type: row[8], weeks: row[9].toString().trim(), status: row[10]
                     });
                 }
             }
@@ -401,6 +421,14 @@
             populateLogCenterDropdowns();
         }
 
+        // 智慧解析序號獲取週次與年份 (34碼為年，56碼為週)
+        function parseWeekInfoFromCode(codeStr) {
+            if(!codeStr || codeStr.length < 6) return { year: "2026", week: "00" };
+            let yearPart = "20" + codeStr.substring(2, 4);
+            let weekPart = codeStr.substring(4, 6);
+            return { year: yearPart, week: parseInt(weekPart, 10) };
+        }
+
         function renderMainSystem() {
             if(parsedSchedule.length === 0) return;
 
@@ -411,7 +439,12 @@
             document.getElementById('bannerFullDate').innerText = `${simDateTime.getFullYear()}年${simDateTime.getMonth()+1}月${simDateTime.getDate()}日 (週${['日','一','二','三','四','五','六'][simDateTime.getDay()]})`;
             
             let currentOnDuty = parsedSchedule[0];
-            document.getElementById('bannerWeekNum').innerText = `當前值日序號為：${currentOnDuty.code}`;
+            let wInfo = parseWeekInfoFromCode(currentOnDuty.code);
+            
+            // 填入全新包裝的膠囊核心看版資訊
+            document.getElementById('bannerWeekNumCapsule').innerText = `${wInfo.year}年 ${wInfo.week}週`;
+            document.getElementById('bannerIntervalCapsule').innerText = currentOnDuty.interval;
+
             document.getElementById('bannerCurrentWorker').innerText = `當週值日：${currentOnDuty.worker}`;
             document.getElementById('bannerNextWorker').innerText = `下週預計：${parsedSchedule[1] ? parsedSchedule[1].worker : '無'}`;
 
@@ -424,26 +457,35 @@
                 else if (s.status === "調班") bCls = "badge-orange";
                 else if (s.status === "代班中") bCls = "badge-yellow";
 
+                // 沒備註就完全空白
+                let cleanMemo = (s.memo === "=" || s.memo === "—" || s.memo === "") ? "" : s.memo;
+                let memoTd = cleanMemo ? `<td class="td-memo" onclick="alert('完整排班備註：\\n${cleanMemo}')">${cleanMemo}</td>` : `<td></td>`;
+
                 schedHtml += `<tr>
                     <td><span class="badge ${bCls}">${s.status}</span></td>
                     <td style="font-weight:500;">${s.interval}</td>
                     <td><strong>${s.worker}</strong></td>
-                    <td class="td-memo" onclick="alert('完整排班備註：\\n${s.memo || '無'}')">${s.memo || '—'}</td>
+                    ${memoTd}
                 </tr>`;
             });
             document.getElementById('scheduleTableBody').innerHTML = schedHtml;
 
-            // 雙軌放假審查判定與正在值日重綁
+            // 房客週次請假精確鎖定渲染
             let statHtml = "";
             for(let name in parsedStats) {
                 let st = parsedStats[name];
                 let statusBadge = `<span class="badge badge-gray">待命中</span>`;
                 
                 if(name === currentOnDuty.worker) {
-                    statusBadge = `<span class="badge badge-blue" style="background-color:#2874A6; color:white;">正在值日</span>`;
+                    statusBadge = `<span class="badge badge-blue" style="background-color:var(--mora-blue-intense); color:white;">正在值日</span>`;
                 } else {
-                    // 🔥 修正：必須要審核通過或執行完畢才成立
-                    let matchLeave = parsedLeaves.find(l => l.applicant === name && (l.status === "審核通過" || l.status === "執行完畢"));
+                    // 🔥 完美 BUG 修復：嚴格比對請假週次範圍是否包含當前 29 週，且狀態需為審核通過或執行完畢
+                    let matchLeave = parsedLeaves.find(l => {
+                        return l.applicant === name && 
+                               (l.status === "審核通過" || l.status === "執行完畢") && 
+                               isWeekInLeaveRange(wInfo.week, l.weeks);
+                    });
+                    
                     if(matchLeave) {
                         if(matchLeave.type === "長假") statusBadge = `<span class="badge badge-purple">長假</span>`;
                         else if(matchLeave.type === "預先假") statusBadge = `<span class="badge badge-green">預先假</span>`;
@@ -468,6 +510,20 @@
             document.getElementById('statUpdateTime').innerText = `更新於 ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
         }
 
+        // 週次文字格式化精製拆解器 (例如: 2628 -> 28週, 2620-2633 -> 20週-33週)
+        function formatLeaveWeekString(rawWeekStr) {
+            let s = rawWeekStr.toString().replace(/\s+/g, '');
+            if(s.includes("-")) {
+                let parts = s.split("-");
+                let startW = parts[0].length >= 4 ? parseInt(parts[0].substring(2,4), 10) : parts[0];
+                let endW = parts[1].length >= 4 ? parseInt(parts[1].substring(2,4), 10) : parts[1];
+                return `${startW}週 - ${endW}週`;
+            } else {
+                let singleW = s.length >= 4 ? parseInt(s.substring(2,4), 10) : s;
+                return `${singleW}週`;
+            }
+        }
+
         function renderLeaveTable() {
             let start = (currentLeavePage - 1) * 5;
             let end = start + 5;
@@ -478,12 +534,18 @@
                 let badgeCls = "badge-gray";
                 if(l.status === "審核通過") badgeCls = "badge-green";
                 if(l.status === "執行完畢") badgeCls = "badge-blue";
-                if(l.status === "審核未過") badgeCls = "badge-red"; // 🔥 紅色
+                if(l.status === "審核未過") badgeCls = "badge-red";
+
+                // 假別也用對應霧感色彩包裹
+                let typeCls = "badge-gray";
+                if(l.type === "長假") typeCls = "badge-purple";
+                else if(l.type === "預先假") typeCls = "badge-green";
+                else if(l.type === "臨時假") typeCls = "badge-orange";
 
                 leaveHtml += `<tr>
                     <td><strong>${l.applicant}</strong></td>
-                    <td>${l.type}</td>
-                    <td style="font-weight:500;">${l.weeks}</td>
+                    <td><span class="badge ${typeCls}" style="font-size:11px; padding:2px 8px;">${l.type}</span></td>
+                    <td style="font-weight:600; color:#5D6D7E;">${formatLeaveWeekString(l.weeks)}</td>
                     <td><span class="badge ${badgeCls}">${l.status}</span></td>
                 </tr>`;
             });
@@ -572,7 +634,9 @@
             userAnswers = {};
             
             const mockDateStr = document.getElementById('mockDate').value;
-            document.getElementById('formMetaInfo').innerText = `${mockDateStr} | 使用版本: ${dynamicFormMeta.version}`;
+            // 注入優化後的寬鬆元數據大間距欄位
+            document.getElementById('formMetaDate').innerText = `回報日期：${mockDateStr}`;
+            document.getElementById('formMetaInfo').innerText = `使用問卷版本號: ${dynamicFormMeta.version} (${currentFormModeLabel})`;
             document.getElementById('logFormModal').classList.remove('hidden');
             
             renderFormPage();
@@ -635,7 +699,8 @@
             if (currentFormPageIndex === formPagesData.length - 1) {
                 document.getElementById('formActionBtn').innerText = "提交日誌表格";
             } else {
-                document.getElementById('formActionBtn').innerText = "下一步驟";
+                // 下一步驟 改成 下一步
+                document.getElementById('formActionBtn').innerText = "下一步";
             }
         }
 
@@ -685,14 +750,14 @@
             let finalJsonString = JSON.stringify(userAnswers);
             let isMakeupMode = currentFormModeLabel.includes("補填");
 
-            // 🔥 測試模式下自動於回報內容加註 (測試資料)
             if (isTestMode) {
                 let augmentedAnswers = Object.assign({}, userAnswers);
                 augmentedAnswers["[系統戳記]"] = "(測試資料)";
                 finalJsonString = JSON.stringify(augmentedAnswers);
             }
 
-            const GAS_WEB_APP_URL = "https://script.google.com/macros/s/XXXXX_你的部署ID_XXXXX/exec";
+            // 🔥 實體部署連結更新綁定
+            const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzU_H6ld7TeMZAg6avRGDehYfN0ybUs9Na9-LLPUs7f0pJndTSdAoD1TKZ4VLgO9VbK/exec";
 
             document.getElementById('formActionBtn').innerText = "連線傳輸中...";
             document.getElementById('formActionBtn').disabled = true;
@@ -702,7 +767,7 @@
                 reporter: reporter,
                 answersJson: finalJsonString,
                 isMakeup: isMakeupMode,
-                isTestRun: isTestMode // 傳給後台做備註換行往下追加的開關依據
+                isTestRun: isTestMode 
             };
 
             fetch(GAS_WEB_APP_URL, {
@@ -787,6 +852,20 @@
 
             html += `</div>`;
             document.getElementById('logViewerCanvas').innerHTML = html;
+        }
+
+        // 輔助排班與請假週次範圍比對核心認定函數 (支援單一週次與 2620-2633 跨週拆解判定)
+        function isWeekInLeaveRange(targetWeek, weekStr) {
+            let s = weekStr.toString().replace(/\s+/g, ''); 
+            if (s.includes("-")) {
+                let parts = s.split("-");
+                let startW = parts[0].length >= 4 ? parseInt(parts[0].substring(2,4), 10) : parseInt(parts[0], 10);
+                let endW = parts[1].length >= 4 ? parseInt(parts[1].substring(2,4), 10) : parseInt(parts[1], 10);
+                return (targetWeek >= startW && targetWeek <= endW);
+            } else {
+                let singleW = s.length >= 4 ? parseInt(s.substring(2,4), 10) : parseInt(s, 10);
+                return singleW === targetWeek;
+            }
         }
     </script>
 </body>
