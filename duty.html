@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>宿舍智慧值日中心</title>
+    <!-- 引入 PapaParse 解析 CSV -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <style>
+        :root {
+            --bg-main: #F4F6F7;
+            --card-bg: rgba(255, 255, 255, 0.9);
+            --text-dark: #3A4145;
+            --text-muted: #7A868C;
+            --mora-blue: #5E758A;
+            --mora-green: #7D8C77;
+            --mora-orange: #BD8366;
+            --mora-purple: #86778C;
+            --mora-red: #A67272;
+            --radius-main: 16px;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "PingFang TC", "Microsoft JhengHei", sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-dark);
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* 頂部導航 */
+        .nav-header {
+            background-color: var(--card-bg);
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+        .nav-title { font-size: 18px; font-weight: bold; color: var(--mora-blue); }
+        .back-btn { background: #cbd1d6; color: #5a6168; border: none; padding: 6px 12px; border-radius: 12px; font-size: 14px; text-decoration: none; font-weight: 500; }
+
+        .container { padding: 15px; max-width: 600px; margin: 0 auto; padding-bottom: 60px; }
+
+        /* 開發者功能測試面板 */
+        .test-panel { background: #EAECEE; border-radius: var(--radius-main); padding: 15px; margin-bottom: 20px; border: 1px dashed var(--text-muted); }
+        .test-title { font-size: 13px; font-weight: bold; color: #566573; margin-top: 0; margin-bottom: 10px; }
+        .test-grid { display: grid; grid-template-columns: 1fr; gap: 10px; font-size: 13px; }
+        .test-row { display: flex; justify-content: space-between; align-items: center; }
+        select, input[type="date"], input[type="time"] { padding: 5px; border-radius: 8px; border: 1px solid #cbd1d6; font-size: 13px; }
+
+        /* 卡片共用樣式 */
+        .card {
+            background: var(--card-bg);
+            border-radius: var(--radius-main);
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 16px rgba(149, 157, 165, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+        }
+        .card-title { font-size: 16px; font-weight: 600; margin-top: 0; margin-bottom: 15px; color: #4A515A; display: flex; justify-content: space-between; align-items: center; }
+        .update-time { font-size: 11px; color: var(--text-muted); font-weight: normal; }
+
+        /* 膠囊標籤 */
+        .badge { display: inline-block; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; text-align: center; }
+        .badge-blue { background-color: #EBF0F5; color: #5E758A; }
+        .badge-green { background-color: #EBF5EB; color: #5E8A5E; }
+        .badge-purple { background-color: #F0EBF5; color: #725E8A; }
+        .badge-orange { background-color: #F5EBE6; color: #8A655E; }
+        .badge-gray { background-color: #ECEFF1; color: #78909C; }
+
+        /* 大看板區 */
+        .hero-banner { background: linear-gradient(135deg, #EAECEF 0%, #D5DBDB 100%); text-align: center; padding: 25px 15px; border-radius: var(--radius-main); margin-bottom: 20px; }
+        .hero-date { font-size: 13px; color: #566573; margin-bottom: 5px; font-weight: 500; }
+        .hero-main { font-size: 24px; font-weight: bold; color: #2C3E50; margin: 8px 0; }
+        .hero-sub { font-size: 14px; color: #7F8C8D; }
+
+        /* 核心導航按鈕 */
+        .action-btn {
+            display: block; width: 100%; text-align: center; padding: 14px; background: var(--mora-blue); color: #fff;
+            font-weight: bold; font-size: 16px; border: none; border-radius: var(--radius-main); cursor: pointer;
+            box-shadow: 0 4px 12px rgba(94, 117, 138, 0.2); margin-bottom: 20px; transition: background 0.2s; box-sizing: border-box;
+        }
+        .action-btn:active { background: #4F6375; }
+
+        /* 統計列表 */
+        .stat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+        .stat-item { background: #F8FAFA; border-radius: 12px; padding: 12px; border: 1px solid #EAECEE; text-align: center; }
+        .stat-name { font-size: 14px; font-weight: bold; margin-bottom: 4px; }
+        .stat-details { font-size: 11px; color: var(--text-muted); line-height: 1.4; margin-bottom: 6px; }
+
+        /* 資料表格（排班、請假紀錄） */
+        .data-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; }
+        .data-table th { padding: 10px; background: #ECEFF1; color: #5A6B7C; font-weight: 600; }
+        .data-table td { padding: 12px 10px; border-bottom: 1px solid #EAECEE; }
+
+        /* 分頁元件 */
+        .pagination { display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px; }
+        .page-btn { padding: 4px 10px; font-size: 12px; background: #cbd1d6; border: none; border-radius: 6px; cursor: pointer; }
+
+        /* 隱藏區塊 */
+        .hidden { display: none; }
+
+        /* 彈出視窗與問卷表單 */
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.4); z-index: 200; padding: 15px; display: flex; align-items: center; justify-content: center; overflow-y: auto; }
+        .modal-content { background: #fff; width: 100%; max-width: 500px; border-radius: var(--radius-main); max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.15); }
+        .form-header { background: #ECEFF1; padding: 15px; font-weight: bold; font-size: 15px; display: flex; justify-content: space-between; border-bottom: 1px solid #D5DBDB; }
+        .form-body { padding: 20px; }
+        .form-group { margin-bottom: 20px; }
+        .form-label { display: block; font-size: 14px; font-weight: 600; margin-bottom: 8px; color: #34495E; }
+        
+        /* 表單控制元件手機優化 */
+        .form-select { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #cbd1d6; font-size: 15px; background-color: #FAFAFA; box-sizing: border-box; }
+        .radio-group, .check-group { display: flex; flex-direction: column; gap: 10px; }
+        .radio-label, .check-label { display: flex; align-items: center; padding: 12px; background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 10px; cursor: pointer; font-size: 14px; box-sizing: border-box; }
+        .radio-label input, .check-label input { margin-right: 10px; width: 18px; height: 18px; }
+        .form-text { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #cbd1d6; font-size: 15px; box-sizing: border-box; min-height: 80px; resize: vertical; }
+
+        .form-footer { padding: 15px; background: #F8FAFC; display: flex; justify-content: space-between; border-top: 1px solid #E2E8F0; }
+        .f-btn { padding: 10px 20px; border-radius: 10px; border: none; font-size: 14px; font-weight: bold; cursor: pointer; }
+        .f-btn-cancel { background: #cbd1d6; color: #5a6168; }
+        .f-btn-next { background: var(--mora-blue); color: #fff; }
+
+        /* 查閱明細檢視單樣式 */
+        .view-row { padding: 10px 0; border-bottom: 1px dashed #EAECEE; display: flex; justify-content: space-between; font-size: 14px; }
+        .view-label { color: var(--text-muted); font-weight: 500; }
+        .view-val { font-weight: 600; color: var(--text-dark); text-align: right; }
+    </style>
+</head>
+<body>
+
+    <div class="nav-header">
+        <div class="nav-title">宿舍值日中心</div>
+        <a href="index.html" class="back-btn">返回主頁</a>
+    </div>
+
+    <div class="container">
+
+        <!-- ==========================================
+             ⚙️ 開發者測試控制面板 (可控制時間與補填模式)
+             ========================================== -->
+        <div class="test-panel">
+            <p class="test-title">⚙️ 系統開發者調試面板 (測試專用限制控制開關)</p>
+            <div class="test-grid">
+                <div class="test-row">
+                    <label>測試模式 (全忽略限制)：</label>
+                    <select id="cfgTestMode" onchange="renderMainSystem()">
+                        <option value="true" selected>開啟 (隨時可完整填寫)</option>
+                        <option value="false">關閉 (嚴格執行正式定時規則)</option>
+                    </select>
+                </div>
+                <div class="test-row">
+                    <label>補填控制開關模式：</label>
+                    <select id="cfgMakeupMode" onchange="renderMainSystem()">
+                        <option value="normal" selected>依照時間規則 (隔日10:30前)</option>
+                        <option value="always">隨時可以進行補填</option>
+                        <option value="never">全面禁止任何補填</option>
+                    </select>
+                </div>
+                <div class="test-row">
+                    <label>虛擬當前模擬日期：</label>
+                    <input type="date" id="mockDate" value="2026-07-12" onchange="renderMainSystem()">
+                </div>
+                <div class="test-row">
+                    <label>虛擬當前模擬時間：</label>
+                    <input type="time" id="mockTime" value="20:00" onchange="renderMainSystem()">
+                </div>
+            </div>
+        </div>
+
+        <!-- ==========================================
+             🕒 大看板區
+             ========================================== -->
+        <div class="hero-banner">
+            <div class="hero-date" id="bannerFullDate">----年--月--日 (週-)</div>
+            <div class="hero-sub" id="bannerWeekNum">當前為：第 -- 週</div>
+            <div class="hero-main" id="bannerCurrentWorker">當週值日：讀取中...</div>
+            <div class="hero-sub" id="bannerNextWorker">下週預計：讀取中...</div>
+        </div>
+
+        <!-- 工作日誌登錄核心入口按鈕 -->
+        <button class="action-btn" onclick="initiateLogSystem()">工作日誌登錄</button>
+
+        <!-- ==========================================
+             📊 個人統計區 (含當週即時狀態)
+             ========================================== -->
+        <div class="card">
+            <div class="card-title">
+                <span>房客值日記帳統計</span>
+                <span class="update-time" id="statUpdateTime">更新於 --:--</span>
+            </div>
+            <div class="stat-grid" id="statGridContainer">
+                <!-- 動態載入房客統計與膠囊狀態 -->
+            </div>
+        </div>
+
+        <!-- ==========================================
+             🏎️ 未來值日排班區 (A欄-E欄)
+             ========================================= -->
+        <div class="card">
+            <div class="card-title">未來八週值日排班資訊</div>
+            <div style="overflow-x: auto;">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>狀態</th>
+                            <th>值日區間</th>
+                            <th>預計值日生</th>
+                        </tr>
+                    </thead>
+                    <tbody id="scheduleTableBody">
+                        <!-- 動態渲染排班列表 -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ==========================================
+             🏖️ 請假與異動紀錄區 (跳過處分紀錄，分頁5筆)
+             ========================================== -->
+        <div class="card">
+            <div class="card-title">請假與異動紀錄</div>
+            <div style="overflow-x: auto;">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>申請人</th>
+                            <th>假別</th>
+                            <th>週次/區間</th>
+                            <th>狀態</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leaveTableBody">
+                        <!-- 動態渲染請假數據 -->
+                    </tbody>
+                </table>
+            </div>
+            <div class="pagination">
+                <button class="page-btn" onclick="changeLeavePage(-1)">上一頁</button>
+                <button class="page-btn" onclick="changeLeavePage(1)">下一頁</button>
+            </div>
+        </div>
+
+        <!-- ==========================================
+             📖 歷史工作日誌查閱區 (切換檢視)
+             ========================================== -->
+        <div class="card">
+            <div class="action-btn" style="background: #7A8B99; margin-bottom: 0;" onclick="toggleLogCenterView()">
+                切換至 歷史日誌紀錄查閱區
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ==========================================
+         📝 模組彈窗：工作日誌動態表單系統
+         ========================================== -->
+    <div class="modal-overlay hidden" id="logFormModal">
+        <div class="modal-content">
+            <div class="form-header">
+                <span id="formTitleText">工作日誌回報填寫</span>
+                <span style="font-size: 12px; color: var(--text-muted);" id="formMetaInfo">版本: --</span>
+            </div>
+            <div class="form-body" id="formDynamicBody">
+                <!-- 根據解析出的表單語法動態爆發渲染生成位置 -->
+            </div>
+            <div class="form-footer">
+                <button class="f-btn f-btn-cancel" onclick="closeLogModal()">取消</button>
+                <button class="f-btn f-btn-next" id="formActionBtn" onclick="handleFormNextStep()">下一步</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==========================================
+         🔍 模組彈窗：獨立歷史日誌紀錄查閱中心
+         ========================================== -->
+    <div class="modal-overlay hidden" id="logCenterModal">
+        <div class="modal-content" style="max-width: 550px;">
+            <div class="form-header">
+                <span>歷史工作日誌明細查閱區</span>
+                <button class="back-btn" onclick="toggleLogCenterView()">關閉</button>
+            </div>
+            <div class="form-body">
+                <div style="margin-bottom: 15px; display: flex; gap: 10px;">
+                    <select id="selectLogWeek" style="flex: 1;" onchange="loadSpecificDayLog()"></select>
+                    <select id="selectLogDay" style="width: 100px;" onchange="loadSpecificDayLog()">
+                        <option value="1">第一日</option>
+                        <option value="2">第二日</option>
+                        <option value="3">第三日</option>
+                        <option value="4">第四日</option>
+                        <option value="5">第五日</option>
+                    </select>
+                </div>
+                <div id="logViewerCanvas" style="padding: 10px; background: #F8FAFC; border-radius: 12px; min-height: 200px;">
+                    <!-- 渲染精緻視覺化檢查單結果 -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================================================================
+         🚀 核心智慧控制前端 JavaScript 驅動引擎
+         ================================================================== -->
+    <script>
+        // CSV 發佈網址
+        const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQkqhXCPp4XiHKCEpI3pz4pzcu3sQreQ_qNRLger00ULCHFr9cTbXHMQqAfk7dLa_gUBAIBSJ5sZM4F/pub?gid=1984800604&single=true&output=csv";
+        
+        let globalRawData = [];
+        let parsedSchedule = [];
+        let parsedStats = {};
+        let parsedLeaves = [];
+        let currentLeavePage = 1;
+        
+        let currentFormQuestions = [];
+        let currentFormPageIndex = 0;
+        let formPagesData = []; // 存分頁題目的陣列
+        let userAnswers = {};
+        let currentFormModeLabel = "正常回報";
+
+        // 當前解析出來要配合的最新問卷題幹 (AK & AL 欄)
+        let dynamicFormMeta = { version: "", questions: [] };
+
+        document.addEventListener("DOMContentLoaded", function() {
+            // 自動帶入今天日期時間到調試面板
+            const t = new Date();
+            document.getElementById('mockDate').value = t.toISOString().split('T')[0];
+            document.getElementById('mockTime').value = t.toTimeString().substring(0,5);
+            
+            fetchDormitoryData();
+        });
+
+        function fetchDormitoryData() {
+            Papa.parse(CSV_URL, {
+                download: true,
+                header: false,
+                complete: function(results) {
+                    globalRawData = results.data;
+                    processDormitoryPayload();
+                }
+            });
+        }
+
+        function processDormitoryPayload() {
+            if(!globalRawData || globalRawData.length < 2) return;
+            
+            // 1. 解析未來排班 (列2-9, 欄A-E)
+            parsedSchedule = [];
+            for (let i = 1; i <= 8; i++) {
+                let row = globalRawData[i];
+                if(row && row[0]) {
+                    parsedSchedule.push({
+                        code: row[0],
+                        interval: row[1],
+                        worker: row[2],
+                        memo: row[3],
+                        status: row[4]
+                    });
+                }
+            }
+
+            // 2. 解析統計資料 (列12-19, 房客 GK, DC, YH, YL 對應 B,C,D,E 欄)
+            const members = ["GK", "DC", "YH", "YL"];
+            const names = ["洪健棋", "郭丹騏", "尹奕竤", "林易諒"];
+            parsedStats = {};
+            
+            // 初始化結構
+            names.forEach(n => parsedStats[n] = { normal: 0, punishment: 0, abort: 0, backup: 0 });
+            
+            for(let mIdx = 0; mIdx < 4; mIdx++) {
+                let colIdx = mIdx + 1; // B, C, D, E
+                let name = names[mIdx];
+                parsedStats[name].normal = globalRawData[12][colIdx] || 0;
+                parsedStats[name].punishment = globalRawData[13][colIdx] || 0;
+                parsedStats[name].abort = globalRawData[14][colIdx] || 0;
+                parsedStats[name].backup = globalRawData[15][colIdx] || 0;
+            }
+
+            // 3. 解析請假與異動紀錄 (從第2列開始，G欄至K欄)，跳過處分
+            parsedLeaves = [];
+            for(let i = 1; i < globalRawData.length; i++) {
+                let row = globalRawData[i];
+                if(row && row[6] && row[8] !== "值日處分" && row[8] !== "" && row[6].toString().startsWith("202")) {
+                    parsedLeaves.push({
+                        applicant: row[7],
+                        type: row[8],
+                        weeks: row[9],
+                        status: row[10]
+                    });
+                }
+            }
+
+            // 4. 解析 AK / AL 欄的動態問卷樣式結構
+            dynamicFormMeta.version = globalRawData[1][36] || "未知版本"; // AK1 儲存版本號
+            dynamicFormMeta.questions = [];
+            for(let i = 1; i < globalRawData.length; i++) {
+                let qText = globalRawData[i][36]; // AK欄
+                let qTypeStr = globalRawData[i][37]; // AL欄
+                if(qText && qTypeStr) {
+                    dynamicFormMeta.questions.push({ stem: qText.trim(), rule: qTypeStr.trim() });
+                }
+            }
+
+            renderMainSystem();
+            populateLogCenterDropdowns();
+        }
+
+        function renderMainSystem() {
+            if(parsedSchedule.length === 0) return;
+
+            const mockDateStr = document.getElementById('mockDate').value;
+            const mockTimeStr = document.getElementById('mockTime').value;
+            const simDateTime = new Date(`${mockDateStr}T${mockTimeStr}`);
+
+            // 渲染看板與時間資訊
+            document.getElementById('bannerFullDate').innerText = `${simDateTime.getFullYear()}年${simDateTime.getMonth()+1}月${simDateTime.getDate()}日 (週${['日','一','二','三','四','五','六'][simDateTime.getDay()]})`;
+            
+            let currentOnDuty = parsedSchedule[0];
+            document.getElementById('bannerWeekNum').innerText = `當前值日序號為：${currentOnDuty.code}`;
+            document.getElementById('bannerCurrentWorker').innerText = `當週值日：${currentOnDuty.worker}`;
+            document.getElementById('bannerNextWorker').innerText = `下週預計：${parsedSchedule[1] ? parsedSchedule[1].worker : '無'}`;
+
+            // 渲染排班表格
+            let schedHtml = "";
+            parsedSchedule.forEach(s => {
+                let bCls = s.status === "執行中" ? "badge-blue" : "badge-gray";
+                schedHtml += `<tr>
+                    <td><span class="badge ${bCls}">${s.status}</span></td>
+                    <td>${s.interval}</td>
+                    <td>${s.worker}</td>
+                </tr>`;
+            });
+            document.getElementById('scheduleTableBody').innerHTML = schedHtml;
+
+            // 渲染房客統計卡片及當週膠囊狀態認定
+            let statHtml = "";
+            for(let name in parsedStats) {
+                let st = parsedStats[name];
+                
+                // 動態判斷狀態膠囊
+                let statusBadge = `<span class="badge badge-gray">待命中</span>`;
+                if(name === currentOnDuty.worker) {
+                    statusBadge = `<span class="badge badge-blue">正在值日</span>`;
+                } else {
+                    // 尋找當週有沒有審核通過的請假單
+                    let matchLeave = parsedLeaves.find(l => l.applicant === name && l.status === "審核通過");
+                    if(matchLeave) {
+                        if(matchLeave.type === "長假") statusBadge = `<span class="badge badge-purple">長假</span>`;
+                        else if(matchLeave.type === "預先假") statusBadge = `<span class="badge badge-green">預先假</span>`;
+                        else if(matchLeave.type === "臨時假") statusBadge = `<span class="badge badge-orange">臨時假</span>`;
+                    }
+                }
+
+                statHtml += `<div class="stat-item">
+                    <div class="stat-name">${name}</div>
+                    <div style="margin-bottom:6px;">${statusBadge}</div>
+                    <div class="stat-details">
+                        值日: ${st.normal}次 | 代班: ${st.backup}次<br>
+                        中斷: ${st.abort}次 | 處分: ${st.punishment}次
+                    </div>
+                </div>`;
+            }
+            document.getElementById('statGridContainer').innerHTML = statHtml;
+
+            // 渲染請假紀錄 (分頁處理)
+            renderLeaveTable();
+
+            // 紀錄更新時間
+            const now = new Date();
+            document.getElementById('statUpdateTime').innerText = `更新於 ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
+        }
+
+        function renderLeaveTable() {
+            let start = (currentLeavePage - 1) * 5;
+            let end = start + 5;
+            let sliced = parsedLeaves.slice(start, end);
+
+            let leaveHtml = "";
+            sliced.forEach(l => {
+                let badgeCls = "badge-gray";
+                if(l.status === "審核通過") badgeCls = "badge-green";
+                if(l.status === "執行完畢") badgeCls = "badge-blue";
+                if(l.status === "審核未過") badgeCls = "badge-red";
+
+                leaveHtml += `<tr>
+                    <td><strong>${l.applicant}</strong></td>
+                    <td>${l.type}</td>
+                    <td>${l.weeks}</td>
+                    <td><span class="badge ${badgeCls}">${l.status}</span></td>
+                </tr>`;
+            });
+            
+            if(leaveHtml === "") leaveHtml = `<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">暫無更多異動紀錄</td></tr>`;
+            document.getElementById('leaveTableBody').innerHTML = leaveHtml;
+        }
+
+        function changeLeavePage(dir) {
+            let maxPage = Math.ceil(parsedLeaves.length / 5) || 1;
+            currentLeavePage += dir;
+            if(currentLeavePage < 1) currentLeavePage = 1;
+            if(currentLeavePage > maxPage) currentLeavePage = maxPage;
+            renderLeaveTable();
+        }
+
+        // ==================================================================
+        // 📝 智慧問卷日誌登錄回報引擎機制 (含補填開關邏輯認定)
+        // ==================================================================
+        function initiateLogSystem() {
+            const isTestMode = document.getElementById('cfgTestMode').value === "true";
+            const makeupMode = document.getElementById('cfgMakeupMode').value;
+            const mockDateStr = document.getElementById('mockDate').value;
+            const mockTimeStr = document.getElementById('mockTime').value;
+            
+            const simDateTime = new Date(`${mockDateStr}T${mockTimeStr}`);
+            const hour = simDateTime.getHours();
+            const min = simDateTime.getMinutes();
+            const curTimeValue = hour * 100 + min;
+
+            currentFormModeLabel = "正常回報";
+
+            // 如果非測試模式，判斷時間與補填形式規則
+            if (!isTestMode) {
+                // 1. 判斷是否為晚上 6:00 前的警告
+                if (hour < 18) {
+                    alert("⚠️ [系統提示] 目前時間尚未進入常規晚間回報時段 (晚上 18:00 後)，系統仍開放進入，填寫時請確認資料是否完整。");
+                }
+
+                // 2. 模擬補填邏輯檢查認定（此處以按鈕觸發當下模擬，實際運作會比對資料庫前一日是否有空格）
+                // 假設今日判定需要觸發補填提示流程：
+                if (makeupMode === "never") {
+                    alert("❌ [權限遭拒] 管理員已全面關閉補填功能，目前無法越權補登前日資訊。");
+                    return;
+                } else if (makeupMode === "normal") {
+                    // 正式模式：隔日 10:30 前算補填，超過算缺失
+                    if (curTimeValue > 1030 && hour < 18) { 
+                        alert("❌ [逾期熔斷] 系統檢測到前一日匯報未完成，且已逾今日 10:30 補填期限，故此時段不開放填寫，改列為匯報缺失。");
+                        return;
+                    } else if (curTimeValue <= 1030) {
+                        alert("💡 [補填回報模式開啟] 系統檢測到您前一日之回報尚未完成，故本次填寫將認定為【補填程序】。");
+                        currentFormModeLabel = "逾期補填";
+                    }
+                } else if (makeupMode === "always") {
+                    currentFormModeLabel = "逾期補填 (隨時開放模式)";
+                }
+            } else {
+                currentFormModeLabel = "開發者測試模式 (限制全忽略)";
+            }
+
+            // 開始切分與解析 Markdown 題目變成多頁面表單
+            compileDynamicFormLayout(simDateTime.getDay() === 5); // 傳入是否為週五
+        }
+
+        function compileDynamicFormLayout(isFriday) {
+            formPagesData = [];
+            let currentPage = { title: "常規回報", questions: [] };
+
+            dynamicFormMeta.questions.forEach(q => {
+                // 換頁解析
+                if (q.rule === "---") {
+                    if (currentPage.questions.length > 0) {
+                        formPagesData.push(currentPage);
+                        currentPage = { title: "下一頁", questions: [] };
+                    }
+                    return;
+                }
+                
+                // 頁碼大標題解析
+                if (q.rule.startsWith("[Page")) {
+                    currentPage.title = q.stem;
+                    return;
+                }
+
+                // 特殊過濾：返家限制週五出現
+                if (q.stem.includes("今日是否休假") && !isFriday) {
+                    // 如果不是週五，把選項中的返家移除
+                    q.rule = q.rule.replace(/\|?\s*\(\s*\)\s*返家（限週五）\s*->\s*END/g, '');
+                }
+
+                currentPage.questions.push(q);
+            });
+
+            if (currentPage.questions.length > 0) {
+                formPagesData.push(currentPage);
+            }
+
+            // 初始化表單狀態
+            currentFormPageIndex = 0;
+            userAnswers = {};
+            document.getElementById('formMetaInfo').innerText = `版本: ${dynamicFormMeta.version} (${currentFormModeLabel})`;
+            document.getElementById('logFormModal').classList.remove('hidden');
+            
+            renderFormPage();
+        }
+
+        function renderFormPage() {
+            if(formPagesData.length === 0) return;
+            const page = formPagesData[currentFormPageIndex];
+            
+            document.getElementById('formTitleText').innerText = page.title;
+            let html = "";
+
+            page.questions.forEach((q, idx) => {
+                let qKey = `Q_${currentFormPageIndex}_${idx}`;
+                html += `<div class="form-group">
+                    <label class="form-label">${q.stem}</label>`;
+
+                if (q.rule.includes("[v]")) {
+                    // 下拉選單解析
+                    let options = q.rule.replace("[v]", "").split("|");
+                    html += `<select class="form-select" data-key="${qKey}">`;
+                    options.forEach(opt => {
+                        html += `<option value="${opt.trim()}">${opt.trim()}</option>`;
+                    });
+                    html += `</select>`;
+                } 
+                else if (q.rule.includes("( )")) {
+                    // 單選按鈕解析
+                    let options = q.rule.split("|");
+                    html += `<div class="radio-group">`;
+                    options.forEach(opt => {
+                        let cleanOpt = opt.replace("( )", "").trim();
+                        html += `<label class="radio-label">
+                            <input type="radio" name="${qKey}" value="${cleanOpt}" data-raw="${opt}"> ${cleanOpt.split("->")[0].trim()}
+                        </label>`;
+                    });
+                    html += `</div>`;
+                }
+                else if (q.rule.includes("{ }")) {
+                    // 多選按鈕解析
+                    let options = q.rule.split("|");
+                    html += `<div class="check-group">`;
+                    options.forEach(opt => {
+                        let cleanOpt = opt.replace("{ }", "").trim();
+                        html += `<label class="check-label">
+                            <input type="checkbox" name="${qKey}" value="${cleanOpt}"> ${cleanOpt}
+                        </label>`;
+                    });
+                    html += `</div>`;
+                }
+                else if (q.rule.includes("[ ]")) {
+                    // 純勾選
+                    html += `<div class="check-group">
+                        <label class="check-label">
+                            <input type="checkbox" data-type="pure-check" data-key="${qKey}"> 已確認完成並充分符合品質
+                        </label>
+                    </div>`;
+                }
+                else if (q.rule.includes("___")) {
+                    // 簡答文字區
+                    html += `<textarea class="form-text" data-key="${qKey}" placeholder="請在此輸入具體說明的細節資訊..."></textarea>`;
+                }
+
+                html += `</div>`;
+            });
+
+            document.getElementById('formDynamicBody').innerHTML = html;
+            
+            // 如果是最後一頁，按鈕改為提交
+            if (currentFormPageIndex === formPagesData.length - 1) {
+                document.getElementById('formActionBtn').innerText = "提交日誌表格";
+            } else {
+                document.getElementById('formActionBtn').innerText = "下一步驟";
+            }
+        }
+
+        function handleFormNextStep() {
+            // 收集當前頁面答案
+            const page = formPagesData[currentFormPageIndex];
+            let triggerEndFlow = false;
+
+            page.questions.forEach((q, idx) => {
+                let qKey = `Q_${currentFormPageIndex}_${idx}`;
+                let selectEl = document.querySelector(`select[data-key="${qKey}"]`);
+                let radioEl = document.querySelector(`input[name="${qKey}"]:checked`);
+                let textEl = document.querySelector(`textarea[data-key="${qKey}"]`);
+                let pureCheckEl = document.querySelector(`input[data-key="${qKey}"][data-type="pure-check"]`);
+                
+                if (selectEl) {
+                    userAnswers[q.stem] = selectEl.value;
+                } else if (radioEl) {
+                    let val = radioEl.value;
+                    let raw = radioEl.getAttribute("data-raw");
+                    userAnswers[q.stem] = val.split("->")[0].trim();
+                    // 偵測跳題邏輯 -> END
+                    if (raw.includes("-> END") || val.includes("-> END")) {
+                        triggerEndFlow = true;
+                    }
+                } else if (textEl) {
+                    userAnswers[q.stem] = textEl.value || "無個別備註";
+                } else if (pureCheckEl) {
+                    userAnswers[q.stem] = pureCheckEl.checked ? "已完成" : "未完成";
+                } else {
+                    // 複選框
+                    let checkedBoxes = document.querySelectorAll(`input[name="${qKey}"]:checked`);
+                    let arr = [];
+                    checkedBoxes.forEach(cb => arr.push(cb.value));
+                    userAnswers[q.stem] = arr.length > 0 ? arr.join(", ") : "皆未清倒";
+                }
+            });
+
+            // 觸發直接提交或已經到最終頁
+            if (triggerEndFlow || currentFormPageIndex === formPagesData.length - 1) {
+                executeFinalSubmissionPayload();
+            } else {
+                currentFormPageIndex++;
+                renderFormPage();
+            }
+        }
+
+        function executeFinalSubmissionPayload() {
+    const mockDateStr = document.getElementById('mockDate').value;
+    const mockTimeStr = document.getElementById('mockTime').value;
+    
+    let reporter = userAnswers["請選擇登錄人"] || "未知回報者";
+    let finalJsonString = JSON.stringify(userAnswers);
+    let isMakeupMode = currentFormModeLabel.includes("補填");
+
+    // 🚨 填入你剛剛在 GAS 部署後拿到的 網頁應用程式網址 (Web App URL)
+    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/XXXXX_你的部署ID_XXXXX/exec";
+
+    // 顯示 Loading 狀態防止重複點擊
+    document.getElementById('formActionBtn').innerText = "連線傳輸中...";
+    document.getElementById('formActionBtn').disabled = true;
+
+    // 封裝成 POST 資料包打給 Google 試算表後端
+    const payload = {
+        date: mockDateStr,
+        reporter: reporter,
+        answersJson: finalJsonString,
+        isMakeup: isMakeupMode
+    };
+
+    fetch(GAS_WEB_APP_URL, {
+        method: "POST",
+        mode: "no-cors", // 使用 no-cors 模式允許跨網域拋轉資料
+        cache: "no-cache",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+    })
+    .then(res => {
+        // 由於 no-cors 模式無法讀取回傳內容，只要不噴錯就代表資料已經順利拋進 Google 佇列
+        alert(`🎉 [日誌上傳完成]\n\n已成功將 ${reporter} 的今日工作日誌寫入 Google 試算表對應欄位！\n模式：${currentFormModeLabel}`);
+        closeLogModal();
+        // 重新讀取資料重新整理畫面
+        setTimeout(() => { fetchDormitoryData(); }, 1500); 
+    })
+    .catch(err => {
+        alert("❌ [傳輸失敗] 連線發生阻礙，請確認網路狀態或調試後台：" + err);
+    })
+    .finally(() => {
+        document.getElementById('formActionBtn').disabled = false;
+        document.getElementById('formActionBtn').innerText = "提交日誌表格";
+    });
+}
+
+        function closeLogModal() {
+            document.getElementById('logFormModal').classList.add('hidden');
+        }
+
+        // ==================================================================
+        // 📖 獨立工作日誌查閱區與精緻回報單視覺化引擎
+        // ==================================================================
+        function toggleLogCenterView() {
+            document.getElementById('logCenterModal').classList.toggle('hidden');
+        }
+
+        function populateLogCenterDropdowns() {
+            let selectWeek = document.getElementById('selectLogWeek');
+            selectWeek.innerHTML = "";
+            // 抓取明細細項區有值的週次
+            for(let i = 1; i <= 5; i++) {
+                let row = globalRawData[i];
+                if(row && row[13]) { // N 欄有值
+                    let opt = document.createElement('option');
+                    opt.value = i;
+                    opt.innerText = `值日區間: ${row[13]} (版本:${row[14]})`;
+                    selectWeek.appendChild(opt);
+                }
+            }
+            loadSpecificDayLog();
+        }
+
+        function loadSpecificDayLog() {
+            const weekIdx = parseInt(document.getElementById('selectLogWeek').value) || 1;
+            const dayNum = parseInt(document.getElementById('selectLogDay').value) || 1;
+            
+            // 計算在試算表對應日的儲存格欄位 (第一日 P-S, 第二日 T-W, 第三日 X-AA, 第四日 AB-AE, 第五日 AF-AI)
+            // 根據試算表結構：第一日登錄時間在 P 欄 (第15欄，從0開始計為15)
+            let baseColIdx = 15 + (dayNum - 1) * 4; 
+            
+            let rowData = globalRawData[weekIdx];
+            if (!rowData || !rowData[baseColIdx]) {
+                document.getElementById('logViewerCanvas').innerHTML = `<div style="text-align:center; padding:30px; color:var(--text-muted); font-size:13px;">➔ 本日暫無任何登錄紀錄資料</div>`;
+                return;
+            }
+
+            let logTime = rowData[baseColIdx];      // P, T, X...
+            let logWorker = rowData[baseColIdx+1];  // Q, U, Y...
+            let logJsonStr = rowData[baseColIdx+2]; // R, V, Z...
+            let logMemo = rowData[baseColIdx+3];    // S, W, AA...
+
+            let html = `<div style="background:#fff; border-radius:8px; padding:15px; box-shadow:inset 0 1px 3px rgba(0,0,0,0.02); border:1px solid #E2E8F0;">
+                <div style="font-size:12px; color:var(--text-muted); margin-bottom:10px; display:flex; justify-content:space-between;">
+                    <span>填寫時間: ${logTime}</span>
+                    <span class="badge badge-blue">填寫人: ${logWorker}</span>
+                </div>`;
+
+            try {
+                // 解析儲存的 JSON 答案包，還原成精緻檢查單長相
+                let obj = JSON.parse(logJsonStr);
+                for(let key in obj) {
+                    let val = obj[key];
+                    let valHtml = val;
+                    if(val === "已完成") valHtml = `<span style="color:#2E7D32; font-weight:bold;">✓ 已完成</span>`;
+                    if(val === "未完成") valHtml = `<span style="color:#C81E1E; font-weight:bold;">✗ 缺失未完</span>`;
+                    
+                    html += `<div class="view-row">
+                        <span class="view-label">${key}</span>
+                        <span class="view-val">${valHtml}</span>
+                    </div>`;
+                }
+            } catch(e) {
+                // 防錯：如果不是標準 JSON 則直接傾倒原始文字
+                html += `<div style="font-size:14px; white-space:pre-wrap; color:#566573; padding:10px 0;">${logJsonStr}</div>`;
+            }
+
+            if(logMemo && logMemo.trim() !== "") {
+                html += `<div style="margin-top:12px; font-size:12px; background:#FEF9E7; padding:8px; border-radius:6px; border-left:3px solid #F39C12; color:#7F8C8D;">
+                    <strong>系統註記：</strong>${logMemo}
+                </div>`;
+            }
+
+            html += `</div>`;
+            document.getElementById('logViewerCanvas').innerHTML = html;
+        }
+
+        // 輔助排班週次判定
+        function isWeekInLeaveRange(targetWeek, weekStr) {
+            let cleanStr = weekStr.toString().replace(/\s+/g, ''); 
+            if (cleanStr.includes("-")) {
+                let parts = cleanStr.split("-");
+                return (targetWeek >= parseInt(parts[0],10) && targetWeek <= parseInt(parts[1],10));
+            }
+            return parseInt(cleanStr, 10) === targetWeek;
+        }
+    </script>
+</body>
+</html>
