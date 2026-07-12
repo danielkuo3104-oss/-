@@ -430,7 +430,6 @@
             const simDateTime = new Date(`${mockDateStr}T${mockTimeStr}`);
 
             // 填入全新包裝的格式化更新時間膠囊
-            //  修正後的看板渲染區塊
             const formatPad = (n) => n.toString().padStart(2, '0');
             const updateTimeEl = document.getElementById('statUpdateTime');
             if (updateTimeEl) {
@@ -445,15 +444,21 @@
             let currentOnDuty = parsedSchedule[0];
             let wInfo = parseWeekInfoFromCode(currentOnDuty.code);
             
-            // 精確對應新版 UI ID 並加上安全保護防止 null 報錯
+            // 🔥 修正：大看板的核心資訊元件全面加入安全保護，確保資料正常覆寫
             const rawCodeEl = document.getElementById('bannerRawCode');
             if (rawCodeEl) rawCodeEl.innerText = currentOnDuty.code;
-            
+
             const weekCapsuleEl = document.getElementById('bannerWeekNumCapsule');
             if (weekCapsuleEl) weekCapsuleEl.innerText = `${wInfo.year}年 ${wInfo.week}週`;
-            
+
             const intervalCapsuleEl = document.getElementById('bannerIntervalCapsule');
             if (intervalCapsuleEl) intervalCapsuleEl.innerText = currentOnDuty.interval;
+
+            const currentWorkerEl = document.getElementById('bannerCurrentWorker');
+            if (currentWorkerEl) currentWorkerEl.innerText = `當週值日：${currentOnDuty.worker}`;
+
+            const nextWorkerEl = document.getElementById('bannerNextWorker');
+            if (nextWorkerEl) nextWorkerEl.innerText = `下週預計：${parsedSchedule[1] ? parsedSchedule[1].worker : '無'}`;
 
             // 渲染值日排班表格膠囊 (優化：備註完全改用展開按鈕，防表格不平衡)
             let schedHtml = "";
@@ -476,7 +481,9 @@
                     ${memoTd}
                 </tr>`;
             });
-            document.getElementById('scheduleTableBody').innerHTML = schedHtml;
+            
+            const scheduleTableBodyEl = document.getElementById('scheduleTableBody');
+            if (scheduleTableBodyEl) scheduleTableBodyEl.innerHTML = schedHtml;
 
             // 房客週次請假精確鎖定渲染
             let statHtml = "";
@@ -509,7 +516,9 @@
                     </div>
                 </div>`;
             }
-            document.getElementById('statGridContainer').innerHTML = statHtml;
+            
+            const statGridContainerEl = document.getElementById('statGridContainer');
+            if (statGridContainerEl) statGridContainerEl.innerHTML = statHtml;
 
             renderLeaveTable();
         }
