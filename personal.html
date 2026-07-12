@@ -303,7 +303,23 @@
 
         <button class="close-btn" style="background: #cbd1d6; color: #5a6168; border: none; border-radius: 16px; margin-top: 15px;" onclick="toggleMenu()">取消</button>
     </div>
-</div>
+</div> 
+
+<script>
+    function toggleMenu() {
+        document.getElementById('fabMenu').classList.toggle('active');
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        // 確保防錯：如果外部沒有定義 isHomePage，自動給予 false 安全降級
+        const isHome = (typeof isHomePage !== 'undefined') ? isHomePage : false;
+        const homeLink = document.getElementById('homeMenuLink');
+        
+        if (!isHome && homeLink) {
+            homeLink.style.display = 'block';
+        }
+    });
+</script>
 
     <script>
         const urlPrimary = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQkqhXCPp4XiHKCEpI3pz4pzcu3sQreQ_qNRLger00ULCHFr9cTbXHMQqAfk7dLa_gUBAIBSJ5sZM4F/pub?gid=0&single=true&output=csv";
