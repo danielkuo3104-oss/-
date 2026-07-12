@@ -430,21 +430,30 @@
             const simDateTime = new Date(`${mockDateStr}T${mockTimeStr}`);
 
             // 填入全新包裝的格式化更新時間膠囊
+            //  修正後的看板渲染區塊
             const formatPad = (n) => n.toString().padStart(2, '0');
-            document.getElementById('statUpdateTime').innerText = `更新時間 ${simDateTime.getFullYear()}/${formatPad(simDateTime.getMonth()+1)}/${formatPad(simDateTime.getDate())} ${formatPad(simDateTime.getHours())}:${formatPad(simDateTime.getMinutes())}`;
+            const updateTimeEl = document.getElementById('statUpdateTime');
+            if (updateTimeEl) {
+                updateTimeEl.innerText = `更新時間 ${simDateTime.getFullYear()}/${formatPad(simDateTime.getMonth()+1)}/${formatPad(simDateTime.getDate())} ${formatPad(simDateTime.getHours())}:${formatPad(simDateTime.getMinutes())}`;
+            }
             
-            document.getElementById('bannerFullDate').innerText = `${simDateTime.getFullYear()}年${simDateTime.getMonth()+1}月${simDateTime.getDate()}日 (週${['日','一','二','三','四','五','六'][simDateTime.getDay()]})`;
+            const fullDateEl = document.getElementById('bannerFullDate');
+            if (fullDateEl) {
+                fullDateEl.innerText = `${simDateTime.getFullYear()}年${simDateTime.getMonth()+1}月${simDateTime.getDate()}日 (週${['日','一','二','三','四','五','六'][simDateTime.getDay()]})`;
+            }
             
             let currentOnDuty = parsedSchedule[0];
             let wInfo = parseWeekInfoFromCode(currentOnDuty.code);
             
-            // 看板上方優先注入顯示原始序號
-            document.getElementById('bannerRawCode').innerText = currentOnDuty.code;
-            document.getElementById('bannerWeekNumCapsule').innerText = `${wInfo.year}年 ${wInfo.week}週`;
-            document.getElementById('bannerIntervalCapsule').innerText = currentOnDuty.interval;
-
-            document.getElementById('bannerCurrentWorker').innerText = `當週值日：${currentOnDuty.worker}`;
-            document.getElementById('bannerNextWorker').innerText = `下週預計：${parsedSchedule[1] ? parsedSchedule[1].worker : '無'}`;
+            // 精確對應新版 UI ID 並加上安全保護防止 null 報錯
+            const rawCodeEl = document.getElementById('bannerRawCode');
+            if (rawCodeEl) rawCodeEl.innerText = currentOnDuty.code;
+            
+            const weekCapsuleEl = document.getElementById('bannerWeekNumCapsule');
+            if (weekCapsuleEl) weekCapsuleEl.innerText = `${wInfo.year}年 ${wInfo.week}週`;
+            
+            const intervalCapsuleEl = document.getElementById('bannerIntervalCapsule');
+            if (intervalCapsuleEl) intervalCapsuleEl.innerText = currentOnDuty.interval;
 
             // 渲染值日排班表格膠囊 (優化：備註完全改用展開按鈕，防表格不平衡)
             let schedHtml = "";
