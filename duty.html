@@ -820,6 +820,9 @@
             }
         }
 
+        // ==========================================
+        // 📝 智慧提交封裝與身分交叉預審機制 (v2.4.3D)
+        // ==========================================
         function executeFinalSubmissionPayload() {
             const isTestMode = document.getElementById('cfgTestMode').value === "true";
             const timeAnchor = document.getElementById('cfgTimeAnchor').value;
@@ -833,26 +836,99 @@
             let finalJsonString = JSON.stringify(userAnswers);
             let isMakeupMode = currentFormModeLabel.includes("補填");
 
-            // 🔥 問題六更新：驗證登錄人與值日生身分是否契合
+            // 交叉比對：登錄人姓名是否跟主看板當值值日生完全契合
             let currentWeekOnDutyWorkerName = parsedSchedule[0] ? parsedSchedule[0].worker : "";
-            
-            if (reporter !== currentWeekOnDutyWorkerName) {
+            let isProxyAgentRun = (reporter !== currentWeekOnDutyWorkerName); // 是否為代班
+
+            if (isProxyAgentRun) {
                 Swal.fire({
                     title: "代理頂替代班審查提示",
-                    text: `系統比對發現您點選的登錄人「${reporter}」並非本週原訂當值值日生「${currentWeekOnDutyWorkerName}」，請問本次是否確認為代理人協助代班登錄送出？`,
+                    text: `系統比對發現您點選的登錄人「${reporter}」並非本週安排之值日生「${currentWeekOnDutyWorkerName}」，請問本次是否確認為代理人頂替協助提交？`,
                     icon: "warning",
                     showCancelButton: true,
                     confirmButtonText: "是的，代班送出",
                     cancelButtonText: "返回修正",
                     customClass: { popup: 'swal2-popup' }
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        proceedWithDuplicateCheck(mockDateStr, reporter, finalJsonString, isMakeupMode, isTestMode);
+                }).then((res) => {
+                    // 🔥 完美修正：將原本誤打的 result 改回一致的 res，徹底消滅未定義報錯 BUG
+                    if (res.isConfirmed) {
+                        proceedWithDuplicateCheck(mockDateStr, reporter, finalJsonString, isMakeupMode, isTestMode, isProxyAgentRun);
                     }
                 });
             } else {
-                proceedWithDuplicateCheck(mockDateStr, reporter, finalJsonString, isMakeupMode, isTestMode);
+                proceedWithDuplicateCheck(mockDateStr, reporter, finalJsonString, isMakeupMode, isTestMode, isProxyAgentRun);
             }
+        }
+
+        function proceedWithDuplicateCheck(mockDateStr, reporter, finalJsonString, isMakeupMode, isTestMode, isProxyAgentRun) {
+            // 換算目標日期是主看版明細列的第幾天，以此抓取對應欄位
+            const tObj = new Date(mockDateStr);
+            let dIdx = tObj.getDay(); 
+            if(dIdx < 1) dIdx = 1; if(dIdx > 5) dIdx = 5;
+            let baseCol = 15 + (dIdx - 1) * 4; 
+            
+            let isDuplicateData = false;
+            let rowData = globalRawData[1]; // 取第一列（當週最新列）進行歷史查重
+            if (rowData && rowData[baseCol] && rowData[baseCol].trim() !== "") {
+                isDuplicateData = true;
+            }
+
+            if (isDuplicateData) {
+                Swal.fire({
+                    title: "重複填寫更正提示",
+                    text: `檢測到本日值日日誌已有先前上傳之回覆。本次送出將自動視為更正表格，全面覆寫原紀錄並累加修改次數，是否確定送出？`,
+                    icon: "info",
+                    showCancelButton: true,
+                    confirmButtonText: "確認更正覆寫",
+                    cancelButtonText: "取消送出",
+                    customClass: { popup: 'swal2-popup' }
+                }).then((res) => {
+                    if (res.isConfirmed) {
+                        fireFetchPostPayload(mockDateStr, reporter, finalJsonString, isMakeupMode, isTestMode, isProxyAgentRun);
+                    }
+                });
+            } else {
+                fireFetchPostPayload(mockDateStr, reporter, finalJsonString, isMakeupMode, isTestMode, isProxyAgentRun);
+            }
+        }
+
+        function fireFetchPostPayload(mockDateStr, reporter, finalJsonString, isMakeupMode, isTestMode, isProxyAgentRun) {
+            if (isTestMode) {
+                let augmentedAnswers = Object.assign({}, userAnswers);
+                augmentedAnswers["[系統戳記]"] = "(測試資料)";
+                finalJsonString = JSON.stringify(augmentedAnswers);
+            }
+
+            const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzU_H6ld7TeMZAg6avRGDehYfN0ybUs9Na9-LLPUs7f0pJndTSdAoD1TKZ4VLgO9VbK/exec";
+            document.getElementById('formActionBtn').innerText = "連線傳輸中...";
+            document.getElementById('formActionBtn').disabled = true;
+
+            const payload = {
+                date: mockDateStr,
+                reporter: reporter,
+                answersJson: finalJsonString,
+                isMakeup: isMakeupMode,
+                isTestRun: isTestMode,
+                isProxy: isProxyAgentRun // 🔥 新增：傳遞代班註記參數給後端 GAS
+            };
+
+            fetch(GAS_WEB_APP_URL, {
+                method: "POST",
+                mode: "no-cors",
+                cache: "no-cache",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            })
+            .then(res => {
+                Swal.fire("日誌上傳完成", `已成功將 ${reporter} 的日誌寫入 Google 試算表對應日欄位！`, "success");
+                closeLogModal();
+                setTimeout(() => { fetchDormitoryData(); }, 1500); 
+            })
+            .catch(err => { Swal.fire("傳輸失敗", "連線異常：" + err, "error"); })
+            .finally(() => {
+                document.getElementById('formActionBtn').disabled = false;
+                document.getElementById('formActionBtn').innerText = "提交日誌表格";
+            });
         }
 
         // 🔥 問題四更新：實體執行重複填寫交叉比對防禦機制
