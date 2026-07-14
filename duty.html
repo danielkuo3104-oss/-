@@ -863,38 +863,53 @@
             }
         }
 
+        // ==========================================
+        // 📝 智慧查重與覆寫預警定址引擎 (v2.4.6D 實體最新列精準修復版)
+        // ==========================================
         function proceedWithDuplicateCheck(mockDateStr, reporter, finalJsonString, isMakeupMode, isTestMode, isProxyAgentRun) {
+            // 1. 換算目標日期是主看板明細列的第幾天，以此抓取對應欄位
             const tObj = new Date(mockDateStr);
             let dIdx = tObj.getDay(); 
             if(dIdx < 1) dIdx = 1; if(dIdx > 5) dIdx = 5;
-            let baseCol = 15 + (dIdx - 1) * 4; 
+            let baseCol = 15 + (dIdx - 1) * 4; // P欄(第一日時間)=15, T欄(第二日時間)=19...
             
-            // 🔥 精確安全定址：動態換算目標週次列
-            const weekIdx = parseInt(document.getElementById('selectLogWeek').value) || 1;
+            // 🔥【終極 Bug 修復】：不再盲信下拉選單的 weekIdx，直接對齊後端由下往上尋找 N 欄最新生效列！
+            let targetRowIdx = -1;
+            for (let i = globalRawData.length - 1; i >= 1; i--) {
+                let intervalText = globalRawData[i][13] ? globalRawData[i][13].toString().trim() : ""; // N 欄是第 13 欄(從0開始)
+                if (intervalText !== "") {
+                    targetRowIdx = i; // 找到最下方有值的一列（在你的圖中會完美精準定址到第 3 列）
+                    break;
+                }
+            }
+
+            // 如果找不到最新列（防呆安全鎖），則降級回退預設
+            if (targetRowIdx === -1) targetRowIdx = 1;
             
             let isDuplicateData = false;
-            let rowData = globalRawData[weekIdx]; 
+            let rowData = globalRawData[targetRowIdx]; // 🎯 實時精確定位到試算表實體最新運作列（第 3 列）
             
             if (rowData && rowData[baseCol] && rowData[baseCol].trim() !== "") {
                 isDuplicateData = true;
             }
 
+            // 2. 根據精確查重結果跳出對應的 SweetAlert2 卡片
             if (isDuplicateData) {
                 Swal.fire({
                     title: "重複填寫更正提示",
-                    text: `檢測到本日值日日誌已有先前上傳之回覆。本次送出將自動視為更正表格，全面覆寫原紀錄並累加修改次數，是否確定送出？`,
+                    text: `檢測到本日值日日誌已有先前上傳之回覆（存在紀錄：${rowData[baseCol]}）。本次送出將自動視為更正表格，全面覆寫原紀錄並累加修改次數，是否確定送出？`,
                     icon: "info",
                     showCancelButton: true,
                     confirmButtonText: "確認更正覆寫",
                     cancelButtonText: "取消送出",
                     customClass: { popup: 'swal2-popup' }
                 }).then((res) => {
-                    // 🔥 精確校正：徹底綁定簡潔變數 res 
                     if (res && res.isConfirmed) {
                         fireFetchPostPayload(mockDateStr, reporter, finalJsonString, isMakeupMode, isTestMode, isProxyAgentRun);
                     }
                 });
             } else {
+                // 如果這一格確實完全空白無資料，暢通放行送出！
                 fireFetchPostPayload(mockDateStr, reporter, finalJsonString, isMakeupMode, isTestMode, isProxyAgentRun);
             }
         }
