@@ -860,19 +860,27 @@
             }
         }
 
+        // ==========================================
+        // 📝 智慧查重與覆寫預警定址引擎 (v2.4.4D 完美修復版)
+        // ==========================================
         function proceedWithDuplicateCheck(mockDateStr, reporter, finalJsonString, isMakeupMode, isTestMode, isProxyAgentRun) {
-            // 換算目標日期是主看版明細列的第幾天，以此抓取對應欄位
+            // 1. 換算目標日期是主看板明細列的第幾天，以此抓取對應欄位
             const tObj = new Date(mockDateStr);
             let dIdx = tObj.getDay(); 
             if(dIdx < 1) dIdx = 1; if(dIdx > 5) dIdx = 5;
-            let baseCol = 15 + (dIdx - 1) * 4; 
+            let baseCol = 15 + (dIdx - 1) * 4; // P欄(第一日時間)=15, T欄(第二日時間)=19...
+            
+            // 🔥【重大Bug修復】：動態獲取當前選擇或最新運行的 weekIdx（通常是 1），而不是鎖死在第 1 列
+            const weekIdx = parseInt(document.getElementById('selectLogWeek').value) || 1;
             
             let isDuplicateData = false;
-            let rowData = globalRawData[1]; // 取第一列（當週最新列）進行歷史查重
+            let rowData = globalRawData[weekIdx]; // 🎯 修正：精確動態定址到當前週次的資料列
+            
             if (rowData && rowData[baseCol] && rowData[baseCol].trim() !== "") {
                 isDuplicateData = true;
             }
 
+            // 2. 根據查重結果跳出對應的 SweetAlert2 卡片
             if (isDuplicateData) {
                 Swal.fire({
                     title: "重複填寫更正提示",
@@ -883,11 +891,13 @@
                     cancelButtonText: "取消送出",
                     customClass: { popup: 'swal2-popup' }
                 }).then((res) => {
-                    if (res.isConfirmed) {
+                    // 🔥 完美修正：徹底移除未定義的 result.isConfirmed，確保下一步順暢通關
+                    if (res && res.isConfirmed) {
                         fireFetchPostPayload(mockDateStr, reporter, finalJsonString, isMakeupMode, isTestMode, isProxyAgentRun);
                     }
                 });
             } else {
+                // 如果該格確實空白無資料，直接放行不跳警告
                 fireFetchPostPayload(mockDateStr, reporter, finalJsonString, isMakeupMode, isTestMode, isProxyAgentRun);
             }
         }
@@ -909,7 +919,7 @@
                 answersJson: finalJsonString,
                 isMakeup: isMakeupMode,
                 isTestRun: isTestMode,
-                isProxy: isProxyAgentRun // 🔥 新增：傳遞代班註記參數給後端 GAS
+                isProxy: isProxyAgentRun 
             };
 
             fetch(GAS_WEB_APP_URL, {
