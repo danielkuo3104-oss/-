@@ -864,39 +864,40 @@
         }
 
         // ==========================================
-        // 📝 智慧查重與覆寫預警定址引擎 (v2.4.7D 硬核硬編碼對位版)
+        // 🎯 核心定址修復：前端也只看 N 欄由下往上搜尋 (v2.5.2D)
         // ==========================================
+        function getSystemTargetRowIdx() {
+            let targetRowIdx = -1;
+            // 從 CSV 資料最底端開始，由下往上掃描 N 欄 (索引13)
+            for (let i = globalRawData.length - 1; i >= 1; i--) {
+                let intervalText = globalRawData[i][13] ? globalRawData[i][13].toString().trim() : ""; 
+                if (intervalText !== "") {
+                    targetRowIdx = i; // 100% 精確同步定位到第 3 列
+                    break;
+                }
+            }
+            return (targetRowIdx === -1) ? 2 : targetRowIdx; 
+        }
+
         function proceedWithDuplicateCheck(mockDateStr, reporter, finalJsonString, isMakeupMode, isTestMode, isProxyAgentRun) {
-            // 1. 強制以本地時區拆解目標日期，防止跨時區偏位
             const tObj = new Date(mockDateStr + "T00:00:00");
             let dIdx = tObj.getDay(); 
             if(dIdx < 1) dIdx = 1; if(dIdx > 5) dIdx = 5;
             
-            // 🎯 前端 PapaParse 解析出來的陣列索引從 0 開始算！
-            // P欄(第16欄)=索引15; T欄(第20欄)=索引19; X欄(第24欄)=索引23; AB欄(第28欄)=索引27; AF欄(第32欄)=索引31
+            // 寫死前端實體陣列欄位位置 (T 欄 = 索引 19)
             const frontColumnMapping = [0, 15, 19, 23, 27, 31];
             let baseCol = frontColumnMapping[dIdx]; 
             
-            // 2. 由下往上精準對齊 N 欄最新生效列
-            let targetRowIdx = -1;
-            for (let i = globalRawData.length - 1; i >= 1; i--) {
-                let intervalText = globalRawData[i][13] ? globalRawData[i][13].toString().trim() : ""; 
-                if (intervalText !== "") {
-                    targetRowIdx = i; 
-                    break;
-                }
-            }
-
-            if (targetRowIdx === -1) targetRowIdx = 1;
+            // 精確獲取由 N 欄推算出的實體生效列
+            let targetRowIdx = getSystemTargetRowIdx();
             
             let isDuplicateData = false;
-            let rowData = globalRawData[targetRowIdx]; // 完美鎖定在試算表實體最新列（第 3 列）
+            let rowData = globalRawData[targetRowIdx]; 
             
             if (rowData && rowData[baseCol] && rowData[baseCol].trim() !== "") {
                 isDuplicateData = true;
             }
 
-            // 3. 執行彈窗提示
             if (isDuplicateData) {
                 Swal.fire({
                     title: "重複填寫更正提示",
@@ -907,12 +908,13 @@
                     cancelButtonText: "取消送出",
                     customClass: { popup: 'swal2-popup' }
                 }).then((res) => {
+                    // 同步打通，將真實的實體列數(加上偏位差修正)拋投給後台
                     if (res && res.isConfirmed) {
-                        fireFetchPostPayload(mockDateStr, reporter, finalJsonString, isMakeupMode, isTestMode, isProxyAgentRun);
+                        fireFetchPostPayload(mockDateStr, reporter, finalJsonString, isMakeupMode, isTestMode, isProxyAgentRun, targetRowIdx);
                     }
                 });
             } else {
-                fireFetchPostPayload(mockDateStr, reporter, finalJsonString, isMakeupMode, isTestMode, isProxyAgentRun);
+                fireFetchPostPayload(mockDateStr, reporter, finalJsonString, isMakeupMode, isTestMode, isProxyAgentRun, targetRowIdx);
             }
         }
 
