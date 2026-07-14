@@ -1010,7 +1010,7 @@
         }
 
         // ==========================================
-        // 📖 歷史日誌查閱與跨年度歷史定址對位引擎 (v2.5.7D 淡色底色膠囊版)
+        // 📖 歷史日誌查閱與跨年度歷史定址對位引擎 (v2.6.0D 答案灰色字修正版)
         // ==========================================
         function loadSpecificDayLog() {
             const weekIdx = parseInt(document.getElementById('selectLogWeek').value) || 1;
@@ -1034,7 +1034,7 @@
             let logTime = rowData[baseColIdx];      
             let logWorker = rowData[baseColIdx+1];  
             let logJsonStr = rowData[baseColIdx+2]; 
-            let logMemo = rowData[rowData.length - 1] === "undefined" ? "" : rowData[baseColIdx+3]; 
+            let logMemo = rowData[baseColIdx+3] ? rowData[baseColIdx+3].toString().trim() : ""; 
             
             const timeAnchor = document.getElementById('cfgTimeAnchor').value;
             let currentCalcYear = new Date().getFullYear(); 
@@ -1062,11 +1062,10 @@
                 }
             }
 
-            // 🎯【核心更新】：將右上角標籤全面改良為莫蘭迪「霧面淡色底色膠囊」
-            let badgeStyle = "background-color: #EBF5FB; color: #2874A6;"; // 同人當值：淡磨砂藍底 + 深藍字
-            
+            // 右上角磨砂淡色標籤
+            let badgeStyle = "background-color: #EBF5FB; color: #2874A6;"; 
             if (logMemo && logMemo.includes("非當值人員登錄")) {
-                badgeStyle = "background-color: #FDF2E9; color: #E67E22;"; // 非當值代理：淡磨砂橘底 + 深橘字
+                badgeStyle = "background-color: #FDF2E9; color: #E67E22;"; 
             } else if (scheduledWorkerName && logWorker !== scheduledWorkerName) {
                 badgeStyle = "background-color: #FDF2E9; color: #E67E22;"; 
             }
@@ -1074,7 +1073,6 @@
             let html = `<div style="background:#fff; border-radius:8px; padding:15px; box-shadow:inset 0 1px 3px rgba(0,0,0,0.02); border:1px solid #E2E8F0;">
                 <div style="font-size:12px; color:var(--text-muted); margin-bottom:12px; display:flex; justify-content:space-between; align-items:center;">
                     <span>填寫時間: ${logTime}</span>
-                    <!-- 霧面質感淡色底色標籤輸出 -->
                     <span style="display:inline-block; padding:5px 12px; border-radius:12px; font-size:11px; font-weight:bold; ${badgeStyle}">當值人員：${logWorker}</span>
                 </div>`;
 
@@ -1084,8 +1082,17 @@
                     if (key === "[系統戳記]") continue; 
                     let val = obj[key];
                     let valHtml = val;
-                    if(val === "已完成") valHtml = `<span style="color:#2E7D32; font-weight:bold;">✓ 已完成</span>`;
-                    if(val === "未完成") valHtml = `<span style="color:#C81E1E; font-weight:bold;">✗ 缺失未完</span>`;
+                    
+                    // ➔ 核心狀態美化轉換
+                    if(val === "已完成") {
+                        valHtml = `<span style="color:#2E7D32; font-weight:bold;">✓ 已完成</span>`;
+                    } else if(val === "未完成") {
+                        valHtml = `<span style="color:#C81E1E; font-weight:bold;">✗ 缺失未完</span>`;
+                    } 
+                    // 🔥【核心優化】：當內容為「無個別備註」時，強制將字體翻轉為淺灰色 (#BDC3C7) 展現無痕美感
+                    else if(val === "無個別備註") {
+                        valHtml = `<span style="color:#BDC3C7; font-weight:500; font-style:italic;">無個別備註</span>`;
+                    }
                     
                     html += `<div class="view-row">
                         <span class="view-label">${key}</span>
@@ -1096,11 +1103,9 @@
                 html += `<div style="font-size:14px; white-space:pre-wrap; color:#566573; padding:10px 0;">${logJsonStr}</div>`;
             }
 
-            // 系統備註底色方塊與無備註灰色字修正
+            // 系統歷史備註區（回歸米色平面方塊）
             if (logMemo && logMemo.trim() !== "" && logMemo !== "—" && logMemo !== "=") {
-                html += `<div style="margin-top:14px; font-size:12px; background:#F2F4F4; padding:10px; border-radius:8px; color:#566573; white-space:pre-wrap; font-weight:500; line-height:1.5;">系統備註明細：\n${logMemo}</div>`;
-            } else {
-                html += `<div style="margin-top:14px; font-size:12px; text-align:center; color:#BDC3C7; font-weight:500; font-style:italic;">(暫無系統備註紀錄)</div>`;
+                html += `<div style="margin-top:14px; font-size:12px; background:#F2EFE9; padding:10px; border-radius:8px; color:#626D78; white-space:pre-wrap; font-weight:500; line-height:1.5;">系統備註紀錄：\n${logMemo}</div>`;
             }
 
             html += `</div>`;
