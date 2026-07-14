@@ -945,11 +945,13 @@
             loadSpecificDayLog();
         }
 
-        // 🔥 問題二與問題七更新：歷史紀錄重組優化
+        // ==========================================
+        // 📖 歷史日誌查閱與跨年度歷史定址對位引擎 (v2.4.2D)
+        // ==========================================
         function loadSpecificDayLog() {
             const weekIdx = parseInt(document.getElementById('selectLogWeek').value) || 1;
             const dayNum = parseInt(document.getElementById('selectLogDay').value) || 1;
-            let baseColIdx = 15 + (dayNum - 1) * 4; 
+            let baseColIdx = 15 + (dayNum - 1) * 4; // 換算 P, T, X... 等核心欄位
             
             let rowData = globalRawData[weekIdx];
             if (!rowData || !rowData[baseColIdx]) {
@@ -958,17 +960,55 @@
             }
 
             let logTime = rowData[baseColIdx];      
-            let logWorker = rowData[baseColIdx+1];  // Q欄實體登錄人姓名
-            let logJsonStr = rowData[baseColIdx+2]; 
-            let logMemo = rowData[baseColIdx+3];    
+            let logWorker = rowData[baseColIdx+1];  // Q欄：現場實體登錄回報人
+            let logJsonStr = rowData[baseColIdx+2]; // R欄：JSON 答案包
+            let logMemo = rowData[baseColIdx+3];    // S欄：系統後台備註
+            
+            // 獲取當前網頁所處的計算年度基準 (防範 2027/7/12 讀到 2026/7/12)
+            const timeAnchor = document.getElementById('cfgTimeAnchor').value;
+            let currentCalcYear = new Date().getFullYear(); 
+            if (timeAnchor === "mock") {
+                currentCalcYear = new Date(document.getElementById('mockDate').value).getFullYear();
+            }
 
-            // 從本週預排中找出這一天原訂的值日生是誰 (C欄，對位解析)
-            let scheduledWorkerName = rowData[2] || ""; // C欄原值日生
+            let scheduledWorkerName = "";
 
-            // 🔥 問題七修正：右上角當值人員身分對位標記顏色
-            let badgeBg = "background-color: var(--mora-blue); color: white;"; // 預設同人(藍色)
-            if (logWorker !== scheduledWorkerName) {
-                badgeBg = "background-color: #E67E22; color: white;"; // 代班代填(藕橘色)
+            // 🔥【核心對位升級機制】：
+            if (weekIdx === 1) {
+                // 1. 如果落在本週，直接看當前排班主看板的當值值日生
+                if (parsedSchedule[0]) {
+                    scheduledWorkerName = parsedSchedule[0].worker;
+                }
+            } else {
+                // 2. 過去歷史資料：撈下方歷史區（試算表第23列開始，索引為 22）
+                // 先撈出這一週日誌明細區所標註的日期區間文字 (N 欄)
+                let targetIntervalText = rowData[13] ? rowData[13].toString().trim() : ""; 
+                
+                // 遍歷歷史區 (列23計至表格盡頭)
+                for (let i = 22; i < globalRawData.length; i++) {
+                    let historyRow = globalRawData[i];
+                    if (historyRow && historyRow[0] && historyRow[1]) {
+                        let historyCode = historyRow[0].toString().trim(); // A欄：歷史序號 (例: DS2628FN11YH)
+                        let historyInterval = historyRow[1].toString().trim(); // B欄：歷史日期範圍 (例: 7/6 ~ 7/10)
+                        
+                        // 拆解歷史序號獲取其西元年度
+                        let historyYear = "20" + historyCode.substring(2, 4);
+                        
+                        // 🔥 雙安全熔斷鎖：必須【年度相同】且【日期區間完全一致】才成立，封殺跨年重疊 BUG
+                        if (parseInt(historyYear, 10) === currentCalcYear && historyInterval === targetIntervalText) {
+                            scheduledWorkerName = historyRow[2] ? historyRow[2].toString().trim() : ""; // 撈取 C 欄原訂值日人員
+                            break; // 尋獲目標，即刻阻斷迴圈
+                        }
+                    }
+                }
+            }
+
+            // 右上角當值人員身分雙軌膠囊變色判定
+            let badgeBg = "background-color: var(--mora-blue); color: white;"; // 預設同人（穩重藍）
+            
+            // 如果查得到原訂值日生，且實體填寫人與其不符，代表確為「代班頂替」
+            if (scheduledWorkerName && logWorker !== scheduledWorkerName) {
+                badgeBg = "background-color: #E67E22; color: white;"; // 觸發代理人警示（橘色）
             }
 
             let html = `<div style="background:#fff; border-radius:8px; padding:15px; box-shadow:inset 0 1px 3px rgba(0,0,0,0.02); border:1px solid #E2E8F0;">
@@ -980,7 +1020,7 @@
             try {
                 let obj = JSON.parse(logJsonStr);
                 for(let key in obj) {
-                    if (key === "[系統戳記]") continue; // 排除純輔助戳記項目
+                    if (key === "[系統戳記]") continue; 
                     let val = obj[key];
                     let valHtml = val;
                     if(val === "已完成") valHtml = `<span style="color:#2E7D32; font-weight:bold;">✓ 已完成</span>`;
@@ -995,7 +1035,6 @@
                 html += `<div style="font-size:14px; white-space:pre-wrap; color:#566573; padding:10px 0;">${logJsonStr}</div>`;
             }
 
-            // 🔥 問題二修正：註記欄改為單純平面方塊色底樣式
             if(logMemo && logMemo.trim() !== "") {
                 html += `<div style="margin-top:14px; font-size:12px; background:#F2EFE9; padding:10px; border-radius:8px; color:#626D78; white-space:pre-wrap; font-weight:500; border:none; line-height:1.5;">系統備註紀錄：\n${logMemo}</div>`;
             }
