@@ -24,6 +24,7 @@
             --mora-yellow: #D4AC0D;
             --mora-purple-text: #8B7A93;
             --radius-main: 16px;
+            --radius-main: 16px;
         }
 
         body {
@@ -200,7 +201,7 @@
                 </div>
                 <div class="test-row">
                     <label>虛擬當前模擬日期：</label>
-                    <input type="date" id="mockDate" value="2026-07-14" onchange="renderMainSystem()">
+                    <input type="date" id="mockDate" value="2026-07-16" onchange="renderMainSystem()">
                 </div>
                 <div class="test-row">
                     <label>虛擬當前模擬時間：</label>
@@ -274,7 +275,7 @@
         </div>
 
         <div class="footer-copyright">
-            <span class="footer-version">v2.4.5D</span><br>
+            <span class="footer-version">v2.7.0D</span><br>
             宿舍智慧居住管理看板系統<br>
             Copyright © Daniel. All Rights Reserved.
         </div>
@@ -339,6 +340,9 @@
         let currentFormModeLabel = "正常回報";
         let isEarlyMeltMode = false; // 提早回報熔斷裁剪開關
         let dynamicFormMeta = { version: "", questions: [] };
+        
+        // 專門儲存補登目標星期的參數：1=第一日(週一), 2=第二日(週二)...
+        let submissionTargetDayNum = -1;
 
         document.addEventListener("DOMContentLoaded", function() {
             if (!SHOW_DEV_PANEL_BUTTON) {
@@ -400,11 +404,32 @@
             }
             parsedLeaves.reverse(); 
 
-            dynamicFormMeta.version = globalRawData[1][36] || "未知版本";
+            // 🎯【核心修正一】：動態從 O 欄（索引 14）讀取當週要解析的版本號
+            let activeRowIdx = getSystemTargetRowIdx();
+            let activeRow = globalRawData[activeRowIdx];
+            let targetVersion = "標準版"; 
+            if (activeRow && activeRow[14]) {
+                targetVersion = activeRow[14].toString().trim(); // 取得 O 欄版本號
+            }
+            dynamicFormMeta.version = targetVersion;
+
+            // 🎯【橫向動態定位】：在第 1 列橫向搜尋對應版本號，並向下解析
+            let headerRow = globalRawData[1];
+            let matchingColIdx = -1;
+            // 從 AK 欄 (索引 36) 開始向後搜尋
+            for (let c = 36; c < headerRow.length; c++) {
+                if (headerRow[c] && headerRow[c].toString().trim() === targetVersion) {
+                    matchingColIdx = c;
+                    break;
+                }
+            }
+
             dynamicFormMeta.questions = [];
-            for(let i = 1; i < globalRawData.length; i++) {
-                let qText = globalRawData[i][36];
-                let qTypeStr = globalRawData[i][37];
+            // 如果找到對應版本號，解析該直欄所有題目與規則；否則預設解析 36 欄
+            let parseColIdx = (matchingColIdx !== -1) ? matchingColIdx : 36;
+            for(let i = 2; i < globalRawData.length; i++) {
+                let qText = globalRawData[i][parseColIdx];
+                let qTypeStr = globalRawData[i][parseColIdx + 1]; // 規則在題目右邊一欄
                 if(qText && qTypeStr) {
                     dynamicFormMeta.questions.push({ stem: qText.trim(), rule: qTypeStr.trim() });
                 }
@@ -577,7 +602,7 @@
         }
 
         // ==========================================
-        // 📝 智慧問卷日誌回報核心控制引擎 (v2.4.5D 硬核升級)
+        // 📝 智慧問卷日誌回報核心控制引擎 (v2.7.1D 逾期自動滑行版)
         // ==========================================
         function initiateLogSystem() {
             const isTestMode = document.getElementById('cfgTestMode').value === "true";
@@ -598,6 +623,7 @@
 
             currentFormModeLabel = "正常回報";
             isEarlyMeltMode = false; 
+            submissionTargetDayNum = dayOfWeek; // 預設寫入今天 (週一~週五)
 
             if (!isTestMode && (dayOfWeek === 0 || dayOfWeek === 6)) {
                 Swal.fire("宿舍休假期間", "目前為週末六日休假不排班時段，無需填寫工作日誌系統。", "info");
@@ -605,41 +631,52 @@
             }
 
             if (!isTestMode) {
-                // 🔥【硬核升級】：檢查前一日未填寫（週二至週五生效，週一豁免一律無條件放行開局）
-                if (dayOfWeek !== 1) {
-                    // 推算昨天是排班明細的第幾天（週二的昨天是第一日 baseCol=15，以此類推）
+                // 檢查前一日未填寫（週二至週五生效）
+                if (dayOfWeek !== 1) { 
                     let prevDayNum = dayOfWeek - 1; 
                     let prevDayBaseColIdx = 15 + (prevDayNum - 1) * 4; // 昨天的時間戳記欄位
                     
-                    let currentOnDutyRow = globalRawData[1]; // 取當週明細資料
+                    let targetRowIdx = getSystemTargetRowIdx();
+                    let currentOnDutyRow = globalRawData[targetRowIdx]; 
                     let isPrevDayEmpty = (!currentOnDutyRow || !currentOnDutyRow[prevDayBaseColIdx] || currentOnDutyRow[prevDayBaseColIdx].trim() === "");
 
-                    // 昨天的時間還空著（代表未填）
                     if (isPrevDayEmpty) {
+                        // 昨夜漏填了！
                         if (curTimeValue > 1030) {
-                            // ❌ 熔斷防禦：已過 10:30 寬限期且常規巡檢時間（18:00）未到，拒絕進入填寫當日
+                            // 🎯【核心優化】：10:30 後不鎖死，彈出警示並「自動轉換為今日常規流程」！
+                            Swal.fire({
+                                title: "昨日補填已逾期",
+                                text: "昨日工作日誌已逾 10:30 補填寬限期，系統已關閉補登。本次填寫將自動轉為登錄「今日」值日資訊。",
+                                icon: "warning"
+                            });
+                            // 滾動切換為當天正常流程
+                            currentFormModeLabel = "正常回報";
+                            submissionTargetDayNum = dayOfWeek; // 回歸填寫今天
+                            
+                            // 判定今天 18:00 前提早點擊日常巡檢的限制
                             if (hour < 18) {
-                                Swal.fire({
-                                    title: "逾期熔斷攔截",
-                                    text: "系統偵測到您前一日（昨日）之工作日誌尚未完成，且已逾今日 10:30 補填寬限期！在未經系統管理處分發布前，本時段禁止跨日匯報或提前登錄當日資訊。",
-                                    icon: "error"
-                                });
-                                return;
+                                isEarlyMeltMode = true;
+                                currentFormModeLabel = "提早休假回報";
                             }
                         } else {
-                            // 💡 10:30 前點擊，主動引導進入補填昨日程序
-                            Swal.fire("補填模式啟動", "系統檢測到前一日工作日誌未如期完成，本次填寫程序將自動認定為【補填程序】。", "info");
+                            // 10:30 前點擊，順暢進入補填昨日程序
+                            Swal.fire({
+                                title: "昨日補填程序啟動",
+                                text: "系統偵測到前一日（昨日）之工作日誌尚未填寫。目前處於寬限時間內，本次提交將自動寫入「昨日」日誌中，且系統備註將加註「逾期補填」。",
+                                icon: "info"
+                            });
                             currentFormModeLabel = "逾期補填";
+                            submissionTargetDayNum = prevDayNum; // 寫入昨天的格子
                         }
                     } else {
-                        // 昨天有填，但今天提早點擊（18:00前），啟動休假/返家提早熔斷裁剪
+                        // 昨天填過了，如果今天未到 18:00
                         if (hour < 18) {
                             isEarlyMeltMode = true;
                             currentFormModeLabel = "提早休假回報";
                         }
                     }
                 } else {
-                    // 週一中午提早回報判定
+                    // 週一 18:00 前提早點擊判定
                     if (hour < 18) {
                         isEarlyMeltMode = true;
                         currentFormModeLabel = "提早休假回報";
@@ -662,52 +699,78 @@
             let currentPage = { title: "常規回報", questions: [] };
 
             dynamicFormMeta.questions.forEach(q => {
-                if (q.rule === "---") {
+                // 深拷貝，防範選項過濾修改到全域變數
+                let qCopy = JSON.parse(JSON.stringify(q));
+
+                if (qCopy.rule === "---") {
                     if (currentPage.questions.length > 0) {
                         formPagesData.push(currentPage);
                         currentPage = { title: "下一頁", questions: [] };
                     }
                     return;
                 }
-                if (q.rule.startsWith("[Page")) {
-                    currentPage.title = q.stem;
+                if (qCopy.rule.startsWith("[Page")) {
+                    currentPage.title = qCopy.stem;
                     return;
                 }
-                if (q.rule === "***") {
-                    currentPage.questions.push({ stem: q.stem, rule: "***", isInstruction: true });
+                if (qCopy.rule === "***") {
+                    currentPage.questions.push({ stem: qCopy.stem, rule: "***", isInstruction: true });
                     return;
                 }
-                if (q.stem.includes("今日是否休假") && !isFriday) {
-                    q.rule = q.rule.replace(/\|?\s*\(\s*\)\s*返家（限週五）\s*->\s*END/g, '');
+                if (qCopy.stem.includes("今日是否休假") && !isFriday) {
+                    qCopy.rule = qCopy.rule.replace(/\|?\s*\(\s*\)\s*返家（限週五）\s*->\s*END/g, '');
                 }
-                currentPage.questions.push(q);
+                currentPage.questions.push(qCopy);
             });
 
             if (currentPage.questions.length > 0) {
                 formPagesData.push(currentPage);
             }
 
+            // 🔥【第五點】：18:00 前日常巡檢與休假選項過濾
+            const timeAnchor = document.getElementById('cfgTimeAnchor').value;
+            let simDateTime = new Date();
+            if (timeAnchor === "mock") {
+                const mockDateStr = document.getElementById('mockDate').value;
+                const mockTimeStr = document.getElementById('mockTime').value;
+                simDateTime = new Date(`${mockDateStr}T${mockTimeStr}`);
+            }
+            const hour = simDateTime.getHours();
+
+            formPagesData.forEach(page => {
+                page.questions.forEach(q => {
+                    if(q.stem.includes("今日是否休假")) {
+                        if (hour < 18) {
+                            // 18:00 之前：強制排除「無」選項，僅提供休假與返家
+                            if (isFriday) {
+                                q.rule = "( ) 國定假日或例假日 -> END | ( ) 返家（限週五） -> END";
+                            } else {
+                                q.rule = "( ) 國定假日或例假日 -> END";
+                            }
+                        } else {
+                            // 18:00 之後：顯示完整選項
+                            if (isFriday) {
+                                q.rule = "( ) 無 | ( ) 國定假日或例假日 -> END | ( ) 返家（限週五） -> END";
+                            } else {
+                                q.rule = "( ) 無 | ( ) 國定假日或例假日 -> END";
+                            }
+                        }
+                    }
+                });
+            });
+
             if (isEarlyMeltMode) {
+                // 提早休假熔斷裁剪：僅保留登錄人、休假題、說明區
                 let meltedQuestions = formPagesData[0].questions.filter(q => {
                     return q.stem.includes("請選擇登錄人") || q.stem.includes("今日是否休假") || q.rule === "***";
                 });
                 
-                meltedQuestions.forEach(q => {
-                    if(q.stem.includes("今日是否休假")) {
-                        if (isFriday) {
-                            q.rule = "( ) 國定假日或例假日 -> END | ( ) 返家（限週五） -> END";
-                        } else {
-                            q.rule = "( ) 國定假日或例假日 -> END";
-                        }
-                    }
-                });
                 formPagesData = [{ title: "【提早休假/返家登錄回報】", questions: meltedQuestions }];
             }
 
             currentFormPageIndex = 0;
             userAnswers = {};
             
-            const timeAnchor = document.getElementById('cfgTimeAnchor').value;
             let mockDateStr = document.getElementById('mockDate').value;
             if (timeAnchor === "real") {
                 mockDateStr = new Date().toISOString().split('T')[0];
@@ -730,8 +793,10 @@
             page.questions.forEach((q, idx) => {
                 let qKey = `Q_${currentFormPageIndex}_${idx}`;
                 
+                // 🎯【第四點】：純說明欄解析 \n 換行符號
                 if (q.isInstruction || q.rule === "***") {
-                    html += `<div class="form-group"><div class="instruction-block">${q.stem}</div></div>`;
+                    let cleanInstructText = q.stem.replace(/\\n/g, '<br>');
+                    html += `<div class="form-group"><div class="instruction-block">${cleanInstructText}</div></div>`;
                     return;
                 }
 
@@ -754,6 +819,7 @@
                     });
                     html += `</div>`;
                 }
+                // 多選題支援
                 else if (q.rule.includes("{ }")) {
                     let options = q.rule.split("|");
                     html += `<div class="check-group">`;
@@ -812,6 +878,7 @@
                 } else if (pureCheckEl) {
                     userAnswers[q.stem] = pureCheckEl.checked ? "已完成" : "未完成";
                 } else {
+                    // 🎯【第三點修正】：高精準度提取多選題核取方塊陣列，解決只回報單個答案缺陷
                     let checkedBoxes = document.querySelectorAll(`input[name="${qKey}"]:checked`);
                     let arr = [];
                     checkedBoxes.forEach(cb => arr.push(cb.value));
@@ -837,11 +904,14 @@
             }
             
             let reporter = userAnswers["請選擇登錄人"] || "未知回報者";
-            let finalJsonString = JSON.stringify(userAnswers);
             let isMakeupMode = currentFormModeLabel.includes("補填");
 
             let currentWeekOnDutyWorkerName = parsedSchedule[0] ? parsedSchedule[0].worker : "";
             let isProxyAgentRun = (reporter !== currentWeekOnDutyWorkerName); 
+
+            // 🎯【第二點核心實現】：提交時順手打包「原訂值日生姓名」注入答案包，封殺任何歷史查詢誤差！
+            userAnswers["[原訂值日生]"] = currentWeekOnDutyWorkerName;
+            let finalJsonString = JSON.stringify(userAnswers);
 
             if (isProxyAgentRun) {
                 Swal.fire({
@@ -853,7 +923,6 @@
                     cancelButtonText: "返回修正",
                     customClass: { popup: 'swal2-popup' }
                 }).then((res) => {
-                    // 🔥 完美校正：將所有內部變數完整綁定為一致的 res，消滅 ReferenceError
                     if (res && res.isConfirmed) {
                         proceedWithDuplicateCheck(mockDateStr, reporter, finalJsonString, isMakeupMode, isTestMode, isProxyAgentRun);
                     }
@@ -863,16 +932,12 @@
             }
         }
 
-        // ==========================================
-        // 🎯 核心定址修復：前端也只看 N 欄由下往上搜尋 (v2.5.2D)
-        // ==========================================
         function getSystemTargetRowIdx() {
             let targetRowIdx = -1;
-            // 從 CSV 資料最底端開始，由下往上掃描 N 欄 (索引13)
             for (let i = globalRawData.length - 1; i >= 1; i--) {
                 let intervalText = globalRawData[i][13] ? globalRawData[i][13].toString().trim() : ""; 
                 if (intervalText !== "") {
-                    targetRowIdx = i; // 100% 精確同步定位到第 3 列
+                    targetRowIdx = i; 
                     break;
                 }
             }
@@ -880,17 +945,14 @@
         }
 
         function proceedWithDuplicateCheck(mockDateStr, reporter, finalJsonString, isMakeupMode, isTestMode, isProxyAgentRun) {
-            const tObj = new Date(mockDateStr + "T00:00:00");
-            let dIdx = tObj.getDay(); 
+            // 🎯【補登修正】：補登昨日時，自動依據 `submissionTargetDayNum` 定位查重欄位位置！
+            let dIdx = submissionTargetDayNum; 
             if(dIdx < 1) dIdx = 1; if(dIdx > 5) dIdx = 5;
             
-            // 寫死前端實體陣列欄位位置 (T 欄 = 索引 19)
             const frontColumnMapping = [0, 15, 19, 23, 27, 31];
             let baseCol = frontColumnMapping[dIdx]; 
             
-            // 精確獲取由 N 欄推算出的實體生效列
             let targetRowIdx = getSystemTargetRowIdx();
-            
             let isDuplicateData = false;
             let rowData = globalRawData[targetRowIdx]; 
             
@@ -901,26 +963,22 @@
             if (isDuplicateData) {
                 Swal.fire({
                     title: "重複填寫更正提示",
-                    text: `檢測到本日值日日誌已有先前上傳之回覆。本次送出將自動視為更正表格，全面覆寫原紀錄並累加修改次數，是否確定送出？`,
+                    text: `檢測到目標格子已有先前填寫之資料。本次送出將自動視為更正覆寫並累加修改次數，是否確定送出？`,
                     icon: "info",
                     showCancelButton: true,
                     confirmButtonText: "確認更正覆寫",
                     cancelButtonText: "取消送出",
                     customClass: { popup: 'swal2-popup' }
                 }).then((res) => {
-                    // 同步打通，將真實的實體列數(加上偏位差修正)拋投給後台
                     if (res && res.isConfirmed) {
-                        fireFetchPostPayload(mockDateStr, reporter, finalJsonString, isMakeupMode, isTestMode, isProxyAgentRun, targetRowIdx);
+                        fireFetchPostPayload(mockDateStr, reporter, finalJsonString, isMakeupMode, isTestMode, isProxyAgentRun);
                     }
                 });
             } else {
-                fireFetchPostPayload(mockDateStr, reporter, finalJsonString, isMakeupMode, isTestMode, isProxyAgentRun, targetRowIdx);
+                fireFetchPostPayload(mockDateStr, reporter, finalJsonString, isMakeupMode, isTestMode, isProxyAgentRun);
             }
         }
 
-        // ==========================================
-        // 🚀 核心拋轉端：點擊確認後強制重刷網頁 (v2.4.8D)
-        // ==========================================
         function fireFetchPostPayload(mockDateStr, reporter, finalJsonString, isMakeupMode, isTestMode, isProxyAgentRun) {
             if (isTestMode) {
                 let augmentedAnswers = Object.assign({}, userAnswers);
@@ -938,7 +996,8 @@
                 answersJson: finalJsonString,
                 isMakeup: isMakeupMode,
                 isTestRun: isTestMode,
-                isProxy: isProxyAgentRun
+                isProxy: isProxyAgentRun,
+                targetDayNum: submissionTargetDayNum // 🚀 傳遞補登修正後的目標星期
             };
 
             fetch(GAS_WEB_APP_URL, {
@@ -949,7 +1008,6 @@
                 body: JSON.stringify(payload)
             })
             .then(res => {
-                // 🔥【體驗優化】：利用 SweetAlert2 的 Promise 機制，監聽使用者點擊「確定」按鈕的瞬間再觸發重刷
                 Swal.fire({
                     title: "日誌上傳完成",
                     text: `已成功將 ${reporter} 的日誌寫入 Google 試算表對應日欄位！`,
@@ -957,7 +1015,6 @@
                     confirmButtonText: "確定並重新整理",
                     customClass: { popup: 'swal2-popup' }
                 }).then((clickResult) => {
-                    // 🎯 當使用者點擊彈窗上的「確定」按鈕後，強制瀏覽器重刷頁面
                     if (clickResult.isConfirmed || clickResult.isDismissed) {
                         closeLogModal();
                         window.location.reload(); 
@@ -974,14 +1031,10 @@
         function closeLogModal() { document.getElementById('logFormModal').classList.add('hidden'); }
         function toggleLogCenterView() { document.getElementById('logCenterModal').classList.toggle('hidden'); }
 
-        // ==========================================
-        // 📥 歷史下拉選單初始化：點開預設完美顯示最新一筆 (v2.5.5D)
-        // ==========================================
         function populateLogCenterDropdowns() {
             let selectWeek = document.getElementById('selectLogWeek');
             selectWeek.innerHTML = "";
             
-            // 1. 動態加載最近 5 週的歷史選單
             for(let i = 1; i <= 5; i++) {
                 let row = globalRawData[i];
                 if(row && row[13]) { 
@@ -992,31 +1045,33 @@
                 }
             }
             
-            // 🎯【優化一】：強制左側週次預設選中第一項（當週最新一筆）
             if (selectWeek.options.length > 0) {
                 selectWeek.selectedIndex = 0;
             }
 
-            // 🎯【優化二】：右側天數自動對齊今天星期，省去手動切換麻煩
-            let realTodayOfWeek = new Date().getDay(); // 0=日, 1=一, 2=二...
-            let defaultDayValue = realTodayOfWeek;
-            if (defaultDayValue < 1 || defaultDayValue > 5) {
-                defaultDayValue = 2; // 週末休假期間預設停留在週二或第五日
-            }
-            document.getElementById('selectLogDay').value = defaultDayValue.toString();
+            // 逆向橫向定位，自動搜尋最新有值的右下角天數
+            let targetRowIdx = getSystemTargetRowIdx();
+            let rowData = globalRawData[targetRowIdx];
+            
+            const checkCols = [15, 19, 23, 27, 31];
+            let lastValidDayNum = 1; 
 
-            // 實時觸發加載渲染，確保一打開就是最新當下的資訊
+            for (let d = 4; d >= 0; d--) {
+                let colIdx = checkCols[d];
+                if (rowData && rowData[colIdx] && rowData[colIdx].trim() !== "") {
+                    lastValidDayNum = d + 1; 
+                    break;
+                }
+            }
+
+            document.getElementById('selectLogDay').value = lastValidDayNum.toString();
             loadSpecificDayLog();
         }
 
-        // ==========================================
-        // 📖 歷史日誌查閱與跨年度歷史定址對位引擎 (v2.6.0D 答案灰色字修正版)
-        // ==========================================
         function loadSpecificDayLog() {
             const weekIdx = parseInt(document.getElementById('selectLogWeek').value) || 1;
             const dayNum = parseInt(document.getElementById('selectLogDay').value) || 1;
             
-            // P欄=15, T欄=19, X欄=23, AB欄=27, AF欄=31
             const frontColumnMapping = [0, 15, 19, 23, 27, 31];
             let baseColIdx = frontColumnMapping[dayNum]; 
             
@@ -1036,38 +1091,23 @@
             let logJsonStr = rowData[baseColIdx+2]; 
             let logMemo = rowData[baseColIdx+3] ? rowData[baseColIdx+3].toString().trim() : ""; 
             
-            const timeAnchor = document.getElementById('cfgTimeAnchor').value;
-            let currentCalcYear = new Date().getFullYear(); 
-            if (timeAnchor === "mock") {
-                currentCalcYear = new Date(document.getElementById('mockDate').value).getFullYear();
+            // 🎯【第二點修正】：讀取 JSON 答案包中的「原訂值日生（[原訂值日生]）」值，取代不穩定的 C 欄查表！
+            let originalOnDutyName = "";
+            try {
+                let tempObj = JSON.parse(logJsonStr);
+                originalOnDutyName = tempObj["[原訂值日生]"] ? tempObj["[原訂值日生]"].toString().trim() : "";
+            } catch(e) {
+                originalOnDutyName = "";
             }
 
-            let scheduledWorkerName = "";
-            if (weekIdx === 1) {
-                scheduledWorkerName = rowData[2] ? rowData[2].toString().trim() : ""; 
-            } else {
-                let targetIntervalText = rowData[13] ? rowData[13].toString().trim() : ""; 
-                for (let i = 22; i < globalRawData.length; i++) {
-                    let historyRow = globalRawData[i];
-                    if (historyRow && historyRow[0] && historyRow[1]) {
-                        let historyCode = historyRow[0].toString().trim(); 
-                        let historyInterval = historyRow[1].toString().trim(); 
-                        let historyYear = "20" + historyCode.substring(2, 4);
-                        
-                        if (parseInt(historyYear, 10) === currentCalcYear && historyInterval === targetIntervalText) {
-                            scheduledWorkerName = historyRow[2] ? historyRow[2].toString().trim() : ""; 
-                            break; 
-                        }
-                    }
-                }
-            }
-
-            // 🎯【身分認證邏輯終極修正 (v2.6.2D)】：徹底拔除不穩定的前後台名字字串比對
-            // 唯一認定標準：只要後台被清洗乾淨的備註（logMemo）裡面沒有「非當值人員登錄」，就100%是本尊當值！
-            let badgeStyle = "background-color: #EBF5FB; color: #2874A6;"; // 預設：高質感磨砂淡藍底（本尊）
+            // 右上角磨砂淡色標籤
+            let badgeStyle = "background-color: #EBF5FB; color: #2874A6;"; // 本尊：淡藍底
             
-            if (logMemo && logMemo.toString().includes("非當值人員登錄")) {
-                badgeStyle = "background-color: #FDF2E9; color: #E67E22;"; // 只有確實是代班，才亮起淡橘底（代理）
+            // 🎯 身分認證邏輯終極修正：直接比對回報人與原訂值日生是否一致！
+            if (originalOnDutyName && logWorker !== originalOnDutyName) {
+                badgeStyle = "background-color: #FDF2E9; color: #E67E22;"; // 代理：淡橘底
+            } else if (logMemo && logMemo.includes("非當值人員登錄")) {
+                badgeStyle = "background-color: #FDF2E9; color: #E67E22;"; 
             }
 
             let html = `<div style="background:#fff; border-radius:8px; padding:15px; box-shadow:inset 0 1px 3px rgba(0,0,0,0.02); border:1px solid #E2E8F0;">
@@ -1079,17 +1119,15 @@
             try {
                 let obj = JSON.parse(logJsonStr);
                 for(let key in obj) {
-                    if (key === "[系統戳記]") continue; 
+                    if (key === "[系統戳記]" || key === "[原訂值日生]") continue; 
                     let val = obj[key];
                     let valHtml = val;
                     
-                    // ➔ 核心狀態美化轉換
                     if(val === "已完成") {
                         valHtml = `<span style="color:#2E7D32; font-weight:bold;">✓ 已完成</span>`;
                     } else if(val === "未完成") {
                         valHtml = `<span style="color:#C81E1E; font-weight:bold;">✗ 未完成</span>`;
                     } 
-                    // 🔥【核心優化】：當內容為「無個別備註」時，強制將字體翻轉為淺灰色 (#BDC3C7)，並保持標準正體字
                     else if(val === "無個別備註") {
                         valHtml = `<span style="color:#BDC3C7; font-weight:500;">無個別備註</span>`;
                     }
@@ -1103,7 +1141,6 @@
                 html += `<div style="font-size:14px; white-space:pre-wrap; color:#566573; padding:10px 0;">${logJsonStr}</div>`;
             }
 
-            // 系統歷史備註區（回歸米色平面方塊）
             if (logMemo && logMemo.trim() !== "" && logMemo !== "—" && logMemo !== "=") {
                 html += `<div style="margin-top:14px; font-size:12px; background:#F2EFE9; padding:10px; border-radius:8px; color:#626D78; white-space:pre-wrap; font-weight:500; line-height:1.5;">系統備註紀錄：\n${logMemo}</div>`;
             }
@@ -1111,6 +1148,7 @@
             html += `</div>`;
             document.getElementById('logViewerCanvas').innerHTML = html;
         }
+
         function isWeekInLeaveRange(targetWeek, weekStr) {
             let s = weekStr.toString().replace(/\s+/g, ''); 
             if (s.includes("-")) {
