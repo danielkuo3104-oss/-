@@ -1027,16 +1027,10 @@
                     selectWeek.appendChild(opt);
                 }
             }
-            
-            if (selectWeek.options.length > 0) {
-                selectWeek.selectedIndex = 0;
-            }
 
             let targetRowIdx = getSystemTargetRowIdx();
             let rowData = globalRawData[targetRowIdx];
             
-            // 🎯【索引精確修正】：週一=15(P), 週二=19(T), 週三=24(W-X之間變動), 週四=27(AB), 週五=31(AE)
-            // 為了萬無一失，我們改為直接檢查該天「登錄人欄位」是否有值 (16, 20, 24, 28, 32)
             const checkReporterCols = [16, 20, 24, 28, 32]; 
             let lastValidDayNum = 1; 
 
@@ -1051,6 +1045,10 @@
                 }
             }
 
+            // 🎯【核心修復】：先指派預設天數，最後才綁定週次並載入，防止觸發 onchange 歸零
+            if (selectWeek.options.length > 0) {
+                selectWeek.selectedIndex = 0;
+            }
             document.getElementById('selectLogDay').value = lastValidDayNum.toString();
             loadSpecificDayLog();
         }
@@ -1078,27 +1076,34 @@
             let logJsonStr = rowData[baseColIdx+2]; 
             let logMemo = rowData[baseColIdx+3] ? rowData[baseColIdx+3].toString().trim() : ""; 
             
-            let originalOnDutyName = "";
-            try {
-                let tempObj = JSON.parse(logJsonStr);
-                originalOnDutyName = tempObj["[原訂值日生]"] ? tempObj["[原訂值日生]"].toString().trim() : "";
-            } catch(e) {
-                originalOnDutyName = "";
+            // 🎯【精準解析備註中的當值與登錄人】
+            let trueOnDutyName = logWorker; // 預設
+            let isProxyUser = false;
+            
+            if (logMemo.includes("[當值：")) {
+                let match = logMemo.match(/\[當值：([^|]+)\s*\|\s*登錄：([^\s(]+)/);
+                if (match && match[1] && match[2]) {
+                    trueOnDutyName = match[1].trim();
+                    let actualReporter = match[2].trim();
+                    isProxyUser = (trueOnDutyName !== actualReporter);
+                }
+            } else if (logMemo.includes("[當值/登錄：")) {
+                let match = logMemo.match(/\[當值\/登錄：([^\s(]+)/);
+                if (match && match[1]) {
+                    trueOnDutyName = match[1].trim();
+                    isProxyUser = false;
+                }
             }
 
-            // 🎯【身分判定邏輯回歸唯一信任標準】：亮起本尊或代理標籤
-            let badgeStyle = "background-color: #EBF5FB; color: #2874A6;"; // 本尊藍
-            
-            if (originalOnDutyName && logWorker !== originalOnDutyName) {
-                badgeStyle = "background-color: #FDF2E9; color: #E67E22;"; // 代理橘
-            } else if (logMemo && logMemo.includes("非當值人員登錄")) {
-                badgeStyle = "background-color: #FDF2E9; color: #E67E22;"; 
-            }
+            // 🎯【顏色正確解析】：不同人（代班）顯示淡橘色，同一人（本尊）顯示淡藍色
+            let badgeStyle = isProxyUser 
+                ? "background-color: #FDF2E9; color: #E67E22;" // 代班：淡橘底
+                : "background-color: #EBF5FB; color: #2874A6;"; // 本尊：淡藍底
 
             let html = `<div style="background:#fff; border-radius:8px; padding:15px; box-shadow:inset 0 1px 3px rgba(0,0,0,0.02); border:1px solid #E2E8F0;">
                 <div style="font-size:12px; color:var(--text-muted); margin-bottom:12px; display:flex; justify-content:space-between; align-items:center;">
                     <span>填寫時間: ${logTime}</span>
-                    <span style="display:inline-block; padding:5px 12px; border-radius:12px; font-size:11px; font-weight:bold; ${badgeStyle}">當值人員：${logWorker}</span>
+                    <span style="display:inline-block; padding:5px 12px; border-radius:12px; font-size:11px; font-weight:bold; ${badgeStyle}">當值人員：${trueOnDutyName}</span>
                 </div>`;
 
             try {
