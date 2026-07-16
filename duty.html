@@ -1,1228 +1,1163 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>宿舍智慧值日中心</title>
-    <!-- 引入 PapaParse 解析 CSV -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
-    <!-- 引入 SweetAlert2 莫蘭迪優雅彈出視窗套件 -->
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <style>
-        :root {
-            --bg-main: #F4F6F7;
-            --card-bg: rgba(255, 255, 255, 0.9);
-            --text-dark: #3A4145;
-            --text-muted: #7A868C;
-            --mora-blue: #5E758A;
-            --mora-blue-intense: #2874A6;
-            --mora-green: #7D8C77;
-            --mora-green-intense: #2E7D32;
-            --mora-orange: #BD8366;
-            --mora-orange-intense: #E67E22;
-            --mora-purple: #86778C;
-            --mora-yellow: #D4AC0D;
-            --mora-purple-text: #8B7A93;
-            --radius-main: 16px;
-            --radius-main: 16px;
-        }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>宿舍智慧值日中心</title>
+    <!-- 引入 PapaParse 解析 CSV -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <!-- 引入 SweetAlert2 莫蘭迪優雅彈出視窗套件 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        :root {
+            --bg-main: #F4F6F7;
+            --card-bg: rgba(255, 255, 255, 0.9);
+            --text-dark: #3A4145;
+            --text-muted: #7A868C;
+            --mora-blue: #5E758A;
+            --mora-blue-intense: #2874A6;
+            --mora-green: #7D8C77;
+            --mora-green-intense: #2E7D32;
+            --mora-orange: #BD8366;
+            --mora-orange-intense: #E67E22;
+            --mora-purple: #86778C;
+            --mora-yellow: #D4AC0D;
+            --mora-purple-text: #8B7A93;
+            --radius-main: 16px;
+        }
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "PingFang TC", "Microsoft JhengHei", sans-serif;
-            background-color: var(--bg-main);
-            color: var(--text-dark);
-            margin: 0;
-            padding: 0;
-            -webkit-tap-highlight-color: transparent;
-        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "PingFang TC", "Microsoft JhengHei", sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-dark);
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
 
-        /* 頂部導航 - 紫色調風格 */
-        .nav-header {
-            background-color: var(--card-bg);
-            padding: 12px 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.03);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            backdrop-filter: blur(10px);
-            border-bottom: 2px solid rgba(139, 122, 147, 0.1);
-        }
-        .nav-title-group { display: flex; flex-direction: column; gap: 4px; }
-        .nav-title { font-size: 18px; font-weight: bold; color: var(--mora-purple-text); }
-        .update-time-row { font-size: 11px; color: #626D78; font-weight: bold; background: #EAECEE; padding: 3px 10px; border-radius: 20px; letter-spacing: 0.3px; display: inline-block; width: fit-content; }
-        .back-btn { background: #cbd1d6; color: #5a6168; border: none; padding: 6px 12px; border-radius: 12px; font-size: 14px; text-decoration: none; font-weight: 500; }
+        /* 頂部導航 - 紫色調風格 */
+        .nav-header {
+            background-color: var(--card-bg);
+            padding: 12px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+            border-bottom: 2px solid rgba(139, 122, 147, 0.1);
+        }
+        .nav-title-group { display: flex; flex-direction: column; gap: 4px; }
+        .nav-title { font-size: 18px; font-weight: bold; color: var(--mora-purple-text); }
+        .update-time-row { font-size: 11px; color: #626D78; font-weight: bold; background: #EAECEE; padding: 3px 10px; border-radius: 20px; letter-spacing: 0.3px; display: inline-block; width: fit-content; }
+        .back-btn { background: #cbd1d6; color: #5a6168; border: none; padding: 6px 12px; border-radius: 12px; font-size: 14px; text-decoration: none; font-weight: 500; }
 
-        .container { padding: 15px; max-width: 600px; margin: 0 auto; padding-bottom: 40px; }
+        .container { padding: 15px; max-width: 600px; margin: 0 auto; padding-bottom: 40px; }
 
-        /* 開發者面板樣式優化 */
-        .dev-toggle-container { margin-bottom: 12px; text-align: right; }
-        .dev-toggle-btn { background: #A89BB0; color: white; border: none; padding: 6px 12px; border-radius: 10px; font-size: 12px; font-weight: bold; cursor: pointer; }
-        .test-panel { background: #F0EDF2; border-radius: var(--radius-main); padding: 15px; margin-bottom: 20px; border: 1px dashed var(--mora-purple-text); }
-        .test-title { font-size: 13px; font-weight: bold; color: var(--mora-purple-text); margin-top: 0; margin-bottom: 10px; }
-        .test-grid { display: grid; grid-template-columns: 1fr; gap: 10px; font-size: 13px; }
-        .test-row { display: flex; justify-content: space-between; align-items: center; }
-        select, input[type="date"], input[type="time"] { padding: 6px; border-radius: 8px; border: 1px solid #cbd1d6; font-size: 13px; background: #fff; }
+        /* 開發者面板樣式優化 */
+        .dev-toggle-container { margin-bottom: 12px; text-align: right; }
+        .dev-toggle-btn { background: #A89BB0; color: white; border: none; padding: 6px 12px; border-radius: 10px; font-size: 12px; font-weight: bold; cursor: pointer; }
+        .test-panel { background: #F0EDF2; border-radius: var(--radius-main); padding: 15px; margin-bottom: 20px; border: 1px dashed var(--mora-purple-text); }
+        .test-title { font-size: 13px; font-weight: bold; color: var(--mora-purple-text); margin-top: 0; margin-bottom: 10px; }
+        .test-grid { display: grid; grid-template-columns: 1fr; gap: 10px; font-size: 13px; }
+        .test-row { display: flex; justify-content: space-between; align-items: center; }
+        select, input[type="date"], input[type="time"] { padding: 6px; border-radius: 8px; border: 1px solid #cbd1d6; font-size: 13px; background: #fff; }
 
-        /* 卡片共用樣式 */
-        .card {
-            background: var(--card-bg);
-            border-radius: var(--radius-main);
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 16px rgba(149, 157, 165, 0.04);
-            border: 1px solid rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(10px);
-        }
-        .card-title { font-size: 16px; font-weight: 600; margin-top: 0; margin-bottom: 15px; color: #4A515A; }
+        /* 卡片共用樣式 */
+        .card {
+            background: var(--card-bg);
+            border-radius: var(--radius-main);
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 16px rgba(149, 157, 165, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+        }
+        .card-title { font-size: 16px; font-weight: 600; margin-top: 0; margin-bottom: 15px; color: #4A515A; }
 
-        /* 膠囊狀態配色 */
-        .badge { display: inline-block; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; text-align: center; line-height: 1.4; }
-        .badge-blue { background-color: #EBF5FB; color: #2874A6; }
-        .badge-green { background-color: #E8F5E9; color: #2E7D32; }
-        .badge-purple { background-color: #F0EBF5; color: #725E8A; }
-        .badge-orange { background-color: #FDF2E9; color: #A04000; }
-        .badge-yellow { background-color: #FEF9E7; color: #B7950B; }
-        .badge-red { background-color: #FDE8E8; color: #C81E1E; }
-        .badge-gray { background-color: #ECEFF1; color: #78909C; }
+        /* 膠囊狀態配色 */
+        .badge { display: inline-block; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; text-align: center; line-height: 1.4; }
+        .badge-blue { background-color: #EBF5FB; color: #2874A6; }
+        .badge-green { background-color: #E8F5E9; color: #2E7D32; }
+        .badge-purple { background-color: #F0EBF5; color: #725E8A; }
+        .badge-orange { background-color: #FDF2E9; color: #A04000; }
+        .badge-yellow { background-color: #FEF9E7; color: #B7950B; }
+        .badge-red { background-color: #FDE8E8; color: #C81E1E; }
+        .badge-gray { background-color: #ECEFF1; color: #78909C; }
 
-        /* 大看板區 */
-        .hero-banner { background: var(--card-bg); padding: 22px 20px; border-radius: var(--radius-main); margin-bottom: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.02); border: 1px solid rgba(255,255,255,0.8); box-sizing: border-box; display: flex; flex-direction: column; gap: 15px; }
-        .banner-date-top { text-align: center; font-size: 16px; font-weight: bold; color: #2C3E50; letter-spacing: 0.5px; margin-bottom: 2px; }
-        .hero-meta-box { background: #F4F6F7; border-radius: 12px; padding: 12px; font-size: 12px; color: #566573; font-weight: bold; display: flex; flex-direction: column; gap: 6px; border: 1px solid #EAECEE; text-align: left; }
-        .hero-split-line { height: 1px; background: rgba(0,0,0,0.04); margin: 2px 0; }
-        .hero-main-box { background: rgba(40, 116, 166, 0.05); border-radius: 14px; padding: 18px 15px; border: 1px solid rgba(40, 116, 166, 0.1); width: 100%; box-sizing: border-box; text-align: center; }
-        
-        /* 按鈕功能調色 */
-        .action-btn {
-            display: block; width: 100%; text-align: center; padding: 14px; color: #fff;
-            font-weight: bold; font-size: 16px; border: none; border-radius: var(--radius-main); cursor: pointer;
-            box-sizing: border-box; transition: opacity 0.2s;
-        }
-        .btn-log-green { background: var(--mora-green); box-shadow: 0 4px 12px rgba(125, 140, 119, 0.25); margin-bottom: 12px; }
-        .btn-view-blue { background: var(--mora-blue); box-shadow: 0 4px 12px rgba(94, 117, 138, 0.25); margin-bottom: 20px; }
-        .action-btn:active { opacity: 0.85; }
+        /* 大看板區 */
+        .hero-banner { background: var(--card-bg); padding: 22px 20px; border-radius: var(--radius-main); margin-bottom: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.02); border: 1px solid rgba(255,255,255,0.8); box-sizing: border-box; display: flex; flex-direction: column; gap: 15px; }
+        .banner-date-top { text-align: center; font-size: 16px; font-weight: bold; color: #2C3E50; letter-spacing: 0.5px; margin-bottom: 2px; }
+        .hero-meta-box { background: #F4F6F7; border-radius: 12px; padding: 12px; font-size: 12px; color: #566573; font-weight: bold; display: flex; flex-direction: column; gap: 6px; border: 1px solid #EAECEE; text-align: left; }
+        .hero-split-line { height: 1px; background: rgba(0,0,0,0.04); margin: 2px 0; }
+        .hero-main-box { background: rgba(40, 116, 166, 0.05); border-radius: 14px; padding: 18px 15px; border: 1px solid rgba(40, 116, 166, 0.1); width: 100%; box-sizing: border-box; text-align: center; }
+        
+        /* 按鈕功能調色 */
+        .action-btn {
+            display: block; width: 100%; text-align: center; padding: 14px; color: #fff;
+            font-weight: bold; font-size: 16px; border: none; border-radius: var(--radius-main); cursor: pointer;
+            box-sizing: border-box; transition: opacity 0.2s;
+        }
+        .btn-log-green { background: var(--mora-green); box-shadow: 0 4px 12px rgba(125, 140, 119, 0.25); margin-bottom: 12px; }
+        .btn-view-blue { background: var(--mora-blue); box-shadow: 0 4px 12px rgba(94, 117, 138, 0.25); margin-bottom: 20px; }
+        .action-btn:active { opacity: 0.85; }
 
-        .table-memo-btn { background: none; border: none; color: var(--mora-blue); text-decoration: underline; font-size: 13px; font-weight: bold; cursor: pointer; }
+        .table-memo-btn { background: none; border: none; color: var(--mora-blue); text-decoration: underline; font-size: 13px; font-weight: bold; cursor: pointer; }
 
-        /* 統計與表格適配 */
-        .stat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
-        .stat-item { background: #F8FAFA; border-radius: 12px; padding: 12px; border: 1px solid #EAECEE; text-align: center; }
-        .stat-name { font-size: 14px; font-weight: bold; margin-bottom: 4px; color: #2C3E50; }
-        .stat-details { font-size: 11px; color: var(--text-muted); line-height: 1.5; margin-bottom: 4px; }
+        /* 統計與表格適配 */
+        .stat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+        .stat-item { background: #F8FAFA; border-radius: 12px; padding: 12px; border: 1px solid #EAECEE; text-align: center; }
+        .stat-name { font-size: 14px; font-weight: bold; margin-bottom: 4px; color: #2C3E50; }
+        .stat-details { font-size: 11px; color: var(--text-muted); line-height: 1.5; margin-bottom: 4px; }
 
-        .data-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; table-layout: fixed; }
-        .data-table th { padding: 10px; background: #ECEFF1; color: #5A6B7C; font-weight: 600; }
-        .data-table td { padding: 12px 10px; border-bottom: 1px solid #EAECEE; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .data-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; table-layout: fixed; }
+        .data-table th { padding: 10px; background: #ECEFF1; color: #5A6B7C; font-weight: 600; }
+        .data-table td { padding: 12px 10px; border-bottom: 1px solid #EAECEE; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-        .pagination { display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px; }
-        .page-btn { padding: 5px 12px; font-size: 12px; background: #cbd1d6; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; color: #5a6168; }
+        .pagination { display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px; }
+        .page-btn { padding: 5px 12px; font-size: 12px; background: #cbd1d6; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; color: #5a6168; }
 
-        .hidden { display: none !important; }
+        .hidden { display: none !important; }
 
-        /* 表單模組與優化打勾覆寫 */
-        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.4); z-index: 200; padding: 15px; display: flex; align-items: center; justify-content: center; }
-        .modal-content { background: #fff; width: 100%; max-width: 500px; border-radius: var(--radius-main); max-height: 85vh; overflow-y: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.15); border: 1px solid rgba(0,0,0,0.05); }
-        .form-header { background: #ECEFF1; padding: 15px; font-weight: bold; font-size: 15px; display: flex; justify-content: space-between; border-bottom: 1px solid #D5DBDB; align-items: center; }
-        
-        .form-meta-container { display: flex; flex-direction: column; gap: 6px; padding: 12px 15px; background: #F8FAFC; border-bottom: 1px solid #E2E8F0; font-size: 12px; font-weight: bold; color: #4A515A; }
-        .form-body { padding: 20px; }
-        .form-group { margin-bottom: 20px; }
-        .form-label { display: block; font-size: 14px; font-weight: 600; margin-bottom: 8px; color: #34495E; }
-        
-        input[type="radio"], input[type="checkbox"], select { accent-color: var(--mora-purple-text); }
-        .form-select { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #cbd1d6; font-size: 15px; background-color: #FAFAFA; box-sizing: border-box; }
-        .radio-group, .check-group { display: flex; flex-direction: column; gap: 10px; }
-        .radio-label, .check-label { display: flex; align-items: center; padding: 12px; background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 10px; cursor: pointer; font-size: 14px; box-sizing: border-box; }
-        .radio-label input, .check-label input { margin-right: 10px; width: 18px; height: 18px; }
-        .form-text { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #cbd1d6; font-size: 15px; box-sizing: border-box; min-height: 80px; resize: vertical; }
+        /* 表單模組與優化打勾覆寫 */
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.4); z-index: 200; padding: 15px; display: flex; align-items: center; justify-content: center; }
+        .modal-content { background: #fff; width: 100%; max-width: 500px; border-radius: var(--radius-main); max-height: 85vh; overflow-y: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.15); border: 1px solid rgba(0,0,0,0.05); }
+        .form-header { background: #ECEFF1; padding: 15px; font-weight: bold; font-size: 15px; display: flex; justify-content: space-between; border-bottom: 1px solid #D5DBDB; align-items: center; }
+        
+        .form-meta-container { display: flex; flex-direction: column; gap: 6px; padding: 12px 15px; background: #F8FAFC; border-bottom: 1px solid #E2E8F0; font-size: 12px; font-weight: bold; color: #4A515A; }
+        .form-body { padding: 20px; }
+        .form-group { margin-bottom: 20px; }
+        .form-label { display: block; font-size: 14px; font-weight: 600; margin-bottom: 8px; color: #34495E; }
+        
+        input[type="radio"], input[type="checkbox"], select { accent-color: var(--mora-purple-text); }
+        .form-select { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #cbd1d6; font-size: 15px; background-color: #FAFAFA; box-sizing: border-box; }
+        .radio-group, .check-group { display: flex; flex-direction: column; gap: 10px; }
+        .radio-label, .check-label { display: flex; align-items: center; padding: 12px; background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 10px; cursor: pointer; font-size: 14px; box-sizing: border-box; }
+        .radio-label input, .check-label input { margin-right: 10px; width: 18px; height: 18px; }
+        .form-text { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #cbd1d6; font-size: 15px; box-sizing: border-box; min-height: 80px; resize: vertical; }
 
-        /* 純說明文字區樣式 */
-        .instruction-block { background: #F4EFF5; border: 1px dashed var(--mora-purple-text); padding: 12px; border-radius: 10px; font-size: 13.5px; color: #5B4A60; font-weight: 500; line-height: 1.5; }
+        /* 純說明文字區樣式 */
+        .instruction-block { background: #F4EFF5; border: 1px dashed var(--mora-purple-text); padding: 12px; border-radius: 10px; font-size: 13.5px; color: #5B4A60; font-weight: 500; line-height: 1.5; }
 
-        .form-footer { padding: 15px; background: #F8FAFC; display: flex; justify-content: space-between; border-top: 1px solid #E2E8F0; }
-        .f-btn { padding: 11px 22px; border-radius: 10px; border: none; font-size: 14px; font-weight: bold; cursor: pointer; }
-        .f-btn-cancel { background: #cbd1d6; color: #5a6168; }
-        .f-btn-next { background: var(--mora-purple-text); color: #fff; }
+        .form-footer { padding: 15px; background: #F8FAFC; display: flex; justify-content: space-between; border-top: 1px solid #E2E8F0; }
+        .f-btn { padding: 11px 22px; border-radius: 10px; border: none; font-size: 14px; font-weight: bold; cursor: pointer; }
+        .f-btn-cancel { background: #cbd1d6; color: #5a6168; }
+        .f-btn-next { background: var(--mora-purple-text); color: #fff; }
 
-        .view-row { padding: 11px 0; border-bottom: 1px dashed #EAECEE; display: flex; justify-content: space-between; font-size: 14px; align-items: center; }
-        .view-label { color: var(--text-muted); font-weight: 500; padding-right: 10px; }
-        .view-val { font-weight: 600; color: var(--text-dark); text-align: right; }
+        .view-row { padding: 11px 0; border-bottom: 1px dashed #EAECEE; display: flex; justify-content: space-between; font-size: 14px; align-items: center; }
+        .view-label { color: var(--text-muted); font-weight: 500; padding-right: 10px; }
+        .view-val { font-weight: 600; color: var(--text-dark); text-align: right; }
 
-        .footer-copyright { text-align: center; padding: 25px 15px 35px 15px; font-size: 12px; color: #A49BB0; border-top: 1px solid rgba(139, 122, 147, 0.08); line-height: 1.6; font-weight: 500; }
-        .footer-version { color: var(--mora-purple-text); font-weight: bold; font-size: 12px; margin-bottom: 4px; display: inline-block; background: #F2EFF4; padding: 1px 10px; border-radius: 20px; }
+        .footer-copyright { text-align: center; padding: 25px 15px 35px 15px; font-size: 12px; color: #A49BB0; border-top: 1px solid rgba(139, 122, 147, 0.08); line-height: 1.6; font-weight: 500; }
+        .footer-version { color: var(--mora-purple-text); font-weight: bold; font-size: 12px; margin-bottom: 4px; display: inline-block; background: #F2EFF4; padding: 1px 10px; border-radius: 20px; }
 
-        .swal2-popup { border-radius: var(--radius-main) !important; font-family: inherit !important; }
-        .swal2-styled.swal2-confirm { background-color: var(--mora-blue) !important; border-radius: 10px !important; }
-    </style>
+        .swal2-popup { border-radius: var(--radius-main) !important; font-family: inherit !important; }
+        .swal2-styled.swal2-confirm { background-color: var(--mora-blue) !important; border-radius: 10px !important; }
+    </style>
 </head>
 <body>
 
-    <div class="nav-header">
-        <div class="nav-title-group">
-            <div class="nav-title">宿舍值日中心</div>
-            <div class="update-time-row" id="statUpdateTime">更新時間 ----/--/-- --:--</div>
-        </div>
-        <a href="index.html" class="back-btn">返回主頁</a>
-    </div>
-
-    <div class="container">
-
-        <div class="dev-toggle-container" id="devToggleBtnWrapper">
-            <button class="dev-toggle-btn" onclick="toggleDeveloperPanel()">調試控制面板 ⚙️</button>
-        </div>
-
-        <div class="test-panel hidden" id="devControlPanel">
-            <p class="test-title">⚙️ 系統開發者調試面板 (測試專用限制控制開關)</p>
-            <div class="test-grid">
-                <div class="test-row">
-                    <label>測試模式 (全忽略限制)：</label>
-                    <select id="cfgTestMode" onchange="renderMainSystem()">
-                        <option value="true" selected>開啟 (隨時可完整填寫)</option>
-                        <option value="false">關閉 (嚴格執行正式定時規則)</option>
-                    </select>
-                </div>
-                <div class="test-row">
-                    <label>時間計算基準來源：</label>
-                    <select id="cfgTimeAnchor" onchange="renderMainSystem()">
-                        <option value="mock" selected>依照模擬面板時間</option>
-                        <option value="real">依照當前手機真實時間</option>
-                    </select>
-                </div>
-                <div class="test-row">
-                    <label>補填控制開關模式：</label>
-                    <select id="cfgMakeupMode" onchange="renderMainSystem()">
-                        <option value="normal" selected>依照時間規則 (隔日10:30前)</option>
-                        <option value="always">隨時可以進行補填</option>
-                        <option value="never">全面禁止任何補填</option>
-                    </select>
-                </div>
-                <div class="test-row">
-                    <label>虛擬當前模擬日期：</label>
-                    <input type="date" id="mockDate" value="2026-07-16" onchange="renderMainSystem()">
-                </div>
-                <div class="test-row">
-                    <label>虛擬當前模擬時間：</label>
-                    <input type="time" id="mockTime" value="12:00" onchange="renderMainSystem()">
-                </div>
-            </div>
-        </div>
-
-        <!-- 🕒 大看板區 -->
-        <div class="hero-banner">
-            <div class="banner-date-top" id="bannerFullDate">----年--月--日 週-</div>
-            <div class="hero-meta-box">
-                <div style="display: flex; justify-content: space-between;"><span style="color:#7A868C;">排班序號</span><span id="bannerRawCode" style="font-family: monospace;">DS--------</span></div>
-                <div class="hero-split-line"></div>
-                <div style="display: flex; justify-content: space-between;"><span style="color:#7A868C;">年度週次</span><span id="bannerWeekNumCapsule">—年 第—週</span></div>
-                <div class="hero-split-line"></div>
-                <div style="display: flex; justify-content: space-between;"><span style="color:#7A868C;">值日區間</span><span id="bannerIntervalCapsule">—/— ~ —/—</span></div>
-            </div>
-            <div class="hero-main-box">
-                <div id="bannerCurrentWorker" style="font-size: 22px; font-weight: bold; color: var(--mora-blue-intense); letter-spacing: 0.5px;">當週值日：讀取中...</div>
-                <div style="width: 40px; height: 2px; background: rgba(40, 116, 166, 0.15); margin: 12px auto;"></div>
-                <div id="bannerNextWorker" style="font-size: 14px; font-weight: bold; color: var(--text-muted);">下週預計：讀取中...</div>
-            </div>
-        </div>
-
-        <button class="action-btn btn-log-green" onclick="initiateLogSystem()">工作日誌登錄</button>
-        <button class="action-btn btn-view-blue" onclick="toggleLogCenterView()">歷史日誌紀錄查閱區</button>
-
-        <div class="card">
-            <div class="card-title">房客值日彙整</div>
-            <div class="stat-grid" id="statGridContainer"></div>
-        </div>
-
-        <div class="card">
-            <div class="card-title">值日排班資訊</div>
-            <div style="overflow-x: auto;">
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th style="width: 75px;">狀態</th>
-                            <th style="width: 105px;">值日區間</th>
-                            <th style="width: 90px;">預計值日生</th>
-                            <th style="width: 80px; text-align: center;">排班備註</th>
-                        </tr>
-                    </thead>
-                    <tbody id="scheduleTableBody"></tbody>
-                </table>
-            </div>
-        </div>
-
-        <div class="card">
-            <div class="card-title">請假與異動紀錄</div>
-            <div style="overflow-x: auto;">
-                <table class="data-table" style="width: 100%; min-width: 400px;">
-                    <thead>
-                        <tr>
-                            <th style="width: 85px;">申請日期</th>
-                            <th style="width: 70px;">申請人</th>
-                            <th style="width: 75px;">假別</th>
-                            <th style="width: 100px;">週次/區間</th>
-                            <th style="width: 70px;">狀態</th>
-                        </tr>
-                    </thead>
-                    <tbody id="leaveTableBody"></tbody>
-                </table>
-            </div>
-            <div class="pagination">
-                <button class="page-btn" onclick="changeLeavePage(-1)">上一頁</button>
-                <button class="page-btn" onclick="changeLeavePage(1)">下一頁</button>
-            </div>
-        </div>
-
-        <div class="footer-copyright">
-            <span class="footer-version">v2.7.0D</span><br>
-            宿舍智慧居住管理看板系統<br>
-            Copyright © Daniel. All Rights Reserved.
-        </div>
-
-    </div>
-
-    <!-- 📝 模組彈窗：工作日誌動態表單系統 -->
-    <div class="modal-overlay hidden" id="logFormModal">
-        <div class="modal-content">
-            <div class="form-header">
-                <span id="formTitleText">工作日誌回報填寫</span>
-                <button class="back-btn" style="padding:4px 10px; font-size:12px;" onclick="closeLogModal()">關閉</button>
-            </div>
-            <div class="form-meta-container">
-                <div id="formMetaDate">日期：----/--/--</div>
-                <div id="formMetaInfo" style="color:var(--mora-purple-text);">使用版本: --</div>
-            </div>
-            <div class="form-body" id="formDynamicBody"></div>
-            <div class="form-footer">
-                <button class="f-btn f-btn-cancel" onclick="closeLogModal()">取消</button>
-                <button class="f-btn f-btn-next" id="formActionBtn" onclick="handleFormNextStep()">下一步</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 🔍 模組彈窗：獨立歷史日誌紀錄查閱中心 -->
-    <div class="modal-overlay hidden" id="logCenterModal">
-        <div class="modal-content" style="max-width: 550px;">
-            <div class="form-header">
-                <span>歷史工作日誌明細查閱區</span>
-                <button class="back-btn" onclick="toggleLogCenterView()">關閉</button>
-            </div>
-            <div class="form-body">
-                <div style="margin-bottom: 15px; display: flex; gap: 10px;">
-                    <select id="selectLogWeek" style="flex: 1;" onchange="loadSpecificDayLog()"></select>
-                    <select id="selectLogDay" style="width: 100px;" onchange="loadSpecificDayLog()">
-                        <option value="1">第一日</option>
-                        <option value="2">第二日</option>
-                        <option value="3">第三日</option>
-                        <option value="4">第四日</option>
-                        <option value="5">第五日</option>
-                    </select>
-                </div>
-                <div id="logViewerCanvas" style="padding: 10px; background: #F8FAFC; border-radius: 12px; min-height: 200px;"></div>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        const SHOW_DEV_PANEL_BUTTON = true;
-        const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQkqhXCPp4XiHKCEpI3pz4pzcu3sQreQ_qNRLger00ULCHFr9cTbXHMQqAfk7dLa_gUBAIBSJ5sZM4F/pub?gid=1984800604&single=true&output=csv";
-        
-        let globalRawData = [];
-        let parsedSchedule = [];
-        let parsedStats = {};
-        let parsedLeaves = [];
-        let currentLeavePage = 1;
-        
-        let currentFormPageIndex = 0;
-        let formPagesData = []; 
-        let userAnswers = {};
-        let currentFormModeLabel = "正常回報";
-        let isEarlyMeltMode = false; // 提早回報熔斷裁剪開關
-        let dynamicFormMeta = { version: "", questions: [] };
-        
-        // 專門儲存補登目標星期的參數：1=第一日(週一), 2=第二日(週二)...
-        let submissionTargetDayNum = -1;
-
-        document.addEventListener("DOMContentLoaded", function() {
-            if (!SHOW_DEV_PANEL_BUTTON) {
-                document.getElementById('devToggleBtnWrapper').classList.add('hidden');
-            }
-            fetchDormitoryData();
-        });
-
-        function toggleDeveloperPanel() {
-            document.getElementById('devControlPanel').classList.toggle('hidden');
-        }
-
-        function fetchDormitoryData() {
-            Papa.parse(CSV_URL, {
-                download: true,
-                header: false,
-                complete: function(results) {
-                    globalRawData = results.data;
-                    processDormitoryPayload();
-                }
-            });
-        }
-
-        function processDormitoryPayload() {
-            if(!globalRawData || globalRawData.length < 2) return;
-            
-            parsedSchedule = [];
-            for (let i = 1; i <= 8; i++) {
-                let row = globalRawData[i];
-                if(row && row[0]) {
-                    parsedSchedule.push({
-                        code: row[0], interval: row[1], worker: row[2], memo: row[3] || "", status: row[4]
-                    });
-                }
-            }
-
-            const names = ["洪健棋", "郭丹騏", "尹奕竤", "林易諒"];
-            parsedStats = {};
-            names.forEach(n => parsedStats[n] = { normal: 0, punishment: 0, abort: 0, backup: 0 });
-            
-            for(let mIdx = 0; mIdx < 4; mIdx++) {
-                let colIdx = mIdx + 1; 
-                let name = names[mIdx];
-                parsedStats[name].normal = globalRawData[12][colIdx] || 0;
-                parsedStats[name].punishment = globalRawData[13][colIdx] || 0;
-                parsedStats[name].abort = globalRawData[14][colIdx] || 0;
-                parsedStats[name].backup = globalRawData[15][colIdx] || 0;
-            }
-
-            parsedLeaves = [];
-            for(let i = 1; i < globalRawData.length; i++) {
-                let row = globalRawData[i];
-                if(row && row[6] && row[7] && row[8] !== "值日處分" && row[8] !== "" && row[6].toString().startsWith("202")) {
-                    parsedLeaves.push({
-                        applyDate: row[6].toString().trim(), 
-                        applicant: row[7], type: row[8], weeks: row[9].toString().trim(), status: row[10]
-                    });
-                }
-            }
-            parsedLeaves.reverse(); 
-
-            // 🎯【核心修正一】：動態從 O 欄（索引 14）讀取當週要解析的版本號
-            let activeRowIdx = getSystemTargetRowIdx();
-            let activeRow = globalRawData[activeRowIdx];
-            let targetVersion = "標準版"; 
-            if (activeRow && activeRow[14]) {
-                targetVersion = activeRow[14].toString().trim(); // 取得 O 欄版本號
-            }
-            dynamicFormMeta.version = targetVersion;
-
-            // 🎯【橫向動態定位】：在第 1 列橫向搜尋對應版本號，並向下解析
-            let headerRow = globalRawData[1];
-            let matchingColIdx = -1;
-            // 從 AK 欄 (索引 36) 開始向後搜尋
-            for (let c = 36; c < headerRow.length; c++) {
-                if (headerRow[c] && headerRow[c].toString().trim() === targetVersion) {
-                    matchingColIdx = c;
-                    break;
-                }
-            }
-
-            dynamicFormMeta.questions = [];
-            // 如果找到對應版本號，解析該直欄所有題目與規則；否則預設解析 36 欄
-            let parseColIdx = (matchingColIdx !== -1) ? matchingColIdx : 36;
-            for(let i = 2; i < globalRawData.length; i++) {
-                let qText = globalRawData[i][parseColIdx];
-                let qTypeStr = globalRawData[i][parseColIdx + 1]; // 規則在題目右邊一欄
-                if(qText && qTypeStr) {
-                    dynamicFormMeta.questions.push({ stem: qText.trim(), rule: qTypeStr.trim() });
-                }
-            }
-
-            renderMainSystem();
-            populateLogCenterDropdowns();
-        }
-
-        function parseWeekInfoFromCode(codeStr) {
-            if(!codeStr || codeStr.length < 6) return { year: "2026", week: "00" };
-            let yearPart = "20" + codeStr.substring(2, 4);
-            let weekPart = codeStr.substring(4, 6);
-            return { year: yearPart, week: parseInt(weekPart, 10) };
-        }
-
-        function renderMainSystem() {
-            if(parsedSchedule.length === 0) return;
-
-            const timeAnchor = document.getElementById('cfgTimeAnchor').value;
-            let simDateTime = new Date(); 
-            if (timeAnchor === "mock") {
-                const mockDateStr = document.getElementById('mockDate').value;
-                const mockTimeStr = document.getElementById('mockTime').value;
-                simDateTime = new Date(`${mockDateStr}T${mockTimeStr}`);
-            }
-
-            const formatPad = (n) => n.toString().padStart(2, '0');
-            const updateTimeEl = document.getElementById('statUpdateTime');
-            if (updateTimeEl) {
-                updateTimeEl.innerText = `更新時間 ${simDateTime.getFullYear()}/${formatPad(simDateTime.getMonth()+1)}/${formatPad(simDateTime.getDate())} ${formatPad(simDateTime.getHours())}:${formatPad(simDateTime.getMinutes())}`;
-            }
-            
-            const fullDateEl = document.getElementById('bannerFullDate');
-            if (fullDateEl) {
-                const dayName = ['週日','週一','週二','週三','週四','週五','週六'][simDateTime.getDay()];
-                fullDateEl.innerText = `${simDateTime.getFullYear()}年${simDateTime.getMonth()+1}月${simDateTime.getDate()}日 ${dayName}`;
-            }
-            
-            let currentOnDuty = parsedSchedule[0];
-            let wInfo = parseWeekInfoFromCode(currentOnDuty.code);
-            
-            const rawCodeEl = document.getElementById('bannerRawCode');
-            if (rawCodeEl) rawCodeEl.innerText = currentOnDuty.code;
-
-            const weekCapsuleEl = document.getElementById('bannerWeekNumCapsule');
-            if (weekCapsuleEl) weekCapsuleEl.innerText = `${wInfo.year}年 第${wInfo.week}週`;
-
-            const intervalCapsuleEl = document.getElementById('bannerIntervalCapsule');
-            if (intervalCapsuleEl) intervalCapsuleEl.innerText = currentOnDuty.interval;
-
-            const currentWorkerEl = document.getElementById('bannerCurrentWorker');
-            if (currentWorkerEl) currentWorkerEl.innerText = `當週值日：${currentOnDuty.worker}`;
-
-            const nextWorkerEl = document.getElementById('bannerNextWorker');
-            if (nextWorkerEl) nextWorkerEl.innerText = `下週預計：${parsedSchedule[1] ? parsedSchedule[1].worker : '無'}`;
-
-            let schedHtml = "";
-            parsedSchedule.forEach(s => {
-                let bCls = "badge-gray";
-                if (s.status === "執行中") bCls = "badge-blue";
-                else if (s.status === "預排") bCls = "badge-green";
-                else if (s.status === "調班") bCls = "badge-orange";
-                else if (s.status === "代班中") bCls = "badge-yellow";
-
-                let cleanMemo = (s.memo === "=" || s.memo === "—" || s.memo === "") ? "" : s.memo.replace(/'/g, "\\'");
-                let memoTd = cleanMemo 
-                    ? `<td style="text-align: center;"><span style="color: var(--mora-blue); text-decoration: underline; font-weight: bold; cursor: pointer; font-size: 13px;" onclick="Swal.fire({title:'排班備註', text:'${cleanMemo}', icon:'info'})">點此查看</span></td>` 
-                    : `<td style="text-align: center; color: #BDC3C7; font-size: 13px; font-weight: 500;">-無-</td>`;
-
-                schedHtml += `<tr>
-                    <td><span class="badge ${bCls}">${s.status}</span></td>
-                    <td style="font-weight:500;">${s.interval}</td>
-                    <td><strong>${s.worker}</strong></td>
-                    ${memoTd}
-                </tr>`;
-            });
-            
-            const scheduleTableBodyEl = document.getElementById('scheduleTableBody');
-            if (scheduleTableBodyEl) scheduleTableBodyEl.innerHTML = schedHtml;
-
-            let statHtml = "";
-            for(let name in parsedStats) {
-                let st = parsedStats[name];
-                let statusBadge = `<span class="badge badge-gray">待命中</span>`;
-                
-                if(name === currentOnDuty.worker) {
-                    statusBadge = `<span class="badge badge-blue" style="background-color:var(--mora-blue-intense); color:white;">正在值日</span>`;
-                } else {
-                    let matchLeave = parsedLeaves.find(l => {
-                        return l.applicant === name && 
-                               (l.status === "審核通過" || l.status === "執行完畢") && 
-                               isWeekInLeaveRange(wInfo.week, l.weeks);
-                    });
-                    
-                    if(matchLeave) {
-                        if(matchLeave.type === "長假") statusBadge = `<span class="badge badge-purple">長假</span>`;
-                        else if(matchLeave.type === "預先假") statusBadge = `<span class="badge badge-green">預先假</span>`;
-                        else if(matchLeave.type === "臨時假") statusBadge = `<span class="badge badge-orange">臨時假</span>`;
-                    }
-                }
-
-                statHtml += `<div class="stat-item">
-                    <div class="stat-name">${name}</div>
-                    <div style="margin-bottom:6px;">${statusBadge}</div>
-                    <div class="stat-details">
-                        值日: ${st.normal}次 | 代班: ${st.backup}次<br>
-                        中斷: ${st.abort}次 | 處分: ${st.punishment}次
-                    </div>
-                </div>`;
-            }
-            
-            const statGridContainerEl = document.getElementById('statGridContainer');
-            if (statGridContainerEl) statGridContainerEl.innerHTML = statHtml;
-
-            renderLeaveTable();
-        }
-
-        function formatLeaveWeekString(rawWeekStr) {
-            let s = rawWeekStr.toString().replace(/\s+/g, '');
-            if(s.includes("-")) {
-                let parts = s.split("-");
-                let startW = parts[0].length >= 4 ? parseInt(parts[0].substring(2,4), 10) : parts[0];
-                let endW = parts[1].length >= 4 ? parseInt(parts[1].substring(2,4), 10) : parts[1];
-                return `${startW}週 - ${endW}週`;
-            } else {
-                let singleW = s.length >= 4 ? parseInt(s.substring(2,4), 10) : s;
-                return `${singleW}週`;
-            }
-        }
-
-        function renderLeaveTable() {
-            let start = (currentLeavePage - 1) * 5;
-            let end = start + 5;
-            let sliced = parsedLeaves.slice(start, end);
-
-            let leaveHtml = "";
-            sliced.forEach(l => {
-                let badgeCls = "badge-gray";
-                if(l.status === "審核通過") badgeCls = "badge-green";
-                if(l.status === "執行完畢") badgeCls = "badge-gray"; 
-                if(l.status === "審核未過") badgeCls = "badge-red";
-
-                let typeCls = "badge-gray";
-                if(l.type === "長假") typeCls = "badge-purple";
-                else if(l.type === "預先假") typeCls = "badge-green";
-                else if(l.type === "臨時假") typeCls = "badge-orange";
-
-                let cleanApplyDate = l.applyDate.split(" ")[0].replace(/-/g, "/");
-
-                leaveHtml += `<tr>
-                    <td style="color:var(--text-muted); font-weight:500;">${cleanApplyDate}</td>
-                    <td><strong>${l.applicant}</strong></td>
-                    <td><span class="badge ${typeCls}" style="font-size:11px; padding:2px 8px;">${l.type}</span></td>
-                    <td style="font-weight:600; color:#5D6D7E;">${formatLeaveWeekString(l.weeks)}</td>
-                    <td><span class="badge ${badgeCls}">${l.status}</span></td>
-                </tr>`;
-            });
-            
-            if(leaveHtml === "") leaveHtml = `<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">暫無更多異動紀錄</td></tr>`;
-            document.getElementById('leaveTableBody').innerHTML = leaveHtml;
-        }
-
-        function changeLeavePage(dir) {
-            let maxPage = Math.ceil(parsedLeaves.length / 5) || 1;
-            currentLeavePage += dir;
-            if(currentLeavePage < 1) currentLeavePage = 1;
-            if(currentLeavePage > maxPage) currentLeavePage = maxPage;
-            renderLeaveTable();
-        }
-
-        // ==========================================
-        // 📝 智慧問卷日誌回報核心控制引擎 (v2.7.5D 完美測試與說明解耦版)
-        // ==========================================
-        function initiateLogSystem() {
-            const isTestMode = document.getElementById('cfgTestMode').value === "true";
-            const makeupMode = document.getElementById('cfgMakeupMode').value;
-            const timeAnchor = document.getElementById('cfgTimeAnchor').value;
-            
-            // 🎯【時區防禦】
-            let simDateTime = new Date();
-            if (timeAnchor === "mock") {
-                const mockDateStr = document.getElementById('mockDate').value; 
-                const mockTimeStr = document.getElementById('mockTime').value; 
-                const dateParts = mockDateStr.split("-");
-                const timeParts = mockTimeStr.split(":");
-                if (dateParts.length === 3 && timeParts.length >= 2) {
-                    simDateTime = new Date(
-                        parseInt(dateParts[0], 10),
-                        parseInt(dateParts[1], 10) - 1, 
-                        parseInt(dateParts[2], 10),
-                        parseInt(timeParts[0], 10),
-                        parseInt(timeParts[1], 10),
-                        0
-                    );
-                }
-            }
-            
-            const dayOfWeek = simDateTime.getDay(); 
-            const hour = simDateTime.getHours();
-            const min = simDateTime.getMinutes();
-            const curTimeValue = hour * 100 + min;
-
-            currentFormModeLabel = "正常回報";
-            isEarlyMeltMode = false; 
-            submissionTargetDayNum = dayOfWeek; // 預設寫入今天
-
-            if (!isTestMode && (dayOfWeek === 0 || dayOfWeek === 6)) {
-                Swal.fire("宿舍休假期間", "目前為週末六日休假不排班時段，無需填寫工作日誌系統。", "info");
-                return;
-            }
-
-            // 🎯【核心優化】：即使是測試模式，也必須走完時間判定，確保開發者能流暢測試防護機制！
-            if (dayOfWeek !== 1) { 
-                let prevDayNum = dayOfWeek - 1; 
-                let prevDayBaseColIdx = 15 + (prevDayNum - 1) * 4; 
-                
-                let targetRowIdx = getSystemTargetRowIdx() - 1; 
-                let currentOnDutyRow = globalRawData[targetRowIdx]; 
-                
-                let isPrevDayEmpty = true;
-                if (currentOnDutyRow && currentOnDutyRow[prevDayBaseColIdx]) {
-                    isPrevDayEmpty = (currentOnDutyRow[prevDayBaseColIdx].toString().trim() === "");
-                }
-
-                if (isPrevDayEmpty) {
-                    if (curTimeValue > 1030) {
-                        Swal.fire({
-                            title: "昨日補填已逾期",
-                            text: "昨日工作日誌已逾今日 10:30 補填寬限期，系統已關閉補登。本次填寫將自動轉為登錄「今日」值日資訊。",
-                            icon: "warning"
-                        });
-                        currentFormModeLabel = isTestMode ? "正常回報 (測試)" : "正常回報";
-                        submissionTargetDayNum = dayOfWeek; 
-                        
-                        if (hour < 18) {
-                            isEarlyMeltMode = true;
-                            currentFormModeLabel = isTestMode ? "提早休假回報 (測試)" : "提早休假回報";
-                        }
-                    } else {
-                        Swal.fire({
-                            title: "昨日補填程序啟動",
-                            text: "系統偵測到前一日（昨日）之工作日誌尚未填寫。目前處於寬限時間內，本次提交將自動寫入「昨日」日誌中，且系統備註將加註「逾期補填」。",
-                            icon: "info"
-                        });
-                        currentFormModeLabel = isTestMode ? "逾期補填 (測試)" : "逾期補填";
-                        submissionTargetDayNum = prevDayNum; 
-                    }
-                } else {
-                    if (hour < 18) {
-                        isEarlyMeltMode = true;
-                        currentFormModeLabel = isTestMode ? "提早休假回報 (測試)" : "提早休假回報";
-                    }
-                }
-            } else {
-                if (hour < 18) {
-                    isEarlyMeltMode = true;
-                    currentFormModeLabel = isTestMode ? "提早休假回報 (測試)" : "提早休假回報";
-                }
-            }
-
-            if (!isTestMode && makeupMode === "never" && currentFormModeLabel.includes("逾期補填")) {
-                Swal.fire("權限遭拒", "管理員已關閉本系統之補填功能，無法補登過期日誌。", "error");
-                return;
-            }
-
-            compileDynamicFormLayout(dayOfWeek === 5); 
-        }
-
-        // ==========================================
-        // 🎯 核心重複檢查校正 (v2.7.3D 偏置對位版)
-        // ==========================================
-        function proceedWithDuplicateCheck(mockDateStr, reporter, finalJsonString, isMakeupMode, isTestMode, isProxyAgentRun) {
-            let dIdx = submissionTargetDayNum; 
-            if(dIdx < 1) dIdx = 1; if(dIdx > 5) dIdx = 5;
-            
-            const frontColumnMapping = [0, 15, 19, 23, 27, 31];
-            let baseCol = frontColumnMapping[dIdx]; 
-            
-            // 🎯【核心修復】：轉換為正確的陣列偏置索引（第 3 列對應陣列索引 2）
-            let targetRowIdx = getSystemTargetRowIdx() - 1; 
-            let isDuplicateData = false;
-            let rowData = globalRawData[targetRowIdx]; 
-            
-            if (rowData && rowData[baseCol] && rowData[baseCol].toString().trim() !== "") {
-                isDuplicateData = true;
-            }
-
-            if (isDuplicateData) {
-                Swal.fire({
-                    title: "重複填寫更正提示",
-                    text: `檢測到目標格子已有先前填寫之資料。本次送出將自動視為更正覆寫並累加修改次數，是否確定送出？`,
-                    icon: "info",
-                    showCancelButton: true,
-                    confirmButtonText: "確認更正覆寫",
-                    cancelButtonText: "取消送出",
-                    customClass: { popup: 'swal2-popup' }
-                }).then((res) => {
-                    if (res && res.isConfirmed) {
-                        // 拋回給後端時，後端需要的是「試算表真實列號」（也就是 3），所以這裡傳入 +1 還原
-                        fireFetchPostPayload(mockDateStr, reporter, finalJsonString, isMakeupMode, isTestMode, isProxyAgentRun, targetRowIdx + 1);
-                    }
-                });
-            } else {
-                fireFetchPostPayload(mockDateStr, reporter, finalJsonString, isMakeupMode, isTestMode, isProxyAgentRun, targetRowIdx + 1);
-            }
-        }
-
-        / ==========================================
-        // 📝 智慧分頁編譯引擎 (v2.7.5D 高精準解析版)
-        // ==========================================
-        function compileDynamicFormLayout(isFriday) {
-            formPagesData = [];
-            let currentPage = { title: "常規回報", questions: [] };
-
-            dynamicFormMeta.questions.forEach(q => {
-                let qCopy = JSON.parse(JSON.stringify(q));
-
-                // 處理分頁符
-                if (qCopy.rule === "---") {
-                    if (currentPage.questions.length > 0) {
-                        formPagesData.push(currentPage);
-                        currentPage = { title: "下一頁", questions: [] };
-                    }
-                    return;
-                }
-                // 處理自訂頁標題
-                if (qCopy.rule.startsWith("[Page")) {
-                    currentPage.title = qCopy.stem;
-                    return;
-                }
-                
-                // 🎯 統一標記純說明欄位，保留原始 rule 以免丟失判定
-                if (qCopy.rule === "***") {
-                    qCopy.isInstruction = true;
-                }
-
-                // 週五返家選項動態過濾
-                if (qCopy.stem.includes("今日是否休假") && !isFriday) {
-                    qCopy.rule = qCopy.rule.replace(/\|?\s*\(\s*\)\s*返家（限週五）\s*->\s*END/g, '');
-                }
-                currentPage.questions.push(qCopy);
-            });
-
-            if (currentPage.questions.length > 0) {
-                formPagesData.push(currentPage);
-            }
-
-            // 🎯【時區防禦】
-            const timeAnchor = document.getElementById('cfgTimeAnchor').value;
-            let simDateTime = new Date();
-            if (timeAnchor === "mock") {
-                const mockDateStr = document.getElementById('mockDate').value;
-                const mockTimeStr = document.getElementById('mockTime').value;
-                const dateParts = mockDateStr.split("-");
-                const timeParts = mockTimeStr.split(":");
-                if (dateParts.length === 3 && timeParts.length >= 2) {
-                    simDateTime = new Date(
-                        parseInt(dateParts[0], 10),
-                        parseInt(dateParts[1], 10) - 1,
-                        parseInt(dateParts[2], 10),
-                        parseInt(timeParts[0], 10),
-                        parseInt(timeParts[1], 10),
-                        0
-                    );
-                }
-            }
-            const hour = simDateTime.getHours();
-
-            // 對所有頁面的「今日是否休假」選項進行時間過濾
-            formPagesData.forEach(page => {
-                page.questions.forEach(q => {
-                    if(q.stem.includes("今日是否休假")) {
-                        if (hour < 18) {
-                            if (isFriday) {
-                                q.rule = "( ) 國定假日或例假日 -> END | ( ) 返家（限週五） -> END";
-                            } else {
-                                q.rule = "( ) 國定假日或例假日 -> END";
-                            }
-                        } else {
-                            if (isFriday) {
-                                q.rule = "( ) 無 | ( ) 國定假日 or 例假日 -> END | ( ) 返家（限週五） -> END";
-                            } else {
-                                q.rule = "( ) 無 | ( ) 國定假日或例假日 -> END";
-                            }
-                        }
-                    }
-                });
-            });
-
-            // 🎯【提早請假熔斷裁剪修正】：確保過濾時「純說明」與「今日是否休假」都不會被意外丟棄！
-            if (isEarlyMeltMode) {
-                let meltedQuestions = formPagesData[0].questions.filter(q => {
-                    return q.stem.includes("請選擇登錄人") || q.stem.includes("今日是否休假") || q.rule === "***" || q.isInstruction === true;
-                });
-                formPagesData = [{ title: "【提早休假/返家登錄回報】", questions: meltedQuestions }];
-            }
-
-            currentFormPageIndex = 0;
-            userAnswers = {};
-            
-            let mockDateStr = document.getElementById('mockDate').value;
-            if (timeAnchor === "real") {
-                mockDateStr = new Date().toISOString().split('T')[0];
-            }
-
-            document.getElementById('formMetaDate').innerText = `回報目標生效日：${mockDateStr}`;
-            document.getElementById('formMetaInfo').innerText = `巡檢模版版本：${dynamicFormMeta.version} [狀態：${currentFormModeLabel}]`;
-            document.getElementById('logFormModal').classList.remove('hidden');
-            
-            renderFormPage();
-        }
-
-        // ==========================================
-        // 🎨 渲染動態表單畫布 (v2.7.5D 精細防漏渲染版)
-        // ==========================================
-        function renderFormPage() {
-            if(formPagesData.length === 0) return;
-            const page = formPagesData[currentFormPageIndex];
-            
-            document.getElementById('formTitleText').innerText = page.title;
-            let html = "";
-
-            page.questions.forEach((q, idx) => {
-                let qKey = `Q_${currentFormPageIndex}_${idx}`;
-                
-                // 🎯【修復】：只要 rule 是 *** 或者標記了 isInstruction，就 100% 渲染成說明塊！
-                if (q.isInstruction || q.rule === "***") {
-                    let cleanInstructText = q.stem.replace(/\\n/g, '<br>');
-                    html += `<div class="form-group"><div class="instruction-block">${cleanInstructText}</div></div>`;
-                    return;
-                }
-
-                html += `<div class="form-group"><label class="form-label">${q.stem}</label>`;
-
-                if (q.rule.includes("[v]")) {
-                    let options = q.rule.replace("[v]", "").split("|");
-                    html += `<select class="form-select" data-key="${qKey}">`;
-                    options.forEach(opt => { html += `<option value="${opt.trim()}">${opt.trim()}</option>`; });
-                    html += `</select>`;
-                } 
-                else if (q.rule.includes("( )")) {
-                    let options = q.rule.split("|");
-                    html += `<div class="radio-group">`;
-                    options.forEach(opt => {
-                        let cleanOpt = opt.replace("( )", "").trim();
-                        html += `<label class="radio-label">
-                            <input type="radio" name="${qKey}" value="${cleanOpt}" data-raw="${opt}"> ${cleanOpt.split("->")[0].trim()}
-                        </label>`;
-                    });
-                    html += `</div>`;
-                }
-                else if (q.rule.includes("{ }")) {
-                    let options = q.rule.split("|");
-                    html += `<div class="check-group">`;
-                    options.forEach(opt => {
-                        let cleanOpt = opt.replace("{ }", "").trim();
-                        html += `<label class="check-label">
-                            <input type="checkbox" name="${qKey}" value="${cleanOpt}"> ${cleanOpt}
-                        </label>`;
-                    });
-                    html += `</div>`;
-                }
-                else if (q.rule.includes("[ ]")) {
-                    html += `<div class="check-group">
-                        <label class="check-label">
-                            <input type="checkbox" data-type="pure-check" data-key="${qKey}"> 已確認完成並充分符合品質
-                        </label>
-                    </div>`;
-                }
-                else if (q.rule.includes("___")) {
-                    html += `<textarea class="form-text" data-key="${qKey}" placeholder="請在此輸入具體說明的細節資訊..."></textarea>`;
-                }
-                html += `</div>`;
-            });
-
-            document.getElementById('formDynamicBody').innerHTML = html;
-            
-            if (currentFormPageIndex === formPagesData.length - 1) {
-                document.getElementById('formActionBtn').innerText = "提交日誌表格";
-            } else {
-                document.getElementById('formActionBtn').innerText = "下一步";
-            }
-        }
-
-        function handleFormNextStep() {
-            const page = formPagesData[currentFormPageIndex];
-            let triggerEndFlow = false;
-
-            page.questions.forEach((q, idx) => {
-                if (q.rule === "***") return; 
-                
-                let qKey = `Q_${currentFormPageIndex}_${idx}`;
-                let selectEl = document.querySelector(`select[data-key="${qKey}"]`);
-                let radioEl = document.querySelector(`input[name="${qKey}"]:checked`);
-                let textEl = document.querySelector(`textarea[data-key="${qKey}"]`);
-                let pureCheckEl = document.querySelector(`input[data-key="${qKey}"][data-type="pure-check"]`);
-                
-                if (selectEl) {
-                    userAnswers[q.stem] = selectEl.value;
-                } else if (radioEl) {
-                    let val = radioEl.value;
-                    let raw = radioEl.getAttribute("data-raw") || ""; 
-                    userAnswers[q.stem] = val.split("->")[0].trim();
-                    if (raw.includes("-> END") || val.includes("-> END")) { triggerEndFlow = true; }
-                } else if (textEl) {
-                    userAnswers[q.stem] = textEl.value || "無個別備註";
-                } else if (pureCheckEl) {
-                    userAnswers[q.stem] = pureCheckEl.checked ? "已完成" : "未完成";
-                } else {
-                    // 🎯【第三點修正】：高精準度提取多選題核取方塊陣列，解決只回報單個答案缺陷
-                    let checkedBoxes = document.querySelectorAll(`input[name="${qKey}"]:checked`);
-                    let arr = [];
-                    checkedBoxes.forEach(cb => arr.push(cb.value));
-                    userAnswers[q.stem] = arr.length > 0 ? arr.join(", ") : "皆未清倒";
-                }
-            });
-
-            if (triggerEndFlow || currentFormPageIndex === formPagesData.length - 1) {
-                executeFinalSubmissionPayload();
-            } else {
-                currentFormPageIndex++;
-                renderFormPage();
-            }
-        }
-
-        function executeFinalSubmissionPayload() {
-            const isTestMode = document.getElementById('cfgTestMode').value === "true";
-            const timeAnchor = document.getElementById('cfgTimeAnchor').value;
-            
-            let mockDateStr = document.getElementById('mockDate').value;
-            if (timeAnchor === "real") {
-                mockDateStr = new Date().toISOString().split('T')[0];
-            }
-            
-            let reporter = userAnswers["請選擇登錄人"] || "未知回報者";
-            let isMakeupMode = currentFormModeLabel.includes("補填");
-
-            let currentWeekOnDutyWorkerName = parsedSchedule[0] ? parsedSchedule[0].worker : "";
-            let isProxyAgentRun = (reporter !== currentWeekOnDutyWorkerName); 
-
-            // 🎯【第二點核心實現】：提交時順手打包「原訂值日生姓名」注入答案包，封殺任何歷史查詢誤差！
-            userAnswers["[原訂值日生]"] = currentWeekOnDutyWorkerName;
-            let finalJsonString = JSON.stringify(userAnswers);
-
-            if (isProxyAgentRun) {
-                Swal.fire({
-                    title: "代理頂替代班審查提示",
-                    text: `系統比對發現您點選的登錄人「${reporter}」並非本週安排之值日生「${currentWeekOnDutyWorkerName}」，請問本次是否確認為代理人頂替協助提交？`,
-                    icon: "warning",
-                    showCancelButton: true,
-                    confirmButtonText: "是的，代班送出",
-                    cancelButtonText: "返回修正",
-                    customClass: { popup: 'swal2-popup' }
-                }).then((res) => {
-                    if (res && res.isConfirmed) {
-                        proceedWithDuplicateCheck(mockDateStr, reporter, finalJsonString, isMakeupMode, isTestMode, isProxyAgentRun);
-                    }
-                });
-            } else {
-                proceedWithDuplicateCheck(mockDateStr, reporter, finalJsonString, isMakeupMode, isTestMode, isProxyAgentRun);
-            }
-        }
-
-        function getSystemTargetRowIdx() {
-            let targetRowIdx = -1;
-            for (let i = globalRawData.length - 1; i >= 1; i--) {
-                let intervalText = globalRawData[i][13] ? globalRawData[i][13].toString().trim() : ""; 
-                if (intervalText !== "") {
-                    targetRowIdx = i; 
-                    break;
-                }
-            }
-            return (targetRowIdx === -1) ? 2 : targetRowIdx; 
-        }
-
-        function proceedWithDuplicateCheck(mockDateStr, reporter, finalJsonString, isMakeupMode, isTestMode, isProxyAgentRun) {
-            // 🎯【補登修正】：補登昨日時，自動依據 `submissionTargetDayNum` 定位查重欄位位置！
-            let dIdx = submissionTargetDayNum; 
-            if(dIdx < 1) dIdx = 1; if(dIdx > 5) dIdx = 5;
-            
-            const frontColumnMapping = [0, 15, 19, 23, 27, 31];
-            let baseCol = frontColumnMapping[dIdx]; 
-            
-            let targetRowIdx = getSystemTargetRowIdx();
-            let isDuplicateData = false;
-            let rowData = globalRawData[targetRowIdx]; 
-            
-            if (rowData && rowData[baseCol] && rowData[baseCol].trim() !== "") {
-                isDuplicateData = true;
-            }
-
-            if (isDuplicateData) {
-                Swal.fire({
-                    title: "重複填寫更正提示",
-                    text: `檢測到目標格子已有先前填寫之資料。本次送出將自動視為更正覆寫並累加修改次數，是否確定送出？`,
-                    icon: "info",
-                    showCancelButton: true,
-                    confirmButtonText: "確認更正覆寫",
-                    cancelButtonText: "取消送出",
-                    customClass: { popup: 'swal2-popup' }
-                }).then((res) => {
-                    if (res && res.isConfirmed) {
-                        fireFetchPostPayload(mockDateStr, reporter, finalJsonString, isMakeupMode, isTestMode, isProxyAgentRun);
-                    }
-                });
-            } else {
-                fireFetchPostPayload(mockDateStr, reporter, finalJsonString, isMakeupMode, isTestMode, isProxyAgentRun);
-            }
-        }
-
-        function fireFetchPostPayload(mockDateStr, reporter, finalJsonString, isMakeupMode, isTestMode, isProxyAgentRun) {
-            if (isTestMode) {
-                let augmentedAnswers = Object.assign({}, userAnswers);
-                augmentedAnswers["[系統戳記]"] = "(測試資料)";
-                finalJsonString = JSON.stringify(augmentedAnswers);
-            }
-
-            const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzU_H6ld7TeMZAg6avRGDehYfN0ybUs9Na9-LLPUs7f0pJndTSdAoD1TKZ4VLgO9VbK/exec";
-            document.getElementById('formActionBtn').innerText = "連線傳輸中...";
-            document.getElementById('formActionBtn').disabled = true;
-
-            const payload = {
-                date: mockDateStr,
-                reporter: reporter,
-                answersJson: finalJsonString,
-                isMakeup: isMakeupMode,
-                isTestRun: isTestMode,
-                isProxy: isProxyAgentRun,
-                targetDayNum: submissionTargetDayNum // 🚀 傳遞補登修正後的目標星期
-            };
-
-            fetch(GAS_WEB_APP_URL, {
-                method: "POST",
-                mode: "no-cors",
-                cache: "no-cache",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload)
-            })
-            .then(res => {
-                Swal.fire({
-                    title: "日誌上傳完成",
-                    text: `已成功將 ${reporter} 的日誌寫入 Google 試算表對應日欄位！`,
-                    icon: "success",
-                    confirmButtonText: "確定並重新整理",
-                    customClass: { popup: 'swal2-popup' }
-                }).then((clickResult) => {
-                    if (clickResult.isConfirmed || clickResult.isDismissed) {
-                        closeLogModal();
-                        window.location.reload(); 
-                    }
-                });
-            })
-            .catch(err => { 
-                Swal.fire("傳輸失敗", "連線異常：" + err, "error"); 
-                document.getElementById('formActionBtn').disabled = false;
-                document.getElementById('formActionBtn').innerText = "提交日誌表格";
-            });
-        }
-
-        function closeLogModal() { document.getElementById('logFormModal').classList.add('hidden'); }
-        function toggleLogCenterView() { document.getElementById('logCenterModal').classList.toggle('hidden'); }
-
-        function populateLogCenterDropdowns() {
-            let selectWeek = document.getElementById('selectLogWeek');
-            selectWeek.innerHTML = "";
-            
-            for(let i = 1; i <= 5; i++) {
-                let row = globalRawData[i];
-                if(row && row[13]) { 
-                    let opt = document.createElement('option');
-                    opt.value = i;
-                    opt.innerText = `值日區間: ${row[13]} (問卷:${row[14] || '標準版'})`;
-                    selectWeek.appendChild(opt);
-                }
-            }
-            
-            if (selectWeek.options.length > 0) {
-                selectWeek.selectedIndex = 0;
-            }
-
-            // 逆向橫向定位，自動搜尋最新有值的右下角天數
-            let targetRowIdx = getSystemTargetRowIdx();
-            let rowData = globalRawData[targetRowIdx];
-            
-            const checkCols = [15, 19, 23, 27, 31];
-            let lastValidDayNum = 1; 
-
-            for (let d = 4; d >= 0; d--) {
-                let colIdx = checkCols[d];
-                if (rowData && rowData[colIdx] && rowData[colIdx].trim() !== "") {
-                    lastValidDayNum = d + 1; 
-                    break;
-                }
-            }
-
-            document.getElementById('selectLogDay').value = lastValidDayNum.toString();
-            loadSpecificDayLog();
-        }
-
-        function loadSpecificDayLog() {
-            const weekIdx = parseInt(document.getElementById('selectLogWeek').value) || 1;
-            const dayNum = parseInt(document.getElementById('selectLogDay').value) || 1;
-            
-            const frontColumnMapping = [0, 15, 19, 23, 27, 31];
-            let baseColIdx = frontColumnMapping[dayNum]; 
-            
-            let rowData = globalRawData[weekIdx];
-            if (!rowData || weekIdx === 1) {
-                let realLatestRowIdx = getSystemTargetRowIdx();
-                rowData = globalRawData[realLatestRowIdx];
-            }
-
-            if (!rowData || !rowData[baseColIdx] || rowData[baseColIdx].trim() === "") {
-                document.getElementById('logViewerCanvas').innerHTML = `<div style="text-align:center; padding:4px 0; color:#95A5A6; font-size:13px; font-weight:500;">➔ 本日暫無任何登錄紀錄資料</div>`;
-                return;
-            }
-
-            let logTime = rowData[baseColIdx];      
-            let logWorker = rowData[baseColIdx+1];  
-            let logJsonStr = rowData[baseColIdx+2]; 
-            let logMemo = rowData[baseColIdx+3] ? rowData[baseColIdx+3].toString().trim() : ""; 
-            
-            // 🎯【第二點修正】：讀取 JSON 答案包中的「原訂值日生（[原訂值日生]）」值，取代不穩定的 C 欄查表！
-            let originalOnDutyName = "";
-            try {
-                let tempObj = JSON.parse(logJsonStr);
-                originalOnDutyName = tempObj["[原訂值日生]"] ? tempObj["[原訂值日生]"].toString().trim() : "";
-            } catch(e) {
-                originalOnDutyName = "";
-            }
-
-            // 右上角磨砂淡色標籤
-            let badgeStyle = "background-color: #EBF5FB; color: #2874A6;"; // 本尊：淡藍底
-            
-            // 🎯 身分認證邏輯終極修正：直接比對回報人與原訂值日生是否一致！
-            if (originalOnDutyName && logWorker !== originalOnDutyName) {
-                badgeStyle = "background-color: #FDF2E9; color: #E67E22;"; // 代理：淡橘底
-            } else if (logMemo && logMemo.includes("非當值人員登錄")) {
-                badgeStyle = "background-color: #FDF2E9; color: #E67E22;"; 
-            }
-
-            let html = `<div style="background:#fff; border-radius:8px; padding:15px; box-shadow:inset 0 1px 3px rgba(0,0,0,0.02); border:1px solid #E2E8F0;">
-                <div style="font-size:12px; color:var(--text-muted); margin-bottom:12px; display:flex; justify-content:space-between; align-items:center;">
-                    <span>填寫時間: ${logTime}</span>
-                    <span style="display:inline-block; padding:5px 12px; border-radius:12px; font-size:11px; font-weight:bold; ${badgeStyle}">當值人員：${logWorker}</span>
-                </div>`;
-
-            try {
-                let obj = JSON.parse(logJsonStr);
-                for(let key in obj) {
-                    if (key === "[系統戳記]" || key === "[原訂值日生]") continue; 
-                    let val = obj[key];
-                    let valHtml = val;
-                    
-                    if(val === "已完成") {
-                        valHtml = `<span style="color:#2E7D32; font-weight:bold;">✓ 已完成</span>`;
-                    } else if(val === "未完成") {
-                        valHtml = `<span style="color:#C81E1E; font-weight:bold;">✗ 未完成</span>`;
-                    } 
-                    else if(val === "無個別備註") {
-                        valHtml = `<span style="color:#BDC3C7; font-weight:500;">無個別備註</span>`;
-                    }
-                    
-                    html += `<div class="view-row">
-                        <span class="view-label">${key}</span>
-                        <span class="view-val">${valHtml}</span>
-                    </div>`;
-                }
-            } catch(e) {
-                html += `<div style="font-size:14px; white-space:pre-wrap; color:#566573; padding:10px 0;">${logJsonStr}</div>`;
-            }
-
-            if (logMemo && logMemo.trim() !== "" && logMemo !== "—" && logMemo !== "=") {
-                html += `<div style="margin-top:14px; font-size:12px; background:#F2EFE9; padding:10px; border-radius:8px; color:#626D78; white-space:pre-wrap; font-weight:500; line-height:1.5;">系統備註紀錄：\n${logMemo}</div>`;
-            }
-
-            html += `</div>`;
-            document.getElementById('logViewerCanvas').innerHTML = html;
-        }
-
-        function isWeekInLeaveRange(targetWeek, weekStr) {
-            let s = weekStr.toString().replace(/\s+/g, ''); 
-            if (s.includes("-")) {
-                let parts = s.split("-");
-                let startW = parts[0].length >= 4 ? parseInt(parts[0].substring(2,4), 10) : parseInt(parts[0], 10);
-                let endW = parts[1].length >= 4 ? parseInt(parts[1].substring(2,4), 10) : parseInt(parts[1], 10);
-                return (targetWeek >= startW && targetWeek <= endW);
-            } else {
-                let singleW = s.length >= 4 ? parseInt(s.substring(2,4), 10) : parseInt(s, 10);
-                return singleW === targetWeek;
-            }
-        }
-    </script>
+    <div class="nav-header">
+        <div class="nav-title-group">
+            <div class="nav-title">宿舍值日中心</div>
+            <div class="update-time-row" id="statUpdateTime">更新時間 ----/--/-- --:--</div>
+        </div>
+        <a href="index.html" class="back-btn">返回主頁</a>
+    </div>
+
+    <div class="container">
+
+        <div class="dev-toggle-container" id="devToggleBtnWrapper">
+            <button class="dev-toggle-btn" onclick="toggleDeveloperPanel()">調試控制面板 ⚙️</button>
+        </div>
+
+        <div class="test-panel hidden" id="devControlPanel">
+            <p class="test-title">⚙️ 系統開發者調試面板 (測試專用限制控制開關)</p>
+            <div class="test-grid">
+                <div class="test-row">
+                    <label>測試模式 (全忽略限制)：</label>
+                    <select id="cfgTestMode" onchange="renderMainSystem()">
+                        <option value="true" selected>開啟 (隨時可完整填寫)</option>
+                        <option value="false">關閉 (嚴格執行正式定時規則)</option>
+                    </select>
+                </div>
+                <div class="test-row">
+                    <label>時間計算基準來源：</label>
+                    <select id="cfgTimeAnchor" onchange="renderMainSystem()">
+                        <option value="mock" selected>依照模擬面板時間</option>
+                        <option value="real">依照當前手機真實時間</option>
+                    </select>
+                </div>
+                <div class="test-row">
+                    <label>補填控制開關模式：</label>
+                    <select id="cfgMakeupMode" onchange="renderMainSystem()">
+                        <option value="normal" selected>依照時間規則 (隔日10:30前)</option>
+                        <option value="always">隨時可以進行補填</option>
+                        <option value="never">全面禁止任何補填</option>
+                    </select>
+                </div>
+                <div class="test-row">
+                    <label>虛擬當前模擬日期：</label>
+                    <input type="date" id="mockDate" value="2026-07-16" onchange="renderMainSystem()">
+                </div>
+                <div class="test-row">
+                    <label>虛擬當前模擬時間：</label>
+                    <input type="time" id="mockTime" value="12:00" onchange="renderMainSystem()">
+                </div>
+            </div>
+        </div>
+
+        <!-- 🕒 大看板區 -->
+        <div class="hero-banner">
+            <div class="banner-date-top" id="bannerFullDate">----年--月--日 週-</div>
+            <div class="hero-meta-box">
+                <div style="display: flex; justify-content: space-between;"><span style="color:#7A868C;">排班序號</span><span id="bannerRawCode" style="font-family: monospace;">DS--------</span></div>
+                <div class="hero-split-line"></div>
+                <div style="display: flex; justify-content: space-between;"><span style="color:#7A868C;">年度週次</span><span id="bannerWeekNumCapsule">—年 第—週</span></div>
+                <div class="hero-split-line"></div>
+                <div style="display: flex; justify-content: space-between;"><span style="color:#7A868C;">值日區間</span><span id="bannerIntervalCapsule">—/— ~ —/—</span></div>
+            </div>
+            <div class="hero-main-box">
+                <div id="bannerCurrentWorker" style="font-size: 22px; font-weight: bold; color: var(--mora-blue-intense); letter-spacing: 0.5px;">當週值日：讀取中...</div>
+                <div style="width: 40px; height: 2px; background: rgba(40, 116, 166, 0.15); margin: 12px auto;"></div>
+                <div id="bannerNextWorker" style="font-size: 14px; font-weight: bold; color: var(--text-muted);">下週預計：讀取中...</div>
+            </div>
+        </div>
+
+        <button class="action-btn btn-log-green" onclick="initiateLogSystem()">工作日誌登錄</button>
+        <button class="action-btn btn-view-blue" onclick="toggleLogCenterView()">歷史日誌紀錄查閱區</button>
+
+        <div class="card">
+            <div class="card-title">房客值日彙整</div>
+            <div class="stat-grid" id="statGridContainer"></div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">值日排班資訊</div>
+            <div style="overflow-x: auto;">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 75px;">狀態</th>
+                            <th style="width: 105px;">值日區間</th>
+                            <th style="width: 90px;">預計值日生</th>
+                            <th style="width: 80px; text-align: center;">排班備註</th>
+                        </tr>
+                    </thead>
+                    <tbody id="scheduleTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">請假與異動紀錄</div>
+            <div style="overflow-x: auto;">
+                <table class="data-table" style="width: 100%; min-width: 400px;">
+                    <thead>
+                        <tr>
+                            <th style="width: 85px;">申請日期</th>
+                            <th style="width: 70px;">申請人</th>
+                            <th style="width: 75px;">假別</th>
+                            <th style="width: 100px;">週次/區間</th>
+                            <th style="width: 70px;">狀態</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leaveTableBody"></tbody>
+                </table>
+            </div>
+            <div class="pagination">
+                <button class="page-btn" onclick="changeLeavePage(-1)">上一頁</button>
+                <button class="page-btn" onclick="changeLeavePage(1)">下一頁</button>
+            </div>
+        </div>
+
+        <div class="footer-copyright">
+            <span class="footer-version">v2.7.7D</span><br>
+            宿舍智慧居住管理看板系統<br>
+            Copyright © Daniel. All Rights Reserved.
+        </div>
+
+    </div>
+
+    <!-- 📝 模組彈窗：工作日誌動態表單系統 -->
+    <div class="modal-overlay hidden" id="logFormModal">
+        <div class="modal-content">
+            <div class="form-header">
+                <span id="formTitleText">工作日誌回報填寫</span>
+                <button class="back-btn" style="padding:4px 10px; font-size:12px;" onclick="closeLogModal()">關閉</button>
+            </div>
+            <div class="form-meta-container">
+                <div id="formMetaDate">日期：----/--/--</div>
+                <div id="formMetaInfo" style="color:var(--mora-purple-text);">使用版本: --</div>
+            </div>
+            <div class="form-body" id="formDynamicBody"></div>
+            <div class="form-footer">
+                <button class="f-btn f-btn-cancel" onclick="closeLogModal()">取消</button>
+                <button class="f-btn f-btn-next" id="formActionBtn" onclick="handleFormNextStep()">下一步</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🔍 模組彈窗：獨立歷史日誌紀錄查閱中心 -->
+    <div class="modal-overlay hidden" id="logCenterModal">
+        <div class="modal-content" style="max-width: 550px;">
+            <div class="form-header">
+                <span>歷史工作日誌明細查閱區</span>
+                <button class="back-btn" onclick="toggleLogCenterView()">關閉</button>
+            </div>
+            <div class="form-body">
+                <div style="margin-bottom: 15px; display: flex; gap: 10px;">
+                    <select id="selectLogWeek" style="flex: 1;" onchange="loadSpecificDayLog()"></select>
+                    <select id="selectLogDay" style="width: 100px;" onchange="loadSpecificDayLog()">
+                        <option value="1">第一日</option>
+                        <option value="2">第二日</option>
+                        <option value="3">第三日</option>
+                        <option value="4">第四日</option>
+                        <option value="5">第五日</option>
+                    </select>
+                </div>
+                <div id="logViewerCanvas" style="padding: 10px; background: #F8FAFC; border-radius: 12px; min-height: 200px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SHOW_DEV_PANEL_BUTTON = true;
+        const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQkqhXCPp4XiHKCEpI3pz4pzcu3sQreQ_qNRLger00ULCHFr9cTbXHMQqAfk7dLa_gUBAIBSJ5sZM4F/pub?gid=1984800604&single=true&output=csv";
+        
+        let globalRawData = [];
+        let parsedSchedule = [];
+        let parsedStats = {};
+        let parsedLeaves = [];
+        let currentLeavePage = 1;
+        
+        let currentFormPageIndex = 0;
+        let formPagesData = []; 
+        let userAnswers = {};
+        let currentFormModeLabel = "正常回報";
+        let isEarlyMeltMode = false; 
+        let dynamicFormMeta = { version: "", questions: [] };
+        
+        let submissionTargetDayNum = -1;
+
+        document.addEventListener("DOMContentLoaded", function() {
+            if (!SHOW_DEV_PANEL_BUTTON) {
+                document.getElementById('devToggleBtnWrapper').classList.add('hidden');
+            }
+            fetchDormitoryData();
+        });
+
+        function toggleDeveloperPanel() {
+            document.getElementById('devControlPanel').classList.toggle('hidden');
+        }
+
+        function fetchDormitoryData() {
+            Papa.parse(CSV_URL, {
+                download: true,
+                header: false,
+                complete: function(results) {
+                    globalRawData = results.data;
+                    processDormitoryPayload();
+                }
+            });
+        }
+
+        function getSystemTargetRowIdx() {
+            let targetRowIdx = -1;
+            for (let i = globalRawData.length - 1; i >= 1; i--) {
+                let intervalText = globalRawData[i][13] ? globalRawData[i][13].toString().trim() : ""; 
+                if (intervalText !== "") {
+                    targetRowIdx = i; 
+                    break;
+                }
+            }
+            return (targetRowIdx === -1) ? 2 : targetRowIdx; 
+        }
+
+        function processDormitoryPayload() {
+            if(!globalRawData || globalRawData.length < 2) return;
+            
+            parsedSchedule = [];
+            for (let i = 1; i <= 8; i++) {
+                let row = globalRawData[i];
+                if(row && row[0]) {
+                    parsedSchedule.push({
+                        code: row[0], interval: row[1], worker: row[2], memo: row[3] || "", status: row[4]
+                    });
+                }
+            }
+
+            const names = ["洪健棋", "郭丹騏", "尹奕竤", "林易諒"];
+            parsedStats = {};
+            names.forEach(n => parsedStats[n] = { normal: 0, punishment: 0, abort: 0, backup: 0 });
+            
+            for(let mIdx = 0; mIdx < 4; mIdx++) {
+                let colIdx = mIdx + 1; 
+                let name = names[mIdx];
+                parsedStats[name].normal = globalRawData[12][colIdx] || 0;
+                parsedStats[name].punishment = globalRawData[13][colIdx] || 0;
+                parsedStats[name].abort = globalRawData[14][colIdx] || 0;
+                parsedStats[name].backup = globalRawData[15][colIdx] || 0;
+            }
+
+            parsedLeaves = [];
+            for(let i = 1; i < globalRawData.length; i++) {
+                let row = globalRawData[i];
+                if(row && row[6] && row[7] && row[8] !== "值日處分" && row[8] !== "" && row[6].toString().startsWith("202")) {
+                    parsedLeaves.push({
+                        applyDate: row[6].toString().trim(), 
+                        applicant: row[7], type: row[8], weeks: row[9].toString().trim(), status: row[10]
+                    });
+                }
+            }
+            parsedLeaves.reverse(); 
+
+            let activeRowIdx = getSystemTargetRowIdx();
+            let activeRow = globalRawData[activeRowIdx];
+            let targetVersion = "標準版"; 
+            if (activeRow && activeRow[14]) {
+                targetVersion = activeRow[14].toString().trim(); 
+            }
+            dynamicFormMeta.version = targetVersion;
+
+            let headerRow = globalRawData[1];
+            let matchingColIdx = -1;
+            for (let c = 36; c < headerRow.length; c++) {
+                if (headerRow[c] && headerRow[c].toString().trim() === targetVersion) {
+                    matchingColIdx = c;
+                    break;
+                }
+            }
+
+            dynamicFormMeta.questions = [];
+            let parseColIdx = (matchingColIdx !== -1) ? matchingColIdx : 36;
+            for(let i = 2; i < globalRawData.length; i++) {
+                let qText = globalRawData[i][parseColIdx];
+                let qTypeStr = globalRawData[i][parseColIdx + 1]; 
+                if(qText && qTypeStr) {
+                    dynamicFormMeta.questions.push({ stem: qText.trim(), rule: qTypeStr.trim() });
+                }
+            }
+
+            renderMainSystem();
+            populateLogCenterDropdowns();
+        }
+
+        function parseWeekInfoFromCode(codeStr) {
+            if(!codeStr || codeStr.length < 6) return { year: "2026", week: "00" };
+            let yearPart = "20" + codeStr.substring(2, 4);
+            let weekPart = codeStr.substring(4, 6);
+            return { year: yearPart, week: parseInt(weekPart, 10) };
+        }
+
+        function renderMainSystem() {
+            if(parsedSchedule.length === 0) return;
+
+            const timeAnchor = document.getElementById('cfgTimeAnchor').value;
+            let simDateTime = new Date(); 
+            if (timeAnchor === "mock") {
+                const mockDateStr = document.getElementById('mockDate').value;
+                const mockTimeStr = document.getElementById('mockTime').value;
+                simDateTime = new Date(`${mockDateStr}T${mockTimeStr}`);
+            }
+
+            const formatPad = (n) => n.toString().padStart(2, '0');
+            const updateTimeEl = document.getElementById('statUpdateTime');
+            if (updateTimeEl) {
+                updateTimeEl.innerText = `更新時間 ${simDateTime.getFullYear()}/${formatPad(simDateTime.getMonth()+1)}/${formatPad(simDateTime.getDate())} ${formatPad(simDateTime.getHours())}:${formatPad(simDateTime.getMinutes())}`;
+            }
+            
+            const fullDateEl = document.getElementById('bannerFullDate');
+            if (fullDateEl) {
+                const dayName = ['週日','週一','週二','週三','週四','週五','週六'][simDateTime.getDay()];
+                fullDateEl.innerText = `${simDateTime.getFullYear()}年${simDateTime.getMonth()+1}月${simDateTime.getDate()}日 ${dayName}`;
+            }
+            
+            let currentOnDuty = parsedSchedule[0];
+            let wInfo = parseWeekInfoFromCode(currentOnDuty.code);
+            
+            const rawCodeEl = document.getElementById('bannerRawCode');
+            if (rawCodeEl) rawCodeEl.innerText = currentOnDuty.code;
+
+            const weekCapsuleEl = document.getElementById('bannerWeekNumCapsule');
+            if (weekCapsuleEl) weekCapsuleEl.innerText = `${wInfo.year}年 第${wInfo.week}週`;
+
+            const intervalCapsuleEl = document.getElementById('bannerIntervalCapsule');
+            if (intervalCapsuleEl) intervalCapsuleEl.innerText = currentOnDuty.interval;
+
+            const currentWorkerEl = document.getElementById('bannerCurrentWorker');
+            if (currentWorkerEl) currentWorkerEl.innerText = `當週值日：${currentOnDuty.worker}`;
+
+            const nextWorkerEl = document.getElementById('bannerNextWorker');
+            if (nextWorkerEl) nextWorkerEl.innerText = `下週預計：${parsedSchedule[1] ? parsedSchedule[1].worker : '無'}`;
+
+            let schedHtml = "";
+            parsedSchedule.forEach(s => {
+                let bCls = "badge-gray";
+                if (s.status === "執行中") bCls = "badge-blue";
+                else if (s.status === "預排") bCls = "badge-green";
+                else if (s.status === "調班") bCls = "badge-orange";
+                else if (s.status === "代班中") bCls = "badge-yellow";
+
+                let cleanMemo = (s.memo === "=" || s.memo === "—" || s.memo === "") ? "" : s.memo.replace(/'/g, "\\'");
+                let memoTd = cleanMemo 
+                    ? `<td style="text-align: center;"><span style="color: var(--mora-blue); text-decoration: underline; font-weight: bold; cursor: pointer; font-size: 13px;" onclick="Swal.fire({title:'排班備註', text:'${cleanMemo}', icon:'info'})">點此查看</span></td>` 
+                    : `<td style="text-align: center; color: #BDC3C7; font-size: 13px; font-weight: 500;">-無-</td>`;
+
+                schedHtml += `<tr>
+                    <td><span class="badge ${bCls}">${s.status}</span></td>
+                    <td style="font-weight:500;">${s.interval}</td>
+                    <td><strong>${s.worker}</strong></td>
+                    ${memoTd}
+                </tr>`;
+            });
+            
+            const scheduleTableBodyEl = document.getElementById('scheduleTableBody');
+            if (scheduleTableBodyEl) scheduleTableBodyEl.innerHTML = schedHtml;
+
+            let statHtml = "";
+            for(let name in parsedStats) {
+                let st = parsedStats[name];
+                let statusBadge = `<span class="badge badge-gray">待命中</span>`;
+                
+                if(name === currentOnDuty.worker) {
+                    statusBadge = `<span class="badge badge-blue" style="background-color:var(--mora-blue-intense); color:white;">正在值日</span>`;
+                } else {
+                    let matchLeave = parsedLeaves.find(l => {
+                        return l.applicant === name && 
+                               (l.status === "審核通過" || l.status === "執行完畢") && 
+                               isWeekInLeaveRange(wInfo.week, l.weeks);
+                    });
+                    
+                    if(matchLeave) {
+                        if(matchLeave.type === "長假") statusBadge = `<span class="badge badge-purple">長假</span>`;
+                        else if(matchLeave.type === "預先假") statusBadge = `<span class="badge badge-green">預先假</span>`;
+                        else if(matchLeave.type === "臨時假") statusBadge = `<span class="badge badge-orange">臨時假</span>`;
+                    }
+                }
+
+                statHtml += `<div class="stat-item">
+                    <div class="stat-name">${name}</div>
+                    <div style="margin-bottom:6px;">${statusBadge}</div>
+                    <div class="stat-details">
+                        值日: ${st.normal}次 | 代班: ${st.backup}次<br>
+                        中斷: ${st.abort}次 | 處分: ${st.punishment}次
+                    </div>
+                </div>`;
+            }
+            
+            const statGridContainerEl = document.getElementById('statGridContainer');
+            if (statGridContainerEl) statGridContainerEl.innerHTML = statHtml;
+
+            renderLeaveTable();
+        }
+
+        // ==========================================
+        // 📝 智慧問卷日誌回報核心控制引擎 (v2.7.7D 完美防漏修正版)
+        // ==========================================
+        function initiateLogSystem() {
+            const isTestMode = document.getElementById('cfgTestMode').value === "true";
+            const makeupMode = document.getElementById('cfgMakeupMode').value;
+            const timeAnchor = document.getElementById('cfgTimeAnchor').value;
+            
+            let simDateTime = new Date();
+            let hour = simDateTime.getHours();
+            let min = simDateTime.getMinutes();
+
+            if (timeAnchor === "mock") {
+                const mockDateStr = document.getElementById('mockDate').value; 
+                const mockTimeStr = document.getElementById('mockTime').value; // 格式可能帶有上午/下午或純數字
+                
+                // 🎯【硬核防禦】：強力正則表達式，管他吐出什麼中文字，只抽數字
+                let match = mockTimeStr.match(/(\d+)[\s:]+(\d+)/);
+                if (match) {
+                    hour = parseInt(match[1], 10);
+                    min = parseInt(match[2], 10);
+                    if (mockTimeStr.includes("下午") && hour < 12) hour += 12;
+                    if (mockTimeStr.includes("上午") && hour === 12) hour = 0;
+                }
+                
+                const dateParts = mockDateStr.split("-");
+                if (dateParts.length === 3) {
+                    simDateTime = new Date(parseInt(dateParts[0], 10), parseInt(dateParts[1], 10) - 1, parseInt(dateParts[2], 10), hour, min, 0);
+                }
+            }
+            
+            const dayOfWeek = simDateTime.getDay(); 
+            const curTimeValue = hour * 100 + min;
+
+            currentFormModeLabel = "正常回報";
+            isEarlyMeltMode = false; 
+            submissionTargetDayNum = dayOfWeek; 
+
+            if (!isTestMode && (dayOfWeek === 0 || dayOfWeek === 6)) {
+                Swal.fire("宿舍休假期間", "目前為週末六日休假不排班時段，無需填寫工作日誌系統。", "info");
+                return;
+            }
+
+            // 🎯【核心優化】：解耦測試開關，時間防護網全面照常流轉
+            if (dayOfWeek !== 1) { 
+                let prevDayNum = dayOfWeek - 1; 
+                let prevDayBaseColIdx = 15 + (prevDayNum - 1) * 4; 
+                
+                let targetRowIdx = getSystemTargetRowIdx() - 1; 
+                let currentOnDutyRow = globalRawData[targetRowIdx]; 
+                
+                let isPrevDayEmpty = true;
+                if (currentOnDutyRow && currentOnDutyRow[prevDayBaseColIdx]) {
+                    isPrevDayEmpty = (currentOnDutyRow[prevDayBaseColIdx].toString().trim() === "");
+                }
+
+                if (isPrevDayEmpty) {
+                    if (curTimeValue > 1030) {
+                        Swal.fire({
+                            title: "昨日補填已逾期",
+                            text: "昨日工作日誌已逾今日 10:30 補填寬限期，系統已關閉補登。本次填寫將自動轉為登錄「今日」值日資訊。",
+                            icon: "warning"
+                        });
+                        currentFormModeLabel = isTestMode ? "正常回報 (測試)" : "正常回報";
+                        submissionTargetDayNum = dayOfWeek; 
+                        
+                        if (hour < 18) {
+                            isEarlyMeltMode = true;
+                            currentFormModeLabel = isTestMode ? "提早休假回報 (測試)" : "提早休假回報";
+                        }
+                    } else {
+                        Swal.fire({
+                            title: "昨日補填程序啟動",
+                            text: "系統偵測到前一日（昨日）之工作日誌尚未填寫。目前處於寬限時間內，本次提交將自動寫入「昨日」日誌中，且系統備註將加註「逾期補填」。",
+                            icon: "info"
+                        });
+                        currentFormModeLabel = isTestMode ? "逾期補填 (測試)" : "逾期補填";
+                        submissionTargetDayNum = prevDayNum; 
+                    }
+                } else {
+                    if (hour < 18) {
+                        isEarlyMeltMode = true;
+                        currentFormModeLabel = isTestMode ? "提早休假回報 (測試)" : "提早休假回報";
+                    }
+                }
+            } else {
+                if (hour < 18) {
+                    isEarlyMeltMode = true;
+                    currentFormModeLabel = isTestMode ? "提早休假回報 (測試)" : "提早休假回報";
+                }
+            }
+
+            if (!isTestMode && makeupMode === "never" && currentFormModeLabel.includes("逾期補填")) {
+                Swal.fire("權限遭拒", "管理員已關閉本系統之補填功能，無法補登過期日誌。", "error");
+                return;
+            }
+
+            compileDynamicFormLayout(dayOfWeek === 5); 
+        }
+
+        // ==========================================
+        // 🎯 核心重複檢查校正
+        // ==========================================
+        function proceedWithDuplicateCheck(mockDateStr, reporter, finalJsonString, isMakeupMode, isTestMode, isProxyAgentRun) {
+            let dIdx = submissionTargetDayNum; 
+            if(dIdx < 1) dIdx = 1; if(dIdx > 5) dIdx = 5;
+            
+            const frontColumnMapping = [0, 15, 19, 23, 27, 31];
+            let baseCol = frontColumnMapping[dIdx]; 
+            
+            let targetRowIdx = getSystemTargetRowIdx() - 1; 
+            let isDuplicateData = false;
+            let rowData = globalRawData[targetRowIdx]; 
+            
+            if (rowData && rowData[baseCol] && rowData[baseCol].toString().trim() !== "") {
+                isDuplicateData = true;
+            }
+
+            if (isDuplicateData) {
+                Swal.fire({
+                    title: "重複填寫更正提示",
+                    text: `檢測到目標格子已有先前填寫之資料。本次送出將自動視為更正覆寫並累加修改次數，是否確定送出？`,
+                    icon: "info",
+                    showCancelButton: true,
+                    confirmButtonText: "確認更正覆寫",
+                    cancelButtonText: "取消送出",
+                    customClass: { popup: 'swal2-popup' }
+                }).then((res) => {
+                    if (res && res.isConfirmed) {
+                        fireFetchPostPayload(mockDateStr, reporter, finalJsonString, isMakeupMode, isTestMode, isProxyAgentRun, targetRowIdx + 1);
+                    }
+                });
+            } else {
+                fireFetchPostPayload(mockDateStr, reporter, finalJsonString, isMakeupMode, isTestMode, isProxyAgentRun, targetRowIdx + 1);
+            }
+        }
+
+        // ==========================================
+        // 📝 智慧分頁編譯引擎 (v2.7.7D 絕不吃字版)
+        // ==========================================
+        function compileDynamicFormLayout(isFriday) {
+            formPagesData = [];
+            let currentPage = { title: "常規回報", questions: [] };
+
+            dynamicFormMeta.questions.forEach(q => {
+                let qCopy = JSON.parse(JSON.stringify(q));
+
+                if (qCopy.rule === "---") {
+                    if (currentPage.questions.length > 0) {
+                        formPagesData.push(currentPage);
+                        currentPage = { title: "下一頁", questions: [] };
+                    }
+                    return;
+                }
+                if (qCopy.rule.startsWith("[Page")) {
+                    currentPage.title = qCopy.stem;
+                    return;
+                }
+                if (qCopy.rule === "***") {
+                    qCopy.isInstruction = true;
+                }
+
+                if (qCopy.stem.includes("今日是否休假") && !isFriday) {
+                    qCopy.rule = qCopy.rule.replace(/\|?\s*\(\s*\)\s*返家（限週五）\s*->\s*END/g, '');
+                }
+                currentPage.questions.push(qCopy);
+            });
+
+            if (currentPage.questions.length > 0) {
+                formPagesData.push(currentPage);
+            }
+
+            // 🎯【完美同步過濾時分】
+            const timeAnchor = document.getElementById('cfgTimeAnchor').value;
+            let simDateTime = new Date();
+            let hour = simDateTime.getHours();
+            if (timeAnchor === "mock") {
+                const mockTimeStr = document.getElementById('mockTime').value;
+                let match = mockTimeStr.match(/(\d+)[\s:]+(\d+)/);
+                if (match) {
+                    hour = parseInt(match[1], 10);
+                    if (mockTimeStr.includes("下午") && hour < 12) hour += 12;
+                    if (mockTimeStr.includes("上午") && hour === 12) hour = 0;
+                }
+            }
+
+            formPagesData.forEach(page => {
+                page.questions.forEach(q => {
+                    if(q.stem.includes("今日是否休假")) {
+                        if (hour < 18) {
+                            if (isFriday) {
+                                q.rule = "( ) 國定假日或例假日 -> END | ( ) 返家（限週五） -> END";
+                            } else {
+                                q.rule = "( ) 國定假日或例假日 -> END";
+                            }
+                        } else {
+                            if (isFriday) {
+                                q.rule = "( ) 無 | ( ) 國定假日或例假日 -> END | ( ) 返家（限週五） -> END";
+                            } else {
+                                q.rule = "( ) 無 | ( ) 國定假日或例假日 -> END";
+                            }
+                        }
+                    }
+                });
+            });
+
+            if (isEarlyMeltMode) {
+                let meltedQuestions = formPagesData[0].questions.filter(q => {
+                    return q.stem.includes("請選擇登錄人") || q.stem.includes("今日是否休假") || q.rule === "***" || q.isInstruction === true;
+                });
+                formPagesData = [{ title: "【提早休假/返家登錄回報】", questions: meltedQuestions }];
+            }
+
+            currentFormPageIndex = 0;
+            userAnswers = {};
+            
+            let mockDateStr = document.getElementById('mockDate').value;
+            if (timeAnchor === "real") {
+                mockDateStr = new Date().toISOString().split('T')[0];
+            }
+
+            document.getElementById('formMetaDate').innerText = `回報目標生效日：${mockDateStr}`;
+            document.getElementById('formMetaInfo').innerText = `巡檢模版版本：${dynamicFormMeta.version} [狀態：${currentFormModeLabel}]`;
+            document.getElementById('logFormModal').classList.remove('hidden');
+            
+            renderFormPage();
+        }
+
+        // ==========================================
+        // 🎨 渲染動態表單畫布
+        // ==========================================
+        function renderFormPage() {
+            if(formPagesData.length === 0) return;
+            const page = formPagesData[currentFormPageIndex];
+            
+            document.getElementById('formTitleText').innerText = page.title;
+            let html = "";
+
+            page.questions.forEach((q, idx) => {
+                let qKey = `Q_${currentFormPageIndex}_${idx}`;
+                
+                if (q.isInstruction || q.rule === "***") {
+                    let cleanInstructText = q.stem.replace(/\\n/g, '<br>');
+                    html += `<div class="form-group"><div class="instruction-block">${cleanInstructText}</div></div>`;
+                    return;
+                }
+
+                html += `<div class="form-group"><label class="form-label">${q.stem}</label>`;
+
+                if (q.rule.includes("[v]")) {
+                    let options = q.rule.replace("[v]", "").split("|");
+                    html += `<select class="form-select" data-key="${qKey}">`;
+                    options.forEach(opt => { html += `<option value="${opt.trim()}">${opt.trim()}</option>`; });
+                    html += `</select>`;
+                } 
+                else if (q.rule.includes("( )")) {
+                    let options = q.rule.split("|");
+                    html += `<div class="radio-group">`;
+                    options.forEach(opt => {
+                        let cleanOpt = opt.replace("( )", "").trim();
+                        html += `<label class="radio-label">
+                            <input type="radio" name="${qKey}" value="${cleanOpt}" data-raw="${opt}"> ${cleanOpt.split("->")[0].trim()}
+                        </label>`;
+                    });
+                    html += `</div>`;
+                }
+                else if (q.rule.includes("{ }")) {
+                    let options = q.rule.split("|");
+                    html += `<div class="check-group">`;
+                    options.forEach(opt => {
+                        let cleanOpt = opt.replace("{ }", "").trim();
+                        html += `<label class="check-label">
+                            <input type="checkbox" name="${qKey}" value="${cleanOpt}"> ${cleanOpt}
+                        </label>`;
+                    });
+                    html += `</div>`;
+                }
+                else if (q.rule.includes("[ ]")) {
+                    html += `<div class="check-group">
+                        <label class="check-label">
+                            <input type="checkbox" data-type="pure-check" data-key="${qKey}"> 已確認完成並充分符合品質
+                        </label>
+                    </div>`;
+                }
+                else if (q.rule.includes("___")) {
+                    html += `<textarea class="form-text" data-key="${qKey}" placeholder="請在此輸入具體說明的細節資訊..."></textarea>`;
+                }
+                html += `</div>`;
+            });
+
+            document.getElementById('formDynamicBody').innerHTML = html;
+            
+            if (currentFormPageIndex === formPagesData.length - 1) {
+                document.getElementById('formActionBtn').innerText = "提交日誌表格";
+            } else {
+                document.getElementById('formActionBtn').innerText = "下一步";
+            }
+        }
+
+        function handleFormNextStep() {
+            const page = formPagesData[currentFormPageIndex];
+            let triggerEndFlow = false;
+
+            page.questions.forEach((q, idx) => {
+                if (q.rule === "***") return; 
+                
+                let qKey = `Q_${currentFormPageIndex}_${idx}`;
+                let selectEl = document.querySelector(`select[data-key="${qKey}"]`);
+                let radioEl = document.querySelector(`input[name="${qKey}"]:checked`);
+                let textEl = document.querySelector(`textarea[data-key="${qKey}"]`);
+                let pureCheckEl = document.querySelector(`input[data-key="${qKey}"][data-type="pure-check"]`);
+                
+                if (selectEl) {
+                    userAnswers[q.stem] = selectEl.value;
+                } else if (radioEl) {
+                    let val = radioEl.value;
+                    let raw = radioEl.getAttribute("data-raw") || ""; 
+                    userAnswers[q.stem] = val.split("->")[0].trim();
+                    if (raw.includes("-> END") || val.includes("-> END")) { triggerEndFlow = true; }
+                } else if (textEl) {
+                    userAnswers[q.stem] = textEl.value || "無個別備註";
+                } else if (pureCheckEl) {
+                    userAnswers[q.stem] = pureCheckEl.checked ? "已完成" : "未完成";
+                } else {
+                    let checkedBoxes = document.querySelectorAll(`input[name="${qKey}"]:checked`);
+                    let arr = [];
+                    checkedBoxes.forEach(cb => arr.push(cb.value));
+                    userAnswers[q.stem] = arr.length > 0 ? arr.join(", ") : "皆未清倒";
+                }
+            });
+
+            if (triggerEndFlow || currentFormPageIndex === formPagesData.length - 1) {
+                executeFinalSubmissionPayload();
+            } else {
+                currentFormPageIndex++;
+                renderFormPage();
+            }
+        }
+
+        function executeFinalSubmissionPayload() {
+            const isTestMode = document.getElementById('cfgTestMode').value === "true";
+            const timeAnchor = document.getElementById('cfgTimeAnchor').value;
+            
+            let mockDateStr = document.getElementById('mockDate').value;
+            if (timeAnchor === "real") {
+                mockDateStr = new Date().toISOString().split('T')[0];
+            }
+            
+            let reporter = userAnswers["請選擇登錄人"] || "未知回報者";
+            let isMakeupMode = currentFormModeLabel.includes("補填");
+
+            let currentWeekOnDutyWorkerName = parsedSchedule[0] ? parsedSchedule[0].worker : "";
+            let isProxyAgentRun = (reporter !== currentWeekOnDutyWorkerName); 
+
+            userAnswers["[原訂值日生]"] = currentWeekOnDutyWorkerName;
+            let finalJsonString = JSON.stringify(userAnswers);
+
+            if (isProxyAgentRun) {
+                Swal.fire({
+                    title: "代理頂替代班審查提示",
+                    text: `系統比對發現您點選的登錄人「${reporter}」並非本週安排之值日生「${currentWeekOnDutyWorkerName}」，請問本次是否確認為代理人頂替協助提交？`,
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonText: "是的，代班送出",
+                    cancelButtonText: "返回修正",
+                    customClass: { popup: 'swal2-popup' }
+                }).then((res) => {
+                    if (res && res.isConfirmed) {
+                        proceedWithDuplicateCheck(mockDateStr, reporter, finalJsonString, isMakeupMode, isTestMode, isProxyAgentRun);
+                    }
+                });
+            } else {
+                proceedWithDuplicateCheck(mockDateStr, reporter, finalJsonString, isMakeupMode, isTestMode, isProxyAgentRun);
+            }
+        }
+
+        function fireFetchPostPayload(mockDateStr, reporter, finalJsonString, isMakeupMode, isTestMode, isProxyAgentRun, targetRowIdx) {
+            if (isTestMode) {
+                let augmentedAnswers = Object.assign({}, userAnswers);
+                augmentedAnswers["[系統戳記]"] = "(測試資料)";
+                finalJsonString = JSON.stringify(augmentedAnswers);
+            }
+
+            const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzU_H6ld7TeMZAg6avRGDehYfN0ybUs9Na9-LLPUs7f0pJndTSdAoD1TKZ4VLgO9VbK/exec";
+            document.getElementById('formActionBtn').innerText = "連線傳輸中...";
+            document.getElementById('formActionBtn').disabled = true;
+
+            const payload = {
+                date: mockDateStr,
+                reporter: reporter,
+                answersJson: finalJsonString,
+                isMakeup: isMakeupMode,
+                isTestRun: isTestMode,
+                isProxy: isProxyAgentRun,
+                targetDayNum: submissionTargetDayNum
+            };
+
+            fetch(GAS_WEB_APP_URL, {
+                method: "POST",
+                mode: "no-cors",
+                cache: "no-cache",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            })
+            .then(res => {
+                Swal.fire({
+                    title: "日誌上傳完成",
+                    text: `已成功將 ${reporter} 的日誌寫入 Google 試算表對應日欄位！`,
+                    icon: "success",
+                    confirmButtonText: "確定並重新整理",
+                    customClass: { popup: 'swal2-popup' }
+                }).then((clickResult) => {
+                    if (clickResult.isConfirmed || clickResult.isDismissed) {
+                        closeLogModal();
+                        window.location.reload(); 
+                    }
+                });
+            })
+            .catch(err => { 
+                Swal.fire("傳輸失敗", "連線異常：" + err, "error"); 
+                document.getElementById('formActionBtn').disabled = false;
+                document.getElementById('formActionBtn').innerText = "提交日誌表格";
+            });
+        }
+
+        function formatLeaveWeekString(rawWeekStr) {
+            let s = rawWeekStr.toString().replace(/\s+/g, '');
+            if(s.includes("-")) {
+                let parts = s.split("-");
+                let startW = parts[0].length >= 4 ? parseInt(parts[0].substring(2,4), 10) : parts[0];
+                let endW = parts[1].length >= 4 ? parseInt(parts[1].substring(2,4), 10) : parts[1];
+                return `${startW}週 - ${endW}週`;
+            } else {
+                let singleW = s.length >= 4 ? parseInt(s.substring(2,4), 10) : s;
+                return `${singleW}週`;
+            }
+        }
+
+        function changeLeavePage(dir) {
+            let maxPage = Math.ceil(parsedLeaves.length / 5) || 1;
+            currentLeavePage += dir;
+            if(currentLeavePage < 1) currentLeavePage = 1;
+            if(currentLeavePage > maxPage) currentLeavePage = maxPage;
+            renderLeaveTable();
+        }
+
+        function renderLeaveTable() {
+            let start = (currentLeavePage - 1) * 5;
+            let end = start + 5;
+            let sliced = parsedLeaves.slice(start, end);
+
+            let leaveHtml = "";
+            sliced.forEach(l => {
+                let badgeCls = "badge-gray";
+                if(l.status === "審核通過") badgeCls = "badge-green";
+                if(l.status === "執行完畢") badgeCls = "badge-gray"; 
+                if(l.status === "審核未過") badgeCls = "badge-red";
+
+                let typeCls = "badge-gray";
+                if(l.type === "長假") typeCls = "badge-purple";
+                else if(l.type === "預先假") typeCls = "badge-green";
+                else if(l.type === "臨時假") typeCls = "badge-orange";
+
+                let cleanApplyDate = l.applyDate.split(" ")[0].replace(/-/g, "/");
+
+                leaveHtml += `<tr>
+                    <td style="color:var(--text-muted); font-weight:500;">${cleanApplyDate}</td>
+                    <td><strong>${l.applicant}</strong></td>
+                    <td><span class="badge ${typeCls}" style="font-size:11px; padding:2px 8px;">${l.type}</span></td>
+                    <td style="font-weight:600; color:#5D6D7E;">${formatLeaveWeekString(l.weeks)}</td>
+                    <td><span class="badge ${badgeCls}">${l.status}</span></td>
+                </tr>`;
+            });
+            
+            if(leaveHtml === "") leaveHtml = `<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">暫無更多異動紀錄</td></tr>`;
+            document.getElementById('leaveTableBody').innerHTML = leaveHtml;
+        }
+
+        function populateLogCenterDropdowns() {
+            let selectWeek = document.getElementById('selectLogWeek');
+            selectWeek.innerHTML = "";
+            
+            for(let i = 1; i <= 5; i++) {
+                let row = globalRawData[i];
+                if(row && row[13]) { 
+                    let opt = document.createElement('option');
+                    opt.value = i;
+                    opt.innerText = `值日區間: ${row[13]} (問卷:${row[14] || '標準版'})`;
+                    selectWeek.appendChild(opt);
+                }
+            }
+            
+            if (selectWeek.options.length > 0) {
+                selectWeek.selectedIndex = 0;
+            }
+
+            let targetRowIdx = getSystemTargetRowIdx();
+            let rowData = globalRawData[targetRowIdx];
+            
+            const checkCols = [15, 19, 23, 27, 31];
+            let lastValidDayNum = 1; 
+
+            for (let d = 4; d >= 0; d--) {
+                let colIdx = checkCols[d];
+                if (rowData && rowData[colIdx] && rowData[colIdx].trim() !== "") {
+                    lastValidDayNum = d + 1; 
+                    break;
+                }
+            }
+
+            document.getElementById('selectLogDay').value = lastValidDayNum.toString();
+            loadSpecificDayLog();
+        }
+
+        function loadSpecificDayLog() {
+            const weekIdx = parseInt(document.getElementById('selectLogWeek').value) || 1;
+            const dayNum = parseInt(document.getElementById('selectLogDay').value) || 1;
+            
+            const frontColumnMapping = [0, 15, 19, 23, 27, 31];
+            let baseColIdx = frontColumnMapping[dayNum]; 
+            
+            let rowData = globalRawData[weekIdx];
+            if (!rowData || weekIdx === 1) {
+                let realLatestRowIdx = getSystemTargetRowIdx();
+                rowData = globalRawData[realLatestRowIdx];
+            }
+
+            if (!rowData || !rowData[baseColIdx] || rowData[baseColIdx].trim() === "") {
+                document.getElementById('logViewerCanvas').innerHTML = `<div style="text-align:center; padding:4px 0; color:#95A5A6; font-size:13px; font-weight:500;">➔ 本日暫無任何登錄紀錄資料</div>`;
+                return;
+            }
+
+            let logTime = rowData[baseColIdx];      
+            let logWorker = rowData[baseColIdx+1];  
+            let logJsonStr = rowData[baseColIdx+2]; 
+            let logMemo = rowData[baseColIdx+3] ? rowData[baseColIdx+3].toString().trim() : ""; 
+            
+            let originalOnDutyName = "";
+            try {
+                let tempObj = JSON.parse(logJsonStr);
+                originalOnDutyName = tempObj["[原訂值日生]"] ? tempObj["[原訂值日生]"].toString().trim() : "";
+            } catch(e) {
+                originalOnDutyName = "";
+            }
+
+            let badgeStyle = "background-color: #EBF5FB; color: #2874A6;"; 
+            
+            if (originalOnDutyName && logWorker !== originalOnDutyName) {
+                badgeStyle = "background-color: #FDF2E9; color: #E67E22;"; 
+            } else if (logMemo && logMemo.includes("非當值人員登錄")) {
+                badgeStyle = "background-color: #FDF2E9; color: #E67E22;"; 
+            }
+
+            let html = `<div style="background:#fff; border-radius:8px; padding:15px; box-shadow:inset 0 1px 3px rgba(0,0,0,0.02); border:1px solid #E2E8F0;">
+                <div style="font-size:12px; color:var(--text-muted); margin-bottom:12px; display:flex; justify-content:space-between; align-items:center;">
+                    <span>填寫時間: ${logTime}</span>
+                    <span style="display:inline-block; padding:5px 12px; border-radius:12px; font-size:11px; font-weight:bold; ${badgeStyle}">當值人員：${logWorker}</span>
+                </div>`;
+
+            try {
+                let obj = JSON.parse(logJsonStr);
+                for(let key in obj) {
+                    if (key === "[系統戳記]" || key === "[原訂值日生]") continue; 
+                    let val = obj[key];
+                    let valHtml = val;
+                    
+                    if(val === "已完成") {
+                        valHtml = `<span style="color:#2E7D32; font-weight:bold;">✓ 已完成</span>`;
+                    } else if(val === "未完成") {
+                        valHtml = `<span style="color:#C81E1E; font-weight:bold;">✗ 未完成</span>`;
+                    } 
+                    else if(val === "無個別備註") {
+                        valHtml = `<span style="color:#BDC3C7; font-weight:500;">無個別備註</span>`;
+                    }
+                    
+                    html += `<div class="view-row">
+                        <span class="view-label">${key}</span>
+                        <span class="view-val">${valHtml}</span>
+                    </div>`;
+                }
+            } catch(e) {
+                html += `<div style="font-size:14px; white-space:pre-wrap; color:#566573; padding:10px 0;">${logJsonStr}</div>`;
+            }
+
+            if (logMemo && logMemo.trim() !== "" && logMemo !== "—" && logMemo !== "=") {
+                html += `<div style="margin-top:14px; font-size:12px; background:#F2EFE9; padding:10px; border-radius:8px; color:#626D78; white-space:pre-wrap; font-weight:500; line-height:1.5;">系統備註紀錄：\n${logMemo}</div>`;
+            }
+
+            html += `</div>`;
+            document.getElementById('logViewerCanvas').innerHTML = html;
+        }
+
+        function isWeekInLeaveRange(targetWeek, weekStr) {
+            let s = weekStr.toString().replace(/\s+/g, ''); 
+            if (s.includes("-")) {
+                let parts = s.split("-");
+                let startW = parts[0].length >= 4 ? parseInt(parts[0].substring(2,4), 10) : parseInt(parts[0], 10);
+                let endW = parts[1].length >= 4 ? parseInt(parts[1].substring(2,4), 10) : parseInt(parts[1], 10);
+                return (targetWeek >= startW && targetWeek <= endW);
+            } else {
+                let singleW = s.length >= 4 ? parseInt(s.substring(2,4), 10) : parseInt(s, 10);
+                return singleW === targetWeek;
+            }
+        }
+    </script>
 </body>
 </html>
