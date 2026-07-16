@@ -274,7 +274,7 @@
         </div>
 
         <div class="footer-copyright">
-            <span class="footer-version">v2.7.8D</span><br>
+            <span class="footer-version">v2.7.9D</span><br>
             宿舍智慧居住管理看板系統<br>
             Copyright © Daniel. All Rights Reserved.
         </div>
@@ -364,7 +364,6 @@
             });
         }
 
-        // 🎯【核心修復二】：置頂列數定址函數，防範跨函數調用未定義錯誤
         function getSystemTargetRowIdx() {
             if (!globalRawData || globalRawData.length < 2) return 2;
             let targetRowIdx = -1;
@@ -416,7 +415,6 @@
             }
             parsedLeaves.reverse(); 
 
-            // 🎯【完美版定位】：確保在此處安全調用已載入之資料
             let activeRowIdx = getSystemTargetRowIdx();
             let activeRow = globalRawData[activeRowIdx];
             let targetVersion = "標準版"; 
@@ -558,7 +556,7 @@
         }
 
         // ==========================================
-        // 📝 智慧問卷日誌回報核心控制引擎 (v2.7.8D 完全對位版)
+        // 📝 智慧問卷日誌回報核心控制引擎 (v2.7.9D 絕緣防擠對位版)
         // ==========================================
         function initiateLogSystem() {
             const isTestMode = document.getElementById('cfgTestMode').value === "true";
@@ -599,16 +597,20 @@
                 return;
             }
 
+            // 🎯【絕緣防護重構】：改用「登錄人（reporter）」進行物理隔離判定，根除備註爆字擠欄位误判
             if (dayOfWeek !== 1) { 
                 let prevDayNum = dayOfWeek - 1; 
-                let prevDayBaseColIdx = 15 + (prevDayNum - 1) * 4; 
+                const frontColumnMapping = [0, 15, 19, 23, 27, 31];
+                let prevDayReporterColIdx = frontColumnMapping[prevDayNum] + 1; // 登錄人欄位是登錄時間+1
                 
                 let targetRowIdx = getSystemTargetRowIdx() - 1; 
                 let currentOnDutyRow = globalRawData[targetRowIdx]; 
                 
                 let isPrevDayEmpty = true;
-                if (currentOnDutyRow && currentOnDutyRow[prevDayBaseColIdx]) {
-                    isPrevDayEmpty = (currentOnDutyRow[prevDayBaseColIdx].toString().trim() === "");
+                if (currentOnDutyRow && currentOnDutyRow[prevDayReporterColIdx]) {
+                    // 如果昨天的登錄人是空的，或者是破折號等無效字元，判定為漏填
+                    let repText = currentOnDutyRow[prevDayReporterColIdx].toString().trim();
+                    isPrevDayEmpty = (repText === "" || repText === "—" || repText === "=");
                 }
 
                 if (isPrevDayEmpty) {
@@ -689,9 +691,6 @@
             }
         }
 
-        // ==========================================
-        // 📝 智慧分頁編譯引擎 (v2.7.8D 高精準解析版)
-        // ==========================================
         function compileDynamicFormLayout(isFriday) {
             formPagesData = [];
             let currentPage = { title: "常規回報", questions: [] };
@@ -779,9 +778,6 @@
             renderFormPage();
         }
 
-        // ==========================================
-        // 🎨 渲染動態表單畫布 (v2.7.8D 精細防漏渲染版)
-        // ==========================================
         function renderFormPage() {
             if(formPagesData.length === 0) return;
             const page = formPagesData[currentFormPageIndex];
@@ -976,7 +972,6 @@
             });
         }
 
-        // 🎯【核心修復一】：挪到最安全、無死角的外層，確保表單一按就關閉
         function closeLogModal() { 
             document.getElementById('logFormModal').classList.add('hidden'); 
         }
