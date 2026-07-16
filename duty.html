@@ -274,7 +274,7 @@
         </div>
 
         <div class="footer-copyright">
-            <span class="footer-version">v2.7.9D</span><br>
+            <span class="footer-version">v2.8.0D</span><br>
             宿舍智慧居住管理看板系統<br>
             Copyright © Daniel. All Rights Reserved.
         </div>
@@ -423,7 +423,8 @@
             }
             dynamicFormMeta.version = targetVersion;
 
-            let headerRow = globalRawData[1];
+            // 🎯【核心修正 1：版本標題在第 1 列（陣列 0）】
+            let headerRow = globalRawData[0]; 
             let matchingColIdx = -1;
             for (let c = 36; c < headerRow.length; c++) {
                 if (headerRow[c] && headerRow[c].toString().trim() === targetVersion) {
@@ -556,7 +557,7 @@
         }
 
         // ==========================================
-        // 📝 智慧問卷日誌回報核心控制引擎 (v2.7.9D 絕緣防擠對位版)
+        // 📝 智慧問卷日誌回報核心控制引擎
         // ==========================================
         function initiateLogSystem() {
             const isTestMode = document.getElementById('cfgTestMode').value === "true";
@@ -597,18 +598,17 @@
                 return;
             }
 
-            // 🎯【絕緣防護重構】：改用「登錄人（reporter）」進行物理隔離判定，根除備註爆字擠欄位误判
             if (dayOfWeek !== 1) { 
                 let prevDayNum = dayOfWeek - 1; 
                 const frontColumnMapping = [0, 15, 19, 23, 27, 31];
-                let prevDayReporterColIdx = frontColumnMapping[prevDayNum] + 1; // 登錄人欄位是登錄時間+1
+                let prevDayReporterColIdx = frontColumnMapping[prevDayNum] + 1; 
                 
-                let targetRowIdx = getSystemTargetRowIdx() - 1; 
+                // 🎯【核心修正 2：不扣減，精確拿陣列索引值】
+                let targetRowIdx = getSystemTargetRowIdx(); 
                 let currentOnDutyRow = globalRawData[targetRowIdx]; 
                 
                 let isPrevDayEmpty = true;
                 if (currentOnDutyRow && currentOnDutyRow[prevDayReporterColIdx]) {
-                    // 如果昨天的登錄人是空的，或者是破折號等無效字元，判定為漏填
                     let repText = currentOnDutyRow[prevDayReporterColIdx].toString().trim();
                     isPrevDayEmpty = (repText === "" || repText === "—" || repText === "=");
                 }
@@ -664,7 +664,8 @@
             const frontColumnMapping = [0, 15, 19, 23, 27, 31];
             let baseCol = frontColumnMapping[dIdx]; 
             
-            let targetRowIdx = getSystemTargetRowIdx() - 1; 
+            // 🎯【核心修正 3：不扣減，精確拿陣列索引值】
+            let targetRowIdx = getSystemTargetRowIdx(); 
             let isDuplicateData = false;
             let rowData = globalRawData[targetRowIdx]; 
             
