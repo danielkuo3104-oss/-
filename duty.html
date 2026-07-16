@@ -1092,6 +1092,33 @@
                 return singleW === targetWeek;
             }
         }
+        // ==========================================
+        // 🎯 核心基礎定址引擎：由下往上搜尋 N 欄取得最新作用列 (v2.7.6D)
+        // ==========================================
+        function getSystemTargetRowIdx() {
+            let targetRowIdx = -1;
+            for (let i = globalRawData.length - 1; i >= 1; i--) {
+                let intervalText = globalRawData[i][13] ? globalRawData[i][13].toString().trim() : ""; 
+                if (intervalText !== "") {
+                    targetRowIdx = i; 
+                    break;
+                }
+            }
+            return (targetRowIdx === -1) ? 2 : targetRowIdx; 
+        }
+
+        function isWeekInLeaveRange(targetWeek, weekStr) {
+            let s = weekStr.toString().replace(/\s+/g, ''); 
+            if (s.includes("-")) {
+                let parts = s.split("-");
+                let startW = parts[0].length >= 4 ? parseInt(parts[0].substring(2,4), 10) : parseInt(parts[0], 10);
+                let endW = parts[1].length >= 4 ? parseInt(parts[1].substring(2,4), 10) : parseInt(parts[1], 10);
+                return (targetWeek >= startW && targetWeek <= endW);
+            } else {
+                let singleW = s.length >= 4 ? parseInt(s.substring(2,4), 10) : parseInt(s, 10);
+                return singleW === targetWeek;
+            }
+        }
     </script>
 </body>
 </html>
