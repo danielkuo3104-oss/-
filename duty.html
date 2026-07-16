@@ -737,27 +737,43 @@
                 }
             }
 
+            // 🎯【完美同步過濾時分】：在問卷選項裁剪前，加入 isMakeup 豁免條件
+            let isMakeupModeRun = currentFormModeLabel.includes("補填");
+
             formPagesData.forEach(page => {
                 page.questions.forEach(q => {
                     if(q.stem.includes("今日是否休假")) {
-                        if (hour < 18) {
-                            if (isFriday) {
-                                q.rule = "( ) 國定假日或例假日 -> END | ( ) 返家（限週五） -> END";
-                            } else {
-                                q.rule = "( ) 國定假日或例假日 -> END";
-                            }
-                        } else {
+                        // 🎯 如果是補填昨日，100% 顯示完整選項 (無、國定假日等)，跳過當天 18:00 的時段攔截
+                        if (isMakeupModeRun) {
                             if (isFriday) {
                                 q.rule = "( ) 無 | ( ) 國定假日或例假日 -> END | ( ) 返家（限週五） -> END";
                             } else {
                                 q.rule = "( ) 無 | ( ) 國定假日或例假日 -> END";
+                            }
+                        } else {
+                            // 否則，正常當日常規流程才看 18:00 限制
+                            if (hour < 18) {
+                                if (isFriday) {
+                                    q.rule = "( ) 國定假日或例假日 -> END | ( ) 返家（限週五） -> END";
+                                
+
+                                } else {
+                                    q.rule = "( ) 國定假日或例假日 -> END";
+                                }
+                            } else {
+                                if (isFriday) {
+                                    q.rule = "( ) 無 | ( ) 國定假日或例假日 -> END | ( ) 返家（限週五） -> END";
+                                } else {
+                                    q.rule = "( ) 無 | ( ) 國定假日或例假日 -> END";
+                                }
                             }
                         }
                     }
                 });
             });
 
-            if (isEarlyMeltMode) {
+            // 🎯 補填模式同樣豁免提早熔斷裁剪，確保載入全量問卷
+            if (isEarlyMeltMode && !isMakeupModeRun) {
                 let meltedQuestions = formPagesData[0].questions.filter(q => {
                     return q.stem.includes("請選擇登錄人") || q.stem.includes("今日是否休假") || q.rule === "***" || q.isInstruction === true;
                 });
@@ -997,20 +1013,23 @@
                 selectWeek.selectedIndex = 0;
             }
 
+            // 🎯【核心修正】：精確獲取最新作用列，橫向逆向掃描哪一日最後有值
             let targetRowIdx = getSystemTargetRowIdx();
             let rowData = globalRawData[targetRowIdx];
             
-            const checkCols = [15, 19, 23, 27, 31];
-            let lastValidDayNum = 1; 
+            const checkCols = [15, 19, 23, 27, 31]; // 週一到週五的登錄時間欄位
+            let lastValidDayNum = 1; // 預設第一日
 
+            // 從週五(AF)往週一(P)逆向檢查，找到第一個有值的格子
             for (let d = 4; d >= 0; d--) {
                 let colIdx = checkCols[d];
-                if (rowData && rowData[colIdx] && rowData[colIdx].trim() !== "") {
+                if (rowData && rowData[colIdx] && rowData[colIdx].toString().trim() !== "") {
                     lastValidDayNum = d + 1; 
                     break;
                 }
             }
 
+            // 🎯 自動切換至最後有值的那一天並渲染
             document.getElementById('selectLogDay').value = lastValidDayNum.toString();
             loadSpecificDayLog();
         }
