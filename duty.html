@@ -557,7 +557,7 @@
         }
 
         // ==========================================
-        // 📝 智慧問卷日誌回報核心控制引擎
+        // 📝 智慧問卷日誌回報核心控制引擎 (v2.8.2D 補填優先順序版)
         // ==========================================
         function initiateLogSystem() {
             const isTestMode = document.getElementById('cfgTestMode').value === "true";
@@ -603,7 +603,6 @@
                 const frontColumnMapping = [0, 15, 19, 23, 27, 31];
                 let prevDayReporterColIdx = frontColumnMapping[prevDayNum] + 1; 
                 
-                // 🎯【核心修正 2：不扣減，精確拿陣列索引值】
                 let targetRowIdx = getSystemTargetRowIdx(); 
                 let currentOnDutyRow = globalRawData[targetRowIdx]; 
                 
@@ -614,20 +613,8 @@
                 }
 
                 if (isPrevDayEmpty) {
-                    if (curTimeValue > 1030) {
-                        Swal.fire({
-                            title: "昨日補填已逾期",
-                            text: "昨日工作日誌已逾今日 10:30 補填寬限期，系統已關閉補登。本次填寫將自動轉為登錄「今日」值日資訊。",
-                            icon: "warning"
-                        });
-                        currentFormModeLabel = isTestMode ? "正常回報 (測試)" : "正常回報";
-                        submissionTargetDayNum = dayOfWeek; 
-                        
-                        if (hour < 18) {
-                            isEarlyMeltMode = true;
-                            currentFormModeLabel = isTestMode ? "提早休假回報 (測試)" : "提早休假回報";
-                        }
-                    } else {
+                    // 🎯【優先權第一步】：先判斷昨天沒填時，是否在 10:30 寬限期內！
+                    if (curTimeValue <= 1030) {
                         Swal.fire({
                             title: "昨日補填程序啟動",
                             text: "系統偵測到前一日（昨日）之工作日誌尚未填寫。目前處於寬限時間內，本次提交將自動寫入「昨日」日誌中，且系統備註將加註「逾期補填」。",
@@ -635,15 +622,47 @@
                         });
                         currentFormModeLabel = isTestMode ? "逾期補填 (測試)" : "逾期補填";
                         submissionTargetDayNum = prevDayNum; 
+                    } else {
+                        // 超過 10:30，補填逾期，自動轉為今日，並接續判斷 18:00 前請假時段
+                        Swal.fire({
+                            title: "昨日補填已逾期",
+                            text: "昨日工作日誌已逾今日 10:30 補填寬限期，系統已關閉補登。本次填寫將自動轉為登錄「今日」值日資訊。",
+                            icon: "warning"
+                        });
+                        submissionTargetDayNum = dayOfWeek; 
+                        
+                        if (hour < 18) {
+                            Swal.fire({
+                                title: "請假與提前休假申報模式",
+                                text: "當日日常巡檢於 18:00 起開放登錄，此前時段僅受理請假或提前休假申報。",
+                                icon: "warning"
+                            });
+                            isEarlyMeltMode = true;
+                            currentFormModeLabel = isTestMode ? "提早休假回報 (測試)" : "提早休假回報";
+                        } else {
+                            currentFormModeLabel = isTestMode ? "正常回報 (測試)" : "正常回報";
+                        }
                     }
                 } else {
+                    // 昨天有填，進入正常當日邏輯：判斷 18:00 前是否僅受理請假
                     if (hour < 18) {
+                        Swal.fire({
+                            title: "請假與提前休假申報模式",
+                            text: "當日日常巡檢於 18:00 起開放登錄，此前時段僅受理請假或提前休假申報。",
+                            icon: "warning"
+                        });
                         isEarlyMeltMode = true;
                         currentFormModeLabel = isTestMode ? "提早休假回報 (測試)" : "提早休假回報";
                     }
                 }
             } else {
+                // 週一沒有昨天，只需判斷 18:00 前請假時段
                 if (hour < 18) {
+                    Swal.fire({
+                        title: "請假與提前休假申報模式",
+                        text: "當日日常巡檢於 18:00 起開放登錄，此前時段僅受理請假或提前休假申報。",
+                        icon: "warning"
+                    });
                     isEarlyMeltMode = true;
                     currentFormModeLabel = isTestMode ? "提早休假回報 (測試)" : "提早休假回報";
                 }
@@ -1013,23 +1032,25 @@
                 selectWeek.selectedIndex = 0;
             }
 
-            // 🎯【核心修正】：精確獲取最新作用列，橫向逆向掃描哪一日最後有值
             let targetRowIdx = getSystemTargetRowIdx();
             let rowData = globalRawData[targetRowIdx];
             
-            const checkCols = [15, 19, 23, 27, 31]; // 週一到週五的登錄時間欄位
-            let lastValidDayNum = 1; // 預設第一日
+            // 🎯【索引精確修正】：週一=15(P), 週二=19(T), 週三=24(W-X之間變動), 週四=27(AB), 週五=31(AE)
+            // 為了萬無一失，我們改為直接檢查該天「登錄人欄位」是否有值 (16, 20, 24, 28, 32)
+            const checkReporterCols = [16, 20, 24, 28, 32]; 
+            let lastValidDayNum = 1; 
 
-            // 從週五(AF)往週一(P)逆向檢查，找到第一個有值的格子
             for (let d = 4; d >= 0; d--) {
-                let colIdx = checkCols[d];
+                let colIdx = checkReporterCols[d];
                 if (rowData && rowData[colIdx] && rowData[colIdx].toString().trim() !== "") {
-                    lastValidDayNum = d + 1; 
-                    break;
+                    let text = rowData[colIdx].toString().trim();
+                    if (text !== "" && text !== "—" && text !== "=") {
+                        lastValidDayNum = d + 1; 
+                        break;
+                    }
                 }
             }
 
-            // 🎯 自動切換至最後有值的那一天並渲染
             document.getElementById('selectLogDay').value = lastValidDayNum.toString();
             loadSpecificDayLog();
         }
@@ -1053,7 +1074,7 @@
             }
 
             let logTime = rowData[baseColIdx];      
-            let logWorker = rowData[baseColIdx+1];  
+            let logWorker = rowData[baseColIdx+1];  // 🎯 這格就是 AC 欄寫入的真實提交人「尹奕竤」
             let logJsonStr = rowData[baseColIdx+2]; 
             let logMemo = rowData[baseColIdx+3] ? rowData[baseColIdx+3].toString().trim() : ""; 
             
@@ -1065,10 +1086,11 @@
                 originalOnDutyName = "";
             }
 
-            let badgeStyle = "background-color: #EBF5FB; color: #2874A6;"; 
+            // 🎯【身分判定邏輯回歸唯一信任標準】：亮起本尊或代理標籤
+            let badgeStyle = "background-color: #EBF5FB; color: #2874A6;"; // 本尊藍
             
             if (originalOnDutyName && logWorker !== originalOnDutyName) {
-                badgeStyle = "background-color: #FDF2E9; color: #E67E22;"; 
+                badgeStyle = "background-color: #FDF2E9; color: #E67E22;"; // 代理橘
             } else if (logMemo && logMemo.includes("非當值人員登錄")) {
                 badgeStyle = "background-color: #FDF2E9; color: #E67E22;"; 
             }
