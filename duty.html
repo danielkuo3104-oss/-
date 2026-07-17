@@ -886,6 +886,23 @@
                 html += `</div>`;
             });
             document.getElementById('formDynamicBody').innerHTML = html;
+
+            // 🎯【上一步功能核心修復】：更換左側按鈕功能為上一步，並實施分頁防禦
+            const prevBtn = document.getElementById('formPrevBtn');
+            if (prevBtn) {
+                if (currentFormPageIndex === 0) {
+                    prevBtn.innerText = "上一步";
+                    prevBtn.disabled = true;
+                    prevBtn.style.opacity = "0.4";
+                    prevBtn.style.cursor = "not-allowed";
+                } else {
+                    prevBtn.innerText = "上一步";
+                    prevBtn.disabled = false;
+                    prevBtn.style.opacity = "1";
+                    prevBtn.style.cursor = "pointer";
+                }
+            }
+
             document.getElementById('formActionBtn').innerText = (currentFormPageIndex === formPagesData.length - 1) ? "提交日誌表格" : "下一步";
         }
 
