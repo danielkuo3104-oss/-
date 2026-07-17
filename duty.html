@@ -1104,7 +1104,7 @@
             let s = weekStr.toString().replace(/\s+/g, ''); 
             if (s.includes("-")) {
                 let parts = s.split("-");
-                let startW = parts[0].length >= 4 ? parseInt(parts[0].substring(2,4), 10) : parseInt(parts[ Part 0], 10);
+                let startW = parts[0].length >= 4 ? parseInt(parts[0].substring(2,4), 10) : parseInt(parts[0], 10);
                 let endW = parts[1].length >= 4 ? parseInt(parts[1].substring(2,4), 10) : parseInt(parts[1], 10);
                 return (targetWeek >= startW && targetWeek <= endW);
             } else {
