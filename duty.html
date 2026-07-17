@@ -354,7 +354,10 @@
         }
 
         function fetchDormitoryData() {
-            Papa.parse(CSV_URL, {
+            // 🎯【快取破壞者】：在網址後方動態加上時間戳記 &t=...，逼迫 PapaParse 每次都抓試算表最新的實時資料
+            const cacheBusterUrl = `${CSV_URL}&t=${new Date().getTime()}`;
+            
+            Papa.parse(cacheBusterUrl, {
                 download: true,
                 header: false,
                 complete: function(results) {
@@ -1065,7 +1068,13 @@
                 }).then((clickResult) => {
                     if (clickResult.isConfirmed || clickResult.isDismissed) {
                         closeLogModal();
-                        window.location.reload(); 
+                        
+                        // 🎯【剛性強刷網頁】：利用加上隨機參數的方式，強迫瀏覽器 100% 拋棄舊快取，全面刷新
+                        if (window.location.href.includes('?')) {
+                            window.location.href = window.location.href.split('?')[0] + '?v=' + new Date().getTime();
+                        } else {
+                            window.location.href = window.location.href + '?v=' + new Date().getTime();
+                        }
                     }
                 });
             })
