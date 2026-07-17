@@ -881,7 +881,44 @@
             });
             document.getElementById('formDynamicBody').innerHTML = html;
 
-            // 🎯【上一步功能核心修復】：更換左側按鈕功能為上一步，並實施分頁防禦
+            // 🎯【核心智慧回填記憶】：如果 userAnswers 裡面已經有這題的答案，立刻讓元件恢復選取狀態！
+            page.questions.forEach((q, idx) => {
+                if (userAnswers[q.stem] !== undefined) {
+                    let savedVal = userAnswers[q.stem];
+                    let qKey = `Q_${currentFormPageIndex}_${idx}`;
+                    
+                    // 1. 回填下拉選單 (Select)
+                    let selectEl = document.querySelector(`select[data-key="${qKey}"]`);
+                    if (selectEl) { selectEl.value = savedVal; }
+                    
+                    // 2. 回填單選鈕 (Radio)
+                    let radioEls = document.querySelectorAll(`input[name="${qKey}"][type="radio"]`);
+                    if (radioEls.length > 0) {
+                        radioEls.forEach(radio => {
+                            if (radio.value.split("->")[0].trim() === savedVal) { radio.checked = true; }
+                        });
+                    }
+                    
+                    // 3. 回填多選題 (Checkbox 群組)
+                    let checkboxEls = document.querySelectorAll(`input[name="${qKey}"][type="checkbox"]`);
+                    if (checkboxEls.length > 0 && savedVal !== "皆未清倒") {
+                        let savedArr = savedVal.split(",").map(v => v.trim());
+                        checkboxEls.forEach(cb => {
+                            if (savedArr.includes(cb.value.trim())) { cb.checked = true; }
+                        });
+                    }
+                    
+                    // 4. 回填純打勾確認 (Pure Checkbox)
+                    let pureCheckEl = document.querySelector(`input[data-key="${qKey}"][data-type="pure-check"]`);
+                    if (pureCheckEl) { pureCheckEl.checked = (savedVal === "已完成"); }
+                    
+                    // 5. 回填文字輸入框 (Textarea)
+                    let textEl = document.querySelector(`textarea[data-key="${qKey}"]`);
+                    if (textEl && savedVal !== "無個別備註") { textEl.value = savedVal; }
+                }
+            });
+
+            // 上一步按鈕分頁狀態防禦
             const prevBtn = document.getElementById('formPrevBtn');
             if (prevBtn) {
                 if (currentFormPageIndex === 0) {
