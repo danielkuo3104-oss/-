@@ -609,6 +609,9 @@
         }
 
 
+        // ==========================================
+        // 📝 智慧問卷日誌回報核心控制引擎 
+        // ==========================================
         function initiateLogSystem() {
             const isTestMode = document.getElementById('cfgTestMode').value === "true";
             const makeupMode = document.getElementById('cfgMakeupMode').value;
@@ -621,6 +624,7 @@
             if (timeAnchor === "mock") {
                 const mockDateStr = document.getElementById('mockDate').value; 
                 const mockTimeStr = document.getElementById('mockTime').value; 
+                
                 let match = mockTimeStr.match(/(\d+)[\s:]+(\d+)/);
                 if (match) {
                     hour = parseInt(match[1], 10);
@@ -628,6 +632,7 @@
                     if (mockTimeStr.includes("下午") && hour < 12) hour += 12;
                     if (mockTimeStr.includes("上午") && hour === 12) hour = 0;
                 }
+                
                 const dateParts = mockDateStr.split("-");
                 if (dateParts.length === 3) {
                     simDateTime = new Date(parseInt(dateParts[0], 10), parseInt(dateParts[1], 10) - 1, parseInt(dateParts[2], 10), hour, min, 0);
@@ -661,6 +666,7 @@
                 }
 
                 if (isPrevDayEmpty) {
+                    // 🎯【優先權第一步】：先判斷昨天沒填時，是否在 10:30 寬限期內！
                     if (curTimeValue <= 1030) {
                         Swal.fire({
                             title: "昨日補填程序啟動",
@@ -670,12 +676,14 @@
                         currentFormModeLabel = isTestMode ? "逾期補填 (測試)" : "逾期補填";
                         submissionTargetDayNum = prevDayNum; 
                     } else {
+                        // 超過 10:30，補填逾期，自動轉為今日，並接續判斷 18:00 前請假時段
                         Swal.fire({
                             title: "昨日補填已逾期",
                             text: "昨日工作日誌已逾今日 10:30 補填寬限期，系統已關閉補登。本次填寫將自動轉為登錄「今日」值日資訊。",
                             icon: "warning"
                         });
                         submissionTargetDayNum = dayOfWeek; 
+                        
                         if (hour < 18) {
                             Swal.fire({
                                 title: "請假與提前休假申報模式",
@@ -684,9 +692,12 @@
                             });
                             isEarlyMeltMode = true;
                             currentFormModeLabel = isTestMode ? "提早休假回報 (測試)" : "提早休假回報";
+                        } else {
+                            currentFormModeLabel = isTestMode ? "正常回報 (測試)" : "正常回報";
                         }
                     }
                 } else {
+                    // 昨天有填，進入正常當日邏輯：判斷 18:00 前是否僅受理請假
                     if (hour < 18) {
                         Swal.fire({
                             title: "請假與提前休假申報模式",
@@ -698,6 +709,7 @@
                     }
                 }
             } else {
+                // 週一沒有昨天，只需判斷 18:00 前請假時段
                 if (hour < 18) {
                     Swal.fire({
                         title: "請假與提前休假申報模式",
