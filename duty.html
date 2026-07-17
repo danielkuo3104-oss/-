@@ -803,7 +803,9 @@
                 }
             }
 
+            // 🎯【核心優化】：引入補填旗標，如果是補填昨日(不論有無逾期)，一律豁免 18:00 前的請假裁剪
             let isMakeupModeRun = currentFormModeLabel.includes("補填");
+            
             formPagesData.forEach(page => {
                 page.questions.forEach(q => {
                     if(q.stem.includes("今日是否休假")) {
@@ -820,6 +822,7 @@
                 });
             });
 
+            // 🎯【強制防禦修復】：若是「補填逾期」雖然轉為今日，但 18:00 前同樣不可啟動請假熔斷，必須讓使用者填寫完整日常巡檢日誌！
             if (isEarlyMeltMode && !isMakeupModeRun) {
                 let meltedQuestions = formPagesData[0].questions.filter(q => {
                     return q.stem.includes("請選擇登錄人") || q.stem.includes("今日是否休假") || q.rule === "***" || q.isInstruction === true;
