@@ -292,8 +292,9 @@
                 <div id="formMetaInfo" style="color:var(--mora-purple-text);">使用版本: --</div>
             </div>
             <div class="form-body" id="formDynamicBody"></div>
-            <div class="form-footer">
-                <button class="f-btn f-btn-cancel" onclick="closeLogModal()">取消</button>
+           <div class="form-footer">
+                <!-- 🎯 修改此處：取消改為上一步，並綁定專屬 ID 與 handleFormPrevStep 函數 -->
+                <button class="f-btn f-btn-cancel" id="formPrevBtn" onclick="handleFormPrevStep()">上一步</button>
                 <button class="f-btn f-btn-next" id="formActionBtn" onclick="handleFormNextStep()">下一步</button>
             </div>
         </div>
@@ -904,6 +905,14 @@
             }
 
             document.getElementById('formActionBtn').innerText = (currentFormPageIndex === formPagesData.length - 1) ? "提交日誌表格" : "下一步";
+        }
+
+        // 🎯【新增】：上一步退頁處理引擎，無損返回前一頁修正資料
+        function handleFormPrevStep() {
+            if (currentFormPageIndex > 0) {
+                currentFormPageIndex--;
+                renderFormPage();
+            }
         }
 
         function handleFormNextStep() {
