@@ -273,7 +273,7 @@
         </div>
 
         <div class="footer-copyright">
-            <span class="footer-version">v2.8.9D</span><br>
+            <span class="footer-version">v2.8.10D</span><br>
             宿舍智慧居住管理看板系統<br>
             Copyright © Daniel. All Rights Reserved.
         </div>
@@ -630,8 +630,16 @@
                 if (match) {
                     hour = parseInt(match[1], 10);
                     min = parseInt(match[2], 10);
-                    if (mockTimeStr.includes("下午") && hour < 12) hour += 12;
-                    if (mockTimeStr.includes("上午") && hour === 12) hour = 0;
+                    
+                    // 🎯【完美進位修正】：精確劃分 12 小時制與原生 24 小時制時間軸
+                    if (mockTimeStr.includes("下午")) {
+                        if (hour < 12) hour += 12;
+                    } else if (mockTimeStr.includes("上午")) {
+                        // 只有當使用者輸入的是傳統「凌晨 12:XX」才歸零，若 hour 沒包含下午且是 12 則維持 12 (中午)
+                        if (hour === 12 && mockTimeStr.replace(/\s+/g, '').includes("上午12")) {
+                            hour = 0; 
+                        }
+                    }
                 }
                 
                 const dateParts = mockDateStr.split("-");
