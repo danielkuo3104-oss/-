@@ -895,12 +895,16 @@
 
             page.questions.forEach((q, idx) => {
                 if (q.rule === "***") return; 
+                
                 let qKey = `Q_${currentFormPageIndex}_${idx}`;
                 let selectEl = document.querySelector(`select[data-key="${qKey}"]`);
-                let radioEl = document.querySelector(`input[name="${qKey}"]:checked`);
                 let textEl = document.querySelector(`textarea[data-key="${qKey}"]`);
                 let pureCheckEl = document.querySelector(`input[data-key="${qKey}"][data-type="pure-check"]`);
                 
+                // 🎯【核心分流修正】：先明確用 type 分開 Radio 與 Checkbox，不讓 selector 誤判
+                let isCheckboxGroup = q.rule.includes("{ }"); 
+                let radioEl = !isCheckboxGroup ? document.querySelector(`input[name="${qKey}"]:checked`) : null;
+
                 if (selectEl) {
                     userAnswers[q.stem] = selectEl.value;
                 } else if (radioEl) {
@@ -912,11 +916,16 @@
                     userAnswers[q.stem] = textEl.value || "無個別備註";
                 } else if (pureCheckEl) {
                     userAnswers[q.stem] = pureCheckEl.checked ? "已完成" : "未完成";
-                } else {
+                } else if (isCheckboxGroup) {
+                    // 🎯【完美收集】：群組 Checkbox 複選框，100% 完整抓取所有打勾項目
                     let checkedBoxes = document.querySelectorAll(`input[name="${qKey}"]:checked`);
                     let arr = [];
-                    checkedBoxes.forEach(cb => arr.push(cb.value));
+                    checkedBoxes.forEach(cb => {
+                        arr.push(cb.value.trim());
+                    });
                     userAnswers[q.stem] = arr.length > 0 ? arr.join(", ") : "皆未清倒";
+                } else {
+                    userAnswers[q.stem] = "未填寫";
                 }
             });
 
