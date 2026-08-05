@@ -71,7 +71,6 @@
         .profile-title-name { font-size: 24px; font-weight: 700; color: #69779b; }
         .profile-subtitle-room { font-size: 14px; color: #8a929a; font-weight: 500; margin-top: 4px; }
         
-        /* 🎯 雙重升級：案件量＋點數現況 複合式莫蘭迪整合看板 */
         .profile-violation-dashboard {
             background: #f8fafc; border: 1px solid #e2e8f0;
             padding: 16px 20px; border-radius: 16px; display: flex; flex-direction: column; gap: 12px;
@@ -100,10 +99,9 @@
         .violation-dash-value {
             font-size: 15px; font-weight: 700; color: #475569;
         }
-        /* 色彩微調 */
         .appealable .violation-dash-value { color: #527996; } 
-        .settled .violation-dash-value { color: #bc6c3a; }     
-        .processing .violation-dash-value { color: #7e878f; }  
+        .settled .violation-dash-value { color: #bc6c3a; }      
+        .processing .violation-dash-value { color: #7e878f; }   
         .pts-total .violation-dash-value { color: #b56a6a; font-size: 16px; }
 
         .violation-dash-clean {
@@ -125,7 +123,6 @@
         .stat-label { font-size: 13px; color: #8a929a; margin-bottom: 10px; font-weight: 500; letter-spacing: 0.5px; }
         .stat-value { font-size: 24px; font-weight: 700; color: #3a414a; }
         
-        /* 🟥 房租專用莫蘭迪紅色系卡片樣式 */
         .stat-card.current-rent { background: linear-gradient(135deg, #ffffff 0%, #fbf5f5 100%); border: 1px solid rgba(181, 106, 106, 0.2); }
         .stat-card.current-rent .stat-value { color: #b56a6a; }
         .stat-card.current-rent .stat-label { color: #b56a6a; font-weight: 600; }
@@ -135,18 +132,15 @@
         .stat-card.current-ele { background: linear-gradient(135deg, #ffffff 0%, #fdf6f0 100%); border: solid 1px rgba(217, 119, 54, 0.15); }
         .stat-card.current-ele .stat-value { color: #d97736; }
         
-        /* 🎯 瓦斯費專用莫蘭迪粉色系卡片樣式 */
         .stat-card.current-gas { background: linear-gradient(135deg, #ffffff 0%, #f7f2f1 100%); border: solid 1px rgba(145, 123, 122, 0.2); }
         .stat-card.current-gas .stat-value { color: #917B7A; }
 
-        /* 🔒 平均用電度數專用莫蘭迪高級灰色系卡片樣式 */
         .stat-card.current-meter { background: linear-gradient(135deg, #ffffff 0%, #f2f4f7 100%); border: solid 1px rgba(138, 146, 154, 0.25); }
         .stat-card.current-meter .stat-value { color: #5a616a; }
 
         .chart-card { background: #ffffff; border-radius: 20px; padding: 24px; box-shadow: 0 8px 20px rgba(140, 149, 159, 0.08); border: 1px solid #e1e4e8; margin-bottom: 0; }
         .chart-container { position: relative; height: 350px; width: 100%; }
 
-        /* 🎛️ 莫蘭迪圖表切換按鈕 */
         .chart-toggle-container { display: flex; gap: 10px; margin-bottom: 15px; }
         .chart-toggle-btn {
             padding: 8px 16px; font-size: 12px; font-weight: 600; color: #8a929a;
@@ -158,7 +152,6 @@
             box-shadow: 0 4px 12px rgba(105, 119, 155, 0.15);
         }
 
-        /* 表格樣式 */
         .morandi-table-container { width: 100%; overflow-x: auto; background: #ffffff; border-radius: 20px; border: 1px solid #e1e4e8; margin-top: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.01); }
         .morandi-table { width: 100%; border-collapse: collapse; font-size: 14px; text-align: left; }
         .morandi-table th, .morandi-table td { padding: 16px 20px; border-bottom: 1px solid #f0f2f5; }
@@ -190,7 +183,6 @@
         .modal-row-summary { display:flex; justify-content:space-between; padding:14px 0 4px 0; font-size:14px; font-weight:700; color:#4a515a; border-top:2px dashed #cbd1d6; margin-top:10px; }
         .close-btn { width:100%; background:#69779b; color:white; border:none; padding:12px; border-radius:12px; font-size:14px; font-weight:600; cursor:pointer; margin-top:20px; transition:background 0.2s; }
 
-        /* 📱 手機 RWD 自動縮合、防溢出樣式調整 */
         @media (max-width: 768px) {
             .header-banner { padding: 35px 20px 45px 20px; }
             .header-banner h1 { font-size: 22px; }
@@ -205,15 +197,13 @@
             
             .profile-header-flex { flex-direction: column; align-items: flex-start; gap: 14px; }
             
-            /* 🎯 關鍵修正：手機版改為上下垂直排列，防寬度溢出 */
             .profile-violation-dashboard { width: 100%; box-sizing: border-box; padding: 14px; }
             .violation-dash-group { flex-direction: column; gap: 8px; }
             .violation-dash-group.top-row { border-bottom: none; padding-bottom: 0; margin-bottom: 0; }
             .violation-dash-item { text-align: left; display: flex; justify-content: space-between; width: 100%; padding: 2px 0; }
-            .violation-dash-item:not(:last-child)::after { display: none; } /* 隱藏水平分隔線 */
+            .violation-dash-item:not(:last-child)::after { display: none; }
             .violation-dash-label { margin-bottom: 0; }
             
-            /* 在手機版兩組數據中間補一條精緻水平虛線 */
             .violation-dash-group.top-row::after {
                 content: ''; width: 100%; border-top: 1px dashed #e2e8f0; margin-top: 6px; margin-bottom: 2px; display: block;
             }
@@ -274,7 +264,6 @@
             前往資訊登錄系統
         </a>
 
-        <!-- 🔥 精選修改：移動至第二順位，並改用醒目且具有高級質感的莫蘭迪煙燻紫棕色調與 3D 厚邊設計 -->
         <a href="duty.html" class="menu-link" style="background: #8B7A93; color: #ffffff; font-weight: 700; border: 2px solid #6F5E77; border-bottom: 5px solid #56465D; margin-bottom: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.05); text-shadow: 0 1px 2px rgba(0,0,0,0.1); border-radius: 16px;">
             進入宿舍值日中心
         </a>
@@ -311,7 +300,6 @@
     }
 
     document.addEventListener("DOMContentLoaded", function() {
-        // 確保防錯：如果外部沒有定義 isHomePage，自動給予 false 安全降級
         const isHome = (typeof isHomePage !== 'undefined') ? isHomePage : false;
         const homeLink = document.getElementById('homeMenuLink');
         
@@ -344,6 +332,14 @@
         let globalParsedData = []; 
         let personalChartInstance = null;
         let currentChartMode = 'cost'; 
+
+        // 🎯 安全數字解析（清除 # 字號及空白，防止 NaN）
+        function parseCleanNumber(val) {
+            if (!val) return 0;
+            let str = String(val).replace(/#/g, '').replace(/["'\uFEFF]/g, '').trim();
+            let num = parseFloat(str);
+            return isNaN(num) ? 0 : num;
+        }
 
         function updateTimestamp() {
             const now = new Date();
@@ -451,7 +447,11 @@
                 const deltaIdx = { "內大": 7, "內小": 8, "中": 9, "外": 10 };
                 const roomCostIdx = { "內大": 12, "內小": 13, "中": 14, "外": 15 };
                 const rentCostIdx = { "內大": 23, "內小": 24, "中": 25, "外": 26 };
-                const gasIdx = 56; 
+                const gasIdx = 56; // BE 欄：總瓦斯費
+
+                // 🎯 核心映射：房客個人瓦斯費與水費精確欄位
+                const gasRoomCostIdx = { "內大": 57, "內小": 58, "中": 59, "外": 60 }; // BF - BI 欄
+                const waterRoomCostIdx = { "內大": 61, "內小": 62, "中": 63, "外": 64 }; // BJ - BM 欄
 
                 globalParsedData = [];
 
@@ -459,27 +459,46 @@
                     const cells = lines[i].split(",").map(c => c.replace(/["'\uFEFF]/g, '').trim());
                     if(cells.length < 27 || !cells[monthIdx] || cells[monthIdx].includes("基準")) continue;
 
+                    // 讀取並清洗試算表個人水費與瓦斯費
+                    const waterRooms = {
+                        "內大": parseCleanNumber(cells[waterRoomCostIdx["內大"]]),
+                        "內小": parseCleanNumber(cells[waterRoomCostIdx["內小"]]),
+                        "中": parseCleanNumber(cells[waterRoomCostIdx["中"]]),
+                        "外": parseCleanNumber(cells[waterRoomCostIdx["外"]])
+                    };
+
+                    const gasRooms = {
+                        "內大": parseCleanNumber(cells[gasRoomCostIdx["內大"]]),
+                        "內小": parseCleanNumber(cells[gasRoomCostIdx["內小"]]),
+                        "中": parseCleanNumber(cells[gasRoomCostIdx["中"]]),
+                        "外": parseCleanNumber(cells[gasRoomCostIdx["外"]])
+                    };
+
                     globalParsedData.push({
                         month: cells[monthIdx],
-                        waterPerRoom: Math.floor((parseFloat(cells[waterIdx]) || 0) / 4),
-                        gasPerRoom: Math.floor((parseFloat(cells[gasIdx]) || 0) / 4),
+                        waterTotal: parseCleanNumber(cells[waterIdx]),
+                        waterRooms: waterRooms,
+                        waterPerRoom: Math.floor((parseCleanNumber(cells[waterIdx])) / 4), // 預設平均備用值
+                        gasTotal: parseCleanNumber(cells[gasIdx]),
+                        gasRooms: gasRooms,
+                        gasPerRoom: Math.floor((parseCleanNumber(cells[gasIdx])) / 4), // 預設平均備用值
                         deltaMeters: {
-                            "內大": Number(((parseFloat(cells[deltaIdx["內大"]]) || 0) / 10).toFixed(1)),
-                            "內小": Number(((parseFloat(cells[deltaIdx["內小"]]) || 0) / 10).toFixed(1)),
-                            "中": Number(((parseFloat(cells[deltaIdx["長"]]) || parseFloat(cells[deltaIdx["中"]]) || 0) / 10).toFixed(1)),
-                            "外": Number(((parseFloat(cells[deltaIdx["外"]]) || 0) / 10).toFixed(1))
+                            "內大": Number(((parseCleanNumber(cells[deltaIdx["內大"]])) / 10).toFixed(1)),
+                            "內小": Number(((parseCleanNumber(cells[deltaIdx["內小"]])) / 10).toFixed(1)),
+                            "中": Number(((parseCleanNumber(cells[deltaIdx["長"]]) || parseCleanNumber(cells[deltaIdx["中"]])) / 10).toFixed(1)),
+                            "外": Number(((parseCleanNumber(cells[deltaIdx["外"]])) / 10).toFixed(1))
                         },
                         rooms: {
-                            "內大": parseFloat(cells[roomCostIdx["內大"]]) || 0,
-                            "內小": parseFloat(cells[roomCostIdx["內小"]]) || 0,
-                            "中": parseFloat(cells[roomCostIdx["中"]]) || 0,
-                            "外": parseFloat(cells[roomCostIdx["外"]]) || 0
+                            "內大": parseCleanNumber(cells[roomCostIdx["內大"]]),
+                            "內小": parseCleanNumber(cells[roomCostIdx["內小"]]),
+                            "中": parseCleanNumber(cells[roomCostIdx["中"]]),
+                            "外": parseCleanNumber(cells[roomCostIdx["外"]])
                         },
                         rents: {
-                            "內大": parseFloat(cells[rentCostIdx["內大"]]) || 0,
-                            "內小": parseFloat(cells[rentCostIdx["內小"]]) || 0,
-                            "中": parseFloat(cells[rentCostIdx["中文"]]) || parseFloat(cells[rentCostIdx["中"]]) || 0,
-                            "外": parseFloat(cells[rentCostIdx["外"]]) || 0
+                            "內大": parseCleanNumber(cells[rentCostIdx["內大"]]),
+                            "內小": parseCleanNumber(cells[rentCostIdx["內小"]]),
+                            "中": parseCleanNumber(cells[rentCostIdx["中文"]]) || parseCleanNumber(cells[rentCostIdx["中"]]),
+                            "外": parseCleanNumber(cells[rentCostIdx["外"]])
                         }
                     });
                 }
@@ -508,9 +527,27 @@
             let datasets = [];
             if (currentChartMode === 'cost') {
                 datasets = [
-                    { label: '水費金額', data: globalParsedData.map(d => d.waterPerRoom > 0 ? d.waterPerRoom : null), borderColor: '#a5c0d1', backgroundColor: 'transparent', borderWidth: 2.5, tension: 0.2, spanGaps: true },
-                    { label: '電費金額', data: globalParsedData.map(d => (d.rooms[roomKey] || 0) > 0 ? d.rooms[roomKey] : null), borderColor: '#d97736', backgroundColor: 'transparent', borderWidth: 2.5, tension: 0.2, spanGaps: true },
-                    { label: '瓦斯費金額', data: globalParsedData.map(d => d.gasPerRoom > 0 ? d.gasPerRoom : null), borderColor: '#917B7A', backgroundColor: 'transparent', borderWidth: 2.5, tension: 0.2, spanGaps: true }
+                    { 
+                        label: '水費金額', 
+                        data: globalParsedData.map(d => {
+                            let val = d.waterRooms[roomKey] !== undefined ? d.waterRooms[roomKey] : d.waterPerRoom;
+                            return val >= 0 ? val : null;
+                        }), 
+                        borderColor: '#a5c0d1', backgroundColor: 'transparent', borderWidth: 2.5, tension: 0.2, spanGaps: true 
+                    },
+                    { 
+                        label: '電費金額', 
+                        data: globalParsedData.map(d => (d.rooms[roomKey] || 0) >= 0 ? d.rooms[roomKey] : null), 
+                        borderColor: '#d97736', backgroundColor: 'transparent', borderWidth: 2.5, tension: 0.2, spanGaps: true 
+                    },
+                    { 
+                        label: '瓦斯費金額', 
+                        data: globalParsedData.map(d => {
+                            let val = d.gasRooms[roomKey] !== undefined ? d.gasRooms[roomKey] : d.gasPerRoom;
+                            return val >= 0 ? val : null;
+                        }), 
+                        borderColor: '#917B7A', backgroundColor: 'transparent', borderWidth: 2.5, tension: 0.2, spanGaps: true 
+                    }
                 ];
             } else {
                 datasets = [
@@ -528,7 +565,6 @@
             });
         }
 
-        // 🎯 渲染與排版整合修正（已移除括號代號標籤）
         function renderPersonalSection() {
             const roomKey = document.getElementById('personalTenantSelect').value;
             if(!roomKey || globalParsedData.length === 0) return;
@@ -540,16 +576,18 @@
 
             const currentRent = latest.rents[roomKey] || 0;
             const currentEle = latest.rooms[roomKey] || 0;
-            const currentWater = latest.waterPerRoom;
-            const currentGas = latest.gasPerRoom;
+            
+            // 🎯 取用個人當月精確實付水費與瓦斯費（若未填則自動退回基礎分攤）
+            const currentWater = latest.waterRooms[roomKey] !== undefined ? latest.waterRooms[roomKey] : latest.waterPerRoom;
+            const currentGas = latest.gasRooms[roomKey] !== undefined ? latest.gasRooms[roomKey] : latest.gasPerRoom;
 
             const validMeterEntries = globalParsedData.filter(d => (d.deltaMeters[roomKey] || 0) > 0);
             const avgMeterVal = validMeterEntries.length > 0 ? (validMeterEntries.reduce((sum, d) => sum + d.deltaMeters[roomKey], 0) / validMeterEntries.length).toFixed(1) : 0;
 
             const totalRentSum = globalParsedData.reduce((sum, d) => sum + (d.rents[roomKey] || 0), 0);
-            const totalWaterSum = globalParsedData.reduce((sum, d) => sum + d.waterPerRoom, 0);
+            const totalWaterSum = globalParsedData.reduce((sum, d) => sum + (d.waterRooms[roomKey] !== undefined ? d.waterRooms[roomKey] : d.waterPerRoom), 0);
             const totalEleSum = globalParsedData.reduce((sum, d) => sum + (d.rooms[roomKey] || 0), 0);
-            const totalGasSum = globalParsedData.reduce((sum, d) => sum + d.gasPerRoom, 0);
+            const totalGasSum = globalParsedData.reduce((sum, d) => sum + (d.gasRooms[roomKey] !== undefined ? d.gasRooms[roomKey] : d.gasPerRoom), 0);
             const overallGrandTotal = totalRentSum + totalWaterSum + totalEleSum + totalGasSum;
 
             let violationElement = "";
@@ -651,14 +689,19 @@
                         </thead>
                         <tbody>
                             ${globalParsedData.map(d => {
-                                const rowTotal = (d.rents[roomKey]||0) + d.waterPerRoom + (d.rooms[roomKey]||0) + d.gasPerRoom;
+                                const rentVal = d.rents[roomKey] || 0;
+                                const waterVal = d.waterRooms[roomKey] !== undefined ? d.waterRooms[roomKey] : d.waterPerRoom;
+                                const eleVal = d.rooms[roomKey] || 0;
+                                const gasVal = d.gasRooms[roomKey] !== undefined ? d.gasRooms[roomKey] : d.gasPerRoom;
+                                const rowTotal = rentVal + waterVal + eleVal + gasVal;
+
                                 return `
                                 <tr>
                                     <td>${d.month}</td>
-                                    <td class="td-rent">NT$ ${(d.rents[roomKey]||0).toLocaleString()}</td>
-                                    <td class="td-water">NT$ ${d.waterPerRoom.toLocaleString()}</td>
-                                    <td class="td-ele">NT$ ${(d.rooms[roomKey]||0).toLocaleString()}</td>
-                                    <td class="td-gas">NT$ ${d.gasPerRoom.toLocaleString()}</td>
+                                    <td class="td-rent">NT$ ${rentVal.toLocaleString()}</td>
+                                    <td class="td-water">NT$ ${waterVal.toLocaleString()}</td>
+                                    <td class="td-ele">NT$ ${eleVal.toLocaleString()}</td>
+                                    <td class="td-gas">NT$ ${gasVal.toLocaleString()}</td>
                                     <td class="table-total-bold">NT$ ${rowTotal.toLocaleString()}</td>
                                 </tr>`;
                             }).join('')}
@@ -709,9 +752,9 @@
                 let displayStr = "";
                 
                 if(type === 'rent') { val = item.rents[roomKey] || 0; displayStr = `NT$ ${val.toLocaleString()}`; }
-                else if(type === 'water') { val = item.waterPerRoom; displayStr = `NT$ ${val.toLocaleString()}`; }
+                else if(type === 'water') { val = item.waterRooms[roomKey] !== undefined ? item.waterRooms[roomKey] : item.waterPerRoom; displayStr = `NT$ ${val.toLocaleString()}`; }
                 else if(type === 'ele') { val = item.rooms[roomKey] || 0; displayStr = `NT$ ${val.toLocaleString()}`; }
-                else if(type === 'gas') { val = item.gasPerRoom || 0; displayStr = `NT$ ${val.toLocaleString()}`; }
+                else if(type === 'gas') { val = item.gasRooms[roomKey] !== undefined ? item.gasRooms[roomKey] : item.gasPerRoom; displayStr = `NT$ ${val.toLocaleString()}`; }
                 else if(type === 'meter') { val = item.deltaMeters[roomKey] || 0; meterSum += val; displayStr = `${val} 度`; }
 
                 html += `<div class="modal-row"><span class="modal-row-label">${item.month}</span><span class="modal-row-value">${displayStr}</span></div>`;
