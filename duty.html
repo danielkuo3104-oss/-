@@ -938,101 +938,67 @@
         }
 
         // ==========================================
-        // 智慧問卷日誌回報核心控制引擎 (精準時間軸修復版)
+        // 智慧問卷日誌回報核心控制引擎 (絕對時間防呆修復版)
         // ==========================================
         function initiateLogSystem() {
             const isTestMode = document.getElementById('cfgTestMode').value === "true";
             const makeupMode = document.getElementById('cfgMakeupMode').value;
             const timeAnchor = document.getElementById('cfgTimeAnchor').value;
             
-            let simDateTime = new Date();
-            let hour = simDateTime.getHours();
-            let min = simDateTime.getMinutes();
+            let simDateTime = new Date(); // 直接抓取裝置當下即時真實時間
 
-            if (timeAnchor === "mock") {
+            // 僅在「測試模式」且選取「mock」時，才讀取模擬選單時間
+            if (isTestMode && timeAnchor === "mock") {
                 const mockDateStr = document.getElementById('mockDate').value; 
                 const mockTimeStr = document.getElementById('mockTime').value; 
-                
-                let match = mockTimeStr.match(/(\d+)[\s:]+(\d+)/);
-                if (match) {
-                    hour = parseInt(match[1], 10);
-                    min = parseInt(match[2], 10);
-                    
-                    if (mockTimeStr.includes("下午") && hour < 12) hour += 12;
-                    if (mockTimeStr.includes("上午") && hour === 12) hour = 0;
-                }
-                const dateParts = mockDateStr.split("-");
-                if (dateParts.length === 3) {
-                    simDateTime = new Date(parseInt(dateParts[0], 10), parseInt(dateParts[1], 10) - 1, parseInt(dateParts[2], 10), hour, min, 0);
+                if (mockDateStr && mockTimeStr) {
+                    simDateTime = new Date(`${mockDateStr}T${mockTimeStr}`);
                 }
             }
             
-            const dayOfWeek = simDateTime.getDay(); // 0=週日, 1=週一 ... 5=週五, 6=週六
+            let hour = simDateTime.getHours();
+            let min = simDateTime.getMinutes();
+            const dayOfWeek = simDateTime.getDay(); // 0=週日, 1=週一, ..., 5=週五, 6=週六
             const curTimeValue = hour * 100 + min;
 
             currentFormModeLabel = "正常回報";
             isEarlyMeltMode = false; 
             submissionTargetDayNum = dayOfWeek; 
 
-            // 六日不排班
+            // 六、日不排班
             if (!isTestMode && (dayOfWeek === 0 || dayOfWeek === 6)) {
                 Swal.fire("宿舍休假期間", "目前為週末六日休假不排班時段，無需填寫工作日誌系統。", "info");
                 return;
             }
 
-            // 🎯 時間軸精準判定：
-            // 情況 A：當日 18:00 前（包含凌晨至下午 17:59）
-            if (!isTestMode && hour < 18) {
-                // 檢查前一日是否空白，且目前是否在隔日 00:00 ~ 12:00 補填寬限期內
-                let prevDayNum = (dayOfWeek === 1) ? 5 : dayOfWeek - 1; // 週一前一天算週五(5)，其餘減1
-                const reporterCsvColMapping = [0, 16, 20, 24, 28, 32];
-                let prevDayReporterColIdx = reporterCsvColMapping[prevDayNum]; 
-                
-                let targetRowIdx = getSystemTargetRowIdx(); 
-                let currentOnDutyRow = globalRawData[targetRowIdx]; 
-                
-                let isPrevDayEmpty = true;
-                if (currentOnDutyRow && currentOnDutyRow[prevDayReporterColIdx]) {
-                    let repText = currentOnDutyRow[prevDayReporterColIdx].toString().trim();
-                    if (repText !== "" && repText !== "—" && repText !== "=") {
-                        isPrevDayEmpty = false;
-                    }
-                }
-
-                // 只有「前一日未填」且「時間在 00:00~12:00 寬限期」且「前一日不是假期間」才啟動補填
-                if (isPrevDayEmpty && curTimeValue <= 1200 && dayOfWeek !== 1) {
-                    Swal.fire({
-                        title: "昨日補填程序啟動",
-                        text: "系統偵測到前一日（昨日）之工作日誌尚未填寫。目前處於寬限時間內，本次提交將自動寫入「昨日」日誌中，且系統備註將加註「補填」。",
-                        icon: "info"
-                    });
-                    currentFormModeLabel = isTestMode ? "補填 (測試)" : "補填";
-                    submissionTargetDayNum = prevDayNum; 
-                } else {
-                    // 若前一日已填寫，或非補填寬限期，凌晨/白天統一進入「提前休假/請假回報」模式
+            // 🎯 時間軸精準嚴格阻絕：
+            if (!isTestMode) {
+                if (hour < 18) {
+                    // 當日 18:00 前（包含凌晨 01:28、白天下午等）
+                    // 在正式模式下，18:00 前絕不開放日常巡檢填寫，一律進入「提前休假/請假回報模式」
                     Swal.fire({
                         title: "請假與提前休假申報模式",
                         text: "當日日常巡檢於 18:00 起開放登錄，此前時段僅受理請假或提前休假申報。",
                         icon: "warning"
                     });
                     isEarlyMeltMode = true;
-                    currentFormModeLabel = isTestMode ? "提早休假回報 (測試)" : "提早休假回報";
+                    currentFormModeLabel = "提早休假回報"; // 絕不包含「補填」字眼
+                    submissionTargetDayNum = dayOfWeek;
+                } else {
+                    // 當日 18:00 ~ 23:59 正常開放當日巡檢
+                    currentFormModeLabel = "正常回報";
                     submissionTargetDayNum = dayOfWeek;
                 }
             } else {
-                // 情況 B：當日 18:00 後，進入正常當日巡檢登錄
-                submissionTargetDayNum = dayOfWeek;
-                currentFormModeLabel = isTestMode ? "正常回報 (測試)" : "正常回報";
-            }
-
-            if (!isTestMode && makeupMode === "never" && currentFormModeLabel.includes("補填")) {
-                Swal.fire("權限遭拒", "管理員已關閉本系統之補填功能，無法補登過期日誌。", "error");
-                return;
+                // 測試模式下的補填邏輯
+                if (currentFormModeLabel.includes("補填") && makeupMode === "never") {
+                    Swal.fire("權限遭拒", "管理員已關閉本系統之補填功能，無法補登過期日誌。", "error");
+                    return;
+                }
             }
 
             compileDynamicFormLayout(dayOfWeek === 5); 
         }
-
         function proceedWithDuplicateCheck(mockDateStr, reporter, finalJsonString, isMakeupMode, isTestMode, isProxyAgentRun) {
             let dIdx = submissionTargetDayNum; 
             if(dIdx < 1) dIdx = 1; if(dIdx > 5) dIdx = 5;
