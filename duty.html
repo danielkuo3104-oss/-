@@ -173,15 +173,15 @@
                 <div class="test-row">
                     <label>測試模式 (全忽略限制)：</label>
                     <select id="cfgTestMode" onchange="renderMainSystem()">
-                        <option value="true" selected>開啟 (隨時可完整填寫)</option>
-                        <option value="false">關閉 (嚴格執行正式定時規則)</option>
+                        <option value="true">開啟 (隨時可完整填寫)</option>
+                        <option value="false" selected>關閉 (嚴格執行正式定時規則)</option>
                     </select>
                 </div>
                 <div class="test-row">
                     <label>時間計算基準來源：</label>
                     <select id="cfgTimeAnchor" onchange="renderMainSystem()">
-                        <option value="mock" selected>依照模擬面板時間</option>
-                        <option value="real">依照當前手機真實時間</option>
+                        <option value="mock">依照模擬面板時間</option>
+                        <option value="real" selected>依照當前手機真實時間</option>
                     </select>
                 </div>
                 <div class="test-row">
@@ -194,11 +194,11 @@
                 </div>
                 <div class="test-row">
                     <label>虛擬當前模擬日期：</label>
-                    <input type="date" id="mockDate" value="2026-07-16" onchange="renderMainSystem()">
+                    <input type="date" id="mockDate" onchange="renderMainSystem()">
                 </div>
                 <div class="test-row">
                     <label>虛擬當前模擬時間：</label>
-                    <input type="time" id="mockTime" value="12:00" onchange="renderMainSystem()">
+                    <input type="time" id="mockTime" onchange="renderMainSystem()">
                 </div>
             </div>
         </div>
@@ -371,15 +371,25 @@
         const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzU_H6ld7TeMZAg6avRGDehYfN0ybUs9Na9-LLPUs7f0pJndTSdAoD1TKZ4VLgO9VbK/exec";
 
         document.addEventListener("DOMContentLoaded", function() {
-            // 🔥 當面板隱藏時，自動將調控選單強制鎖定為「正式模式」與「真實時間」
+            // 自動將面板的日期與時間初始化為「當下真實時間」
+            let now = new Date();
+            let yr = now.getFullYear();
+            let mo = (now.getMonth() + 1).toString().padStart(2, '0');
+            let da = now.getDate().toString().padStart(2, '0');
+            let hr = now.getHours().toString().padStart(2, '0');
+            let mi = now.getMinutes().toString().padStart(2, '0');
+            
+            document.getElementById('mockDate').value = `${yr}-${mo}-${da}`;
+            document.getElementById('mockTime').value = `${hr}:${mi}`;
+
+            // 當面板隱藏時，自動強制鎖定為正式營運模式 (使用真實時間)
             if (!SHOW_DEV_PANEL_BUTTON) {
                 document.getElementById('devToggleBtnWrapper').classList.add('hidden');
                 document.getElementById('devControlPanel').classList.add('hidden');
                 
-                // 自動切換為正式營運設定
-                document.getElementById('cfgTestMode').value = "false";     // 關閉測試模式
-                document.getElementById('cfgTimeAnchor').value = "real";    // 使用真實手機時間
-                document.getElementById('cfgMakeupMode').value = "normal";  // 執行正常補填寬限規則
+                document.getElementById('cfgTestMode').value = "false";
+                document.getElementById('cfgTimeAnchor').value = "real";
+                document.getElementById('cfgMakeupMode').value = "normal";
             }
             
             fetchDormitoryData();
