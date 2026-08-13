@@ -362,10 +362,29 @@
 
     <script>
         // 共用全域變數與系統設定
-        const SHOW_DEV_PANEL_BUTTON = true;
+        // 共用全域變數與系統設定
+        // 💡 開關說明：
+        // false = 正式營運模式 (自動隱藏面板、強制使用真實手機時間、嚴格執行時間與補填規則)
+        // true  = 開發調試模式 (顯示面板、可自由切換模擬時間與測試開關)
+        const SHOW_DEV_PANEL_BUTTON = false; 
+        
         const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQkqhXCPp4XiHKCEpI3pz4pzcu3sQreQ_qNRLger00ULCHFr9cTbXHMQqAfk7dLa_gUBAIBSJ5sZM4F/pub?gid=1984800604&single=true&output=csv";
         const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzU_H6ld7TeMZAg6avRGDehYfN0ybUs9Na9-LLPUs7f0pJndTSdAoD1TKZ4VLgO9VbK/exec";
-        
+
+        document.addEventListener("DOMContentLoaded", function() {
+            // 🔥 當面板隱藏時，自動將調控選單強制鎖定為「正式模式」與「真實時間」
+            if (!SHOW_DEV_PANEL_BUTTON) {
+                document.getElementById('devToggleBtnWrapper').classList.add('hidden');
+                document.getElementById('devControlPanel').classList.add('hidden');
+                
+                // 自動切換為正式營運設定
+                document.getElementById('cfgTestMode').value = "false";     // 關閉測試模式
+                document.getElementById('cfgTimeAnchor').value = "real";    // 使用真實手機時間
+                document.getElementById('cfgMakeupMode').value = "normal";  // 執行正常補填寬限規則
+            }
+            
+            fetchDormitoryData();
+        });
         let globalRawData = [];
         let parsedSchedule = [];
         let parsedStats = {};
