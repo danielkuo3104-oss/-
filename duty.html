@@ -928,7 +928,7 @@
         }
 
         // ==========================================
-        // 智慧問卷日誌回報核心控制引擎
+        // 智慧問卷日誌回報核心控制引擎 (對位修復完整版)
         // ==========================================
         function initiateLogSystem() {
             const isTestMode = document.getElementById('cfgTestMode').value === "true";
@@ -970,9 +970,12 @@
             }
 
             if (dayOfWeek !== 1) { 
-                let prevDayNum = dayOfWeek - 1; 
-                const frontColumnMapping = [0, 15, 19, 23, 27, 31];
-                let prevDayReporterColIdx = frontColumnMapping[prevDayNum] + 1; 
+                let prevDayNum = dayOfWeek - 1; // 1=週一, 2=週二, 3=週三, 4=週四
+                
+                // 🎯 修正對位：試算表中各日「登錄人」欄位在 CSV 陣列(0-based)中的精確索引
+                // 週一=Q欄(16), 週二=U欄(20), 週三=Y欄(24), 週四=AC欄(28), 週五=AG欄(32)
+                const reporterCsvColMapping = [0, 16, 20, 24, 28, 32];
+                let prevDayReporterColIdx = reporterCsvColMapping[prevDayNum]; 
                 
                 let targetRowIdx = getSystemTargetRowIdx(); 
                 let currentOnDutyRow = globalRawData[targetRowIdx]; 
@@ -1036,8 +1039,12 @@
         function proceedWithDuplicateCheck(mockDateStr, reporter, finalJsonString, isMakeupMode, isTestMode, isProxyAgentRun) {
             let dIdx = submissionTargetDayNum; 
             if(dIdx < 1) dIdx = 1; if(dIdx > 5) dIdx = 5;
-            const frontColumnMapping = [0, 15, 19, 23, 27, 31];
-            let baseCol = frontColumnMapping[dIdx]; 
+            
+            // 🎯 修正對位：試算表中各日「登錄時間」欄位在 CSV 陣列(0-based)中的精確索引
+            // 週一=P欄(15), 週二=T欄(19), 週三=X欄(23), 週四=AB欄(27), 週五=AF欄(31)
+            const timeCsvColMapping = [0, 15, 19, 23, 27, 31];
+            let baseCol = timeCsvColMapping[dIdx]; 
+            
             let targetRowIdx = getSystemTargetRowIdx(); 
             let isDuplicateData = false;
             let rowData = globalRawData[targetRowIdx]; 
