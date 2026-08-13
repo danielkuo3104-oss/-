@@ -928,7 +928,7 @@
         }
 
         // ==========================================
-        // 智慧問卷日誌回報核心控制引擎 (對位修復完整版)
+        // 智慧問卷日誌回報核心控制引擎 (精準時間軸修復版)
         // ==========================================
         function initiateLogSystem() {
             const isTestMode = document.getElementById('cfgTestMode').value === "true";
@@ -957,23 +957,24 @@
                 }
             }
             
-            const dayOfWeek = simDateTime.getDay(); 
+            const dayOfWeek = simDateTime.getDay(); // 0=週日, 1=週一 ... 5=週五, 6=週六
             const curTimeValue = hour * 100 + min;
 
             currentFormModeLabel = "正常回報";
             isEarlyMeltMode = false; 
             submissionTargetDayNum = dayOfWeek; 
 
+            // 六日不排班
             if (!isTestMode && (dayOfWeek === 0 || dayOfWeek === 6)) {
                 Swal.fire("宿舍休假期間", "目前為週末六日休假不排班時段，無需填寫工作日誌系統。", "info");
                 return;
             }
 
-            if (dayOfWeek !== 1) { 
-                let prevDayNum = dayOfWeek - 1; // 1=週一, 2=週二, 3=週三, 4=週四
-                
-                // 🎯 修正對位：試算表中各日「登錄人」欄位在 CSV 陣列(0-based)中的精確索引
-                // 週一=Q欄(16), 週二=U欄(20), 週三=Y欄(24), 週四=AC欄(28), 週五=AG欄(32)
+            // 🎯 時間軸精準判定：
+            // 情況 A：當日 18:00 前（包含凌晨至下午 17:59）
+            if (!isTestMode && hour < 18) {
+                // 檢查前一日是否空白，且目前是否在隔日 00:00 ~ 12:00 補填寬限期內
+                let prevDayNum = (dayOfWeek === 1) ? 5 : dayOfWeek - 1; // 週一前一天算週五(5)，其餘減1
                 const reporterCsvColMapping = [0, 16, 20, 24, 28, 32];
                 let prevDayReporterColIdx = reporterCsvColMapping[prevDayNum]; 
                 
@@ -983,41 +984,22 @@
                 let isPrevDayEmpty = true;
                 if (currentOnDutyRow && currentOnDutyRow[prevDayReporterColIdx]) {
                     let repText = currentOnDutyRow[prevDayReporterColIdx].toString().trim();
-                    isPrevDayEmpty = (repText === "" || repText === "—" || repText === "=");
+                    if (repText !== "" && repText !== "—" && repText !== "=") {
+                        isPrevDayEmpty = false;
+                    }
                 }
 
-                if (isPrevDayEmpty) {
-                    if (curTimeValue <= 1200) {
-                        Swal.fire({
-                            title: "昨日補填程序啟動",
-                            text: "系統偵測到前一日（昨日）之工作日誌尚未填寫。目前處於寬限時間內，本次提交將自動寫入「昨日」日誌中，且系統備註將加註「補填」。",
-                            icon: "info"
-                        });
-                        currentFormModeLabel = isTestMode ? "補填 (測試)" : "補填";
-                        submissionTargetDayNum = prevDayNum; 
-                    } else {
-                        Swal.fire({
-                            title: "昨日補填已逾期",
-                            text: "昨日工作日誌已逾今日 12:00 補填寬限期，系統已關閉補登通道。本次填寫將自動轉為登錄「今日」值日資訊。",
-                            icon: "warning"
-                        });
-                        submissionTargetDayNum = dayOfWeek; 
-                        isEarlyMeltMode = false; 
-                        currentFormModeLabel = isTestMode ? "正常回報 (測試)" : "正常回報";
-                    }
+                // 只有「前一日未填」且「時間在 00:00~12:00 寬限期」且「前一日不是假期間」才啟動補填
+                if (isPrevDayEmpty && curTimeValue <= 1200 && dayOfWeek !== 1) {
+                    Swal.fire({
+                        title: "昨日補填程序啟動",
+                        text: "系統偵測到前一日（昨日）之工作日誌尚未填寫。目前處於寬限時間內，本次提交將自動寫入「昨日」日誌中，且系統備註將加註「補填」。",
+                        icon: "info"
+                    });
+                    currentFormModeLabel = isTestMode ? "補填 (測試)" : "補填";
+                    submissionTargetDayNum = prevDayNum; 
                 } else {
-                    if (hour < 18) {
-                        Swal.fire({
-                            title: "請假與提前休假申報模式",
-                            text: "當日日常巡檢於 18:00 起開放登錄，此前時段僅受理請假或提前休假申報。",
-                            icon: "warning"
-                        });
-                        isEarlyMeltMode = true;
-                        currentFormModeLabel = isTestMode ? "提早休假回報 (測試)" : "提早休假回報";
-                    }
-                }
-            } else {
-                if (hour < 18) {
+                    // 若前一日已填寫，或非補填寬限期，凌晨/白天統一進入「提前休假/請假回報」模式
                     Swal.fire({
                         title: "請假與提前休假申報模式",
                         text: "當日日常巡檢於 18:00 起開放登錄，此前時段僅受理請假或提前休假申報。",
@@ -1025,7 +1007,12 @@
                     });
                     isEarlyMeltMode = true;
                     currentFormModeLabel = isTestMode ? "提早休假回報 (測試)" : "提早休假回報";
+                    submissionTargetDayNum = dayOfWeek;
                 }
+            } else {
+                // 情況 B：當日 18:00 後，進入正常當日巡檢登錄
+                submissionTargetDayNum = dayOfWeek;
+                currentFormModeLabel = isTestMode ? "正常回報 (測試)" : "正常回報";
             }
 
             if (!isTestMode && makeupMode === "never" && currentFormModeLabel.includes("補填")) {
