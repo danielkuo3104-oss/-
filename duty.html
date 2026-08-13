@@ -268,7 +268,7 @@
         </div>
 
         <div class="footer-copyright">
-            <span class="footer-version">v2.9.2D</span><br>
+            <span class="footer-version">v2.9.3D</span><br>
             宿舍智慧居住管理看板系統<br>
             Copyright Daniel. All Rights Reserved.
         </div>
@@ -362,9 +362,8 @@
 
     <script>
         // 共用全域變數與系統設定
-        // 共用全域變數與系統設定
         // 💡 開關說明：
-        // false = 正式營運模式 (自動隱藏面板、強制使用真實手機時間、嚴格執行時間與補填規則)
+        // false = 正式營運模式 (自動隱藏面板、強制使用真實時間、執行正常規律)
         // true  = 開發調試模式 (顯示面板、可自由切換模擬時間與測試開關)
         const SHOW_DEV_PANEL_BUTTON = false; 
         
@@ -385,6 +384,7 @@
             
             fetchDormitoryData();
         });
+
         let globalRawData = [];
         let parsedSchedule = [];
         let parsedStats = {};
@@ -402,13 +402,6 @@
         // 請假查閱/申報相關變數
         let currentLeavePage = 1;
         let currentLeaveStep = 1;
-
-        document.addEventListener("DOMContentLoaded", function() {
-            if (!SHOW_DEV_PANEL_BUTTON) {
-                document.getElementById('devToggleBtnWrapper').classList.add('hidden');
-            }
-            fetchDormitoryData();
-        });
 
         function toggleDeveloperPanel() {
             document.getElementById('devControlPanel').classList.toggle('hidden');
@@ -676,7 +669,6 @@
             renderLeaveTable();
         }
 
-        // 輔助函式：將日期轉換為西元週號
         function getSundayBasedWeekCode(d) {
             let date = new Date(d.getTime());
             let year = date.getFullYear().toString().substring(2);
@@ -771,7 +763,6 @@
                     <div style="font-size:12.5px; color:#7A868C; margin-top:8px;">預先假一次僅能申請一週（起迄日須落於同一週次內），且僅可申請未來 2 個月內之區間。</div>
                 `;
             } else if (leaveType === "臨時假") {
-                // 從 index 1 抓起，排除自己與全體分攤
                 let candidates = parsedSchedule.slice(1).map(s => s.worker).filter((v, i, a) => a.indexOf(v) === i && v !== "【全體分攤】" && v !== applicant);
                 html = `
                     <div class="form-group">
@@ -844,30 +835,26 @@
                     targetWeeks = `${startWeekCode}-${endWeekCode}`;
                     
                 } else if (leaveType === "預先假") {
-                    // 1. 找出區間內的所有「週一至週五」工作日
                     let workDays = [];
                     let tempD = new Date(startD.getTime());
                     while (tempD <= endD) {
                         let day = tempD.getDay();
-                        if (day >= 1 && day <= 5) { // 1 = 週一, 5 = 週五
+                        if (day >= 1 && day <= 5) {
                             workDays.push(new Date(tempD.getTime()));
                         }
                         tempD.setDate(tempD.getDate() + 1);
                     }
 
-                    // 防護一：如果完全沒選到任何工作日 (例如只選了六日)
                     if (workDays.length === 0) {
                         Swal.fire("日期錯誤", "選取的請假區間未包含任何週一至週五的工作日。", "warning");
                         return;
                     }
 
-                    // 防護二：包含的工作日天數不能超過 5 天
                     if (workDays.length > 5) {
                         Swal.fire("申報限制", "預先假一次僅能申請單一週次（最多包含 5 個工作日），您的選取已跨越不同週次。", "warning");
                         return;
                     }
 
-                    // 防護三：精準檢查第一個工作日與最後一個工作日是否屬於「同一週」
                     let firstWorkDayWeek = getSundayBasedWeekCode(workDays[0]);
                     let lastWorkDayWeek = getSundayBasedWeekCode(workDays[workDays.length - 1]);
 
