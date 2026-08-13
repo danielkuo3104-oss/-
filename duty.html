@@ -805,15 +805,14 @@
                     return;
                 }
 
-                let startWeekCode = getSundayBasedWeekCode(startD);
-                let endWeekCode = getSundayBasedWeekCode(endD);
-
-                if (startWeekCode <= currentWeekCode) {
-                    Swal.fire("日期錯誤", "請假期間不可包含本週或過去的週次。", "error");
-                    return;
-                }
-
                 if (leaveType === "長假") {
+                    let startWeekCode = getSundayBasedWeekCode(startD);
+                    let endWeekCode = getSundayBasedWeekCode(endD);
+
+                    if (startWeekCode <= currentWeekCode) {
+                        Swal.fire("日期錯誤", "請假期間不可包含本週或過去的週次。", "error");
+                        return;
+                    }
                     if (endWeekCode - startWeekCode < 1) {
                         Swal.fire("申報限制", "長假申請必須選擇至少 2 週的時間。", "warning");
                         return;
@@ -824,18 +823,54 @@
                         return;
                     }
                     targetWeeks = `${startWeekCode}-${endWeekCode}`;
+                    
                 } else if (leaveType === "預先假") {
-                    if (startWeekCode !== endWeekCode) {
-                        Swal.fire("申報限制", "預先假一次僅能申請單一週次，請確認起訖日期是否在同一週內。", "warning");
+                    // 1. 找出區間內的所有「週一至週五」工作日
+                    let workDays = [];
+                    let tempD = new Date(startD.getTime());
+                    while (tempD <= endD) {
+                        let day = tempD.getDay();
+                        if (day >= 1 && day <= 5) { // 1 = 週一, 5 = 週五
+                            workDays.push(new Date(tempD.getTime()));
+                        }
+                        tempD.setDate(tempD.getDate() + 1);
+                    }
+
+                    // 防護一：如果完全沒選到任何工作日 (例如只選了六日)
+                    if (workDays.length === 0) {
+                        Swal.fire("日期錯誤", "選取的請假區間未包含任何週一至週五的工作日。", "warning");
                         return;
                     }
+
+                    // 防護二：包含的工作日天數不能超過 5 天
+                    if (workDays.length > 5) {
+                        Swal.fire("申報限制", "預先假一次僅能申請單一週次（最多包含 5 個工作日），您的選取已跨越不同週次。", "warning");
+                        return;
+                    }
+
+                    // 防護三：精準檢查第一個工作日與最後一個工作日是否屬於「同一週」
+                    let firstWorkDayWeek = getSundayBasedWeekCode(workDays[0]);
+                    let lastWorkDayWeek = getSundayBasedWeekCode(workDays[workDays.length - 1]);
+
+                    if (firstWorkDayWeek !== lastWorkDayWeek) {
+                        Swal.fire("申報限制", "檢測到跨週請假！您的請假區間包含了兩個不同工作週（例如跨越上週五與本週一），預先假一次僅限單一週次。", "warning");
+                        return;
+                    }
+
+                    let targetWeekCode = firstWorkDayWeek;
+
+                    if (targetWeekCode <= currentWeekCode) {
+                        Swal.fire("日期錯誤", "請假期間不可為本週或過去的時間。", "error");
+                        return;
+                    }
+
                     let maxFuture = new Date();
                     maxFuture.setMonth(maxFuture.getMonth() + 2);
                     if (startD > maxFuture) {
                         Swal.fire("申報限制", "預先假最多僅能申請未來兩個月內的週次。", "warning");
                         return;
                     }
-                    targetWeeks = startWeekCode.toString();
+                    targetWeeks = targetWeekCode.toString();
                 }
             } else if (leaveType === "臨時假") {
                 targetWeeks = parsedSchedule[0].code.substring(2, 6);
