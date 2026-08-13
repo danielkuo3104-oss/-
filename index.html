@@ -206,6 +206,13 @@
             border: 1px solid #cedde7; padding: 4px 12px; border-radius: 6px; cursor: pointer; transition: all 0.2s;
         }
         .receipt-link-btn:hover { background: #dbecf7; color: #3b5a70; }
+        
+        /* 「已繳」狀態標籤 */
+        .paid-badge {
+            display: inline-block; font-size: 11px; font-weight: 600; color: #437353; background: #ebf5ee;
+            border: 1px solid #d5ebd9; padding: 3px 10px; border-radius: 6px;
+        }
+        
         .receipt-group-box { display: flex; gap: 6px; }
 
         .image-modal-box { max-width: 460px; text-align: center; padding: 24px; }
@@ -214,7 +221,6 @@
             margin: 14px 0; overflow: hidden; display: flex; justify-content: center; align-items: center; min-height: 200px;
         }
         .receipt-img-container img { width: 100%; height: auto; max-height: 50vh; object-fit: contain; display: block; }
-        .receipt-date-tag { font-size: 13px; color: #7a828a; background: #f1f3f5; padding: 6px 14px; border-radius: 30px; display: inline-block; margin-bottom: 10px; font-weight: 500; }
 
         .detail-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 8px; color: #5a6168; }
         .detail-table th, .detail-table td { padding: 10px 12px; border-bottom: 1px solid #f0f2f5; text-align: left; }
@@ -316,10 +322,10 @@
         </div>
     </div>
 
+    <!-- 檢視憑證照片視窗 (已移除日期標籤) -->
     <div class="modal-overlay" id="imageModal" onclick="closeImageModal()" style="z-index: 1100;">
         <div class="modal-box image-modal-box" onclick="event.stopPropagation()">
             <div class="modal-title" id="imageModalTitle">檢視憑證照片</div>
-            <div class="receipt-date-tag" id="receiptDateDisplay">上傳日期：--/--</div>
             <div class="receipt-img-container">
                 <img id="receiptImageDisplay" src="" alt="憑證照片載入中...">
             </div>
@@ -414,6 +420,28 @@
         let dutyCountdownTimer = null;
         let globalBasePhotoUrl = ""; 
         let globalRulesHistory = []; 
+
+        // 🎯 智慧憑證/已繳按鈕渲染防禦器
+        function renderReceiptBtn(val, btnText, titleText, styleStr = "") {
+            if (!val) return "<span style='color:#cbd1d6;'>-</span>";
+            let cleanVal = String(val).trim();
+            if (cleanVal === "" || cleanVal === "-") return "<span style='color:#cbd1d6;'>-</span>";
+            
+            // 如果填寫「已繳」，顯示靜態完成標籤，不綁定點擊事件
+            if (cleanVal === "已繳") {
+                return `<span class="paid-badge">已繳</span>`;
+            }
+            
+            // 只有包含網址時才渲染成可點擊的檢視按鈕
+            if (cleanVal.includes("http://") || cleanVal.includes("https://") || cleanVal.includes("drive.google.com")) {
+                let defaultStyle = "color:#527996; background:#edf3f7; border: 1px solid #cedde7;";
+                let useStyle = styleStr || defaultStyle;
+                return `<span class="receipt-link-btn" style="${useStyle}" onclick="openImageModal('${cleanVal}', '${titleText}')">${btnText}</span>`;
+            }
+            
+            // 其他狀況（如其他純文字備註）直接顯示
+            return `<span style='color:#7a828a; font-size:12px;'>${cleanVal}</span>`;
+        }
 
         // 🎯 安全清洗數值（清除 # 字號及空白，轉為標準數字）
         function parseCleanNumber(val) {
@@ -713,21 +741,17 @@
                 const recordIdx = { "內大": 2, "內小": 3, "中": 4, "外": 5 };
                 
                 // 個人瓦斯費與水費實付欄位索引對應
-                const gasRoomCostIdx = { "內大": 57, "內小": 58, "中": 59, "外": 60 }; // BF - BI (58~61欄)
-                const waterRoomCostIdx = { "內大": 61, "內小": 62, "中": 63, "外": 64 }; // BJ - BM (62~65欄)
+                const gasRoomCostIdx = { "內大": 57, "內小": 58, "中": 59, "外": 60 };
+                const waterRoomCostIdx = { "內大": 61, "內小": 62, "中": 63, "外": 64 };
 
                 const waterBillIdx = { "內大": 39, "內小": 40, "中": 41, "外": 42, "證明": 43 };
                 const eleBillIdx   = { "內大": 44, "內小": 45, "中": 46, "外": 47, "證明": 48 };
                 const gasBillIdx   = { "內大": 49, "內小": 50, "中": 51, "外": 52, "證明": 53 };
 
                 const meterPhotoIdx = 28;  
-                const meterDateIdx = 29;   
                 const waterReceiptIdx = 30;
-                const waterDateIdx = 31;   
                 const eleReceiptIdx = 32;  
-                const eleDateIdx = 33;     
                 const gasReceiptIdx = 54; // BC 欄
-                const gasDateIdx = 55;    // BD 欄
 
                 const rentIdx = { "內大": 34, "內小": 35, "中": 36, "外": 37, "房東": 38 };
 
@@ -779,7 +803,6 @@
                     gasChartData.push(gasVal > 0 ? gasVal : null);
                     meterDeltaTotal.push(deltaMeters["總和"] > 0 ? parseFloat(deltaMeters["總和"]) : null);
 
-                    // 🎯 解析個人實付金額（清洗可能殘留的 #）
                     const waterRooms = {
                         "內大": parseCleanNumber(cells[waterRoomCostIdx["內大"]]),
                         "內小": parseCleanNumber(cells[waterRoomCostIdx["內小"]]),
@@ -816,24 +839,24 @@
                         gas: gasVal, gasPerRoom: gasPerRoom, gasImpute: gasImpute, gasRooms: gasRooms,
                         total: combinedSum,
                         deltaMeters: deltaMeters, recordMeters: recordMeters,
-                        meterPhoto: cells[meterPhotoIdx] || "", meterDate: cells[meterDateIdx] || "",
-                        waterReceipt: cells[waterReceiptIdx] || "", waterDate: cells[waterDateIdx] || "",
-                        eleReceipt: cells[eleReceiptIdx] || "", eleDate: cells[eleDateIdx] || "",
-                        gasReceipt: cells[gasReceiptIdx] || "", gasDate: cells[gasDateIdx] || "",
+                        meterPhoto: cells[meterPhotoIdx] || "",
+                        waterReceipt: cells[waterReceiptIdx] || "",
+                        eleReceipt: cells[eleReceiptIdx] || "",
+                        gasReceipt: cells[gasReceiptIdx] || "",
                         rooms: eleRooms
                     });
 
-                    const uBig   = cells[rentIdx["內大"]] || "";
-                    const uSmall = cells[rentIdx["內小"]] || "";
-                    const uMid   = cells[rentIdx["中"]] || ""; 
-                    const uOut   = cells[rentIdx["外"]] || "";
-                    const uOwner = cells[rentIdx["房東"]] || "";
+                    const uBig    = cells[rentIdx["內大"]] || "";
+                    const uSmall  = cells[rentIdx["內小"]] || "";
+                    const uMid    = cells[rentIdx["中"]] || ""; 
+                    const uOut    = cells[rentIdx["外"]] || "";
+                    const uOwner  = cells[rentIdx["房東"]] || "";
 
-                    const btnBig   = uBig   ? `<span class="receipt-link-btn" onclick="openImageModal('${uBig}', '', '${monthVal} 內大房租憑證')">檢視</span>` : "<span style='color:#cbd1d6;'>-</span>";
-                    const btnSmall = uSmall ? `<span class="receipt-link-btn" onclick="openImageModal('${uSmall}', '', '${monthVal} 內小房租憑證')">檢視</span>` : "<span style='color:#cbd1d6;'>-</span>";
-                    const btnMid   = uMid   ? `<span class="receipt-link-btn" onclick="openImageModal('${uMid}', '', '${monthVal} 中房房租憑證')">檢視</span>` : "<span style='color:#cbd1d6;'>-</span>";
-                    const btnOut   = uOut   ? `<span class="receipt-link-btn" onclick="openImageModal('${uOut}', '', '${monthVal} 外房房租憑證')">檢視</span>` : "<span style='color:#cbd1d6;'>-</span>";
-                    const btnOwner = uOwner ? `<span class="receipt-link-btn" onclick="openImageModal('${uOwner}', '', '${monthVal} 轉帳房東證明')">檢視</span>` : "<span style='color:#cbd1d6;'>-</span>";
+                    const btnBig   = renderReceiptBtn(uBig, '檢視', `${monthVal} 內大房租憑證`);
+                    const btnSmall = renderReceiptBtn(uSmall, '檢視', `${monthVal} 內小房租憑證`);
+                    const btnMid   = renderReceiptBtn(uMid, '檢視', `${monthVal} 中房房租憑證`);
+                    const btnOut   = renderReceiptBtn(uOut, '檢視', `${monthVal} 外房房租憑證`);
+                    const btnOwner = renderReceiptBtn(uOwner, '檢視', `${monthVal} 轉帳房東證明`);
 
                     rentTableRowsHtml += `
                         <tr>
@@ -863,23 +886,27 @@
                     const gbOut   = cells[gasBillIdx["外"]] || "";
                     const gbProof = cells[gasBillIdx["證明"]] || "";
 
-                    const btnWBig   = wbBig   ? `<span class="receipt-link-btn" onclick="openImageModal('${wbBig}', '', '${monthVal} 內大水費憑證')">水費</span>` : "<span style='color:#cbd1d6;'>-</span>";
-                    const btnWSmall = wbSmall ? `<span class="receipt-link-btn" onclick="openImageModal('${wbSmall}', '', '${monthVal} 內小水費憑證')">水費</span>` : "<span style='color:#cbd1d6;'>-</span>";
-                    const btnWMid   = wbMid   ? `<span class="receipt-link-btn" onclick="openImageModal('${wbMid}', '', '${monthVal} 中房水費憑證')">水費</span>` : "<span style='color:#cbd1d6;'>-</span>";
-                    const btnWOut   = wbOut   ? `<span class="receipt-link-btn" onclick="openImageModal('${wbOut}', '', '${monthVal} 外房水費憑證')">水費</span>` : "<span style='color:#cbd1d6;'>-</span>";
-                    const btnWProof = wbProof ? `<span class="receipt-link-btn" style="color:#527996; background:#edf3f7; border-color:#cedde7;" onclick="openImageModal('${wbProof}', '', '${monthVal} 水費繳款完成證明')">水費收據</span>` : "<span style='color:#cbd1d6;'>-</span>";
+                    const styleWater = "color:#527996; background:#edf3f7; border: 1px solid #cedde7;";
+                    const styleEle   = "color:#d97736; background:#fdf6f0; border: 1px solid #f9e3d5;";
+                    const styleGas   = "color:#917B7A; background:#F5EFEB; border: 1px solid #e6dede;";
 
-                    const btnEBig   = ebBig   ? `<span class="receipt-link-btn" style="color:#d97736; background:#fdf6f0; border-color:#f9e3d5;" onclick="openImageModal('${ebBig}', '', '${monthVal} 內大電費憑證')">電費</span>` : "<span style='color:#cbd1d6;'>-</span>";
-                    const btnESmall = ebSmall ? `<span class="receipt-link-btn" style="color:#d97736; background:#fdf6f0; border-color:#f9e3d5;" onclick="openImageModal('${ebSmall}', '', '${monthVal} 內小電費憑證')">電費</span>` : "<span style='color:#cbd1d6;'>-</span>";
-                    const btnEMid   = ebMid   ? `<span class="receipt-link-btn" style="color:#d97736; background:#fdf6f0; border-color:#f9e3d5;" onclick="openImageModal('${ebMid}', '', '${monthVal} 中房電費憑證')">電費</span>` : "<span style='color:#cbd1d6;'>-</span>";
-                    const btnEOut   = ebOut   ? `<span class="receipt-link-btn" style="color:#d97736; background:#fdf6f0; border-color:#f9e3d5;" onclick="openImageModal('${ebOut}', '', '${monthVal} 外房電費憑證')">電費</span>` : "<span style='color:#cbd1d6;'>-</span>";
-                    const btnEProof = ebProof ? `<span class="receipt-link-btn" style="color:#d97736; background:#fdf6f0; border-color:#f9e3d5;" onclick="openImageModal('${ebProof}', '', '${monthVal} 電費繳款完成證明')">電費收據</span>` : "<span style='color:#cbd1d6;'>-</span>";
+                    const btnWBig   = renderReceiptBtn(wbBig, '水費', `${monthVal} 內大水費憑證`, styleWater);
+                    const btnWSmall = renderReceiptBtn(wbSmall, '水費', `${monthVal} 內小水費憑證`, styleWater);
+                    const btnWMid   = renderReceiptBtn(wbMid, '水費', `${monthVal} 中房水費憑證`, styleWater);
+                    const btnWOut   = renderReceiptBtn(wbOut, '水費', `${monthVal} 外房水費憑證`, styleWater);
+                    const btnWProof = renderReceiptBtn(wbProof, '水費收據', `${monthVal} 水費繳款完成證明`, styleWater);
 
-                    const btnGBig   = gbBig   ? `<span class="receipt-link-btn" style="color:#917B7A; background:#F5EFEB; border-color:#e6dede;" onclick="openImageModal('${gbBig}', '', '${monthVal} 內大瓦斯費憑證')">瓦斯</span>` : "<span style='color:#cbd1d6;'>-</span>";
-                    const btnGSmall = gbSmall ? `<span class="receipt-link-btn" style="color:#917B7A; background:#F5EFEB; border-color:#e6dede;" onclick="openImageModal('${gbSmall}', '', '${monthVal} 內小瓦斯費憑證')">瓦斯</span>` : "<span style='color:#cbd1d6;'>-</span>";
-                    const btnGMid   = gbMid   ? `<span class="receipt-link-btn" style="color:#917B7A; background:#F5EFEB; border-color:#e6dede;" onclick="openImageModal('${gbMid}', '', '${monthVal} 中房瓦斯費憑證')">瓦斯</span>` : "<span style='color:#cbd1d6;'>-</span>";
-                    const btnGOut   = gbOut   ? `<span class="receipt-link-btn" style="color:#917B7A; background:#F5EFEB; border-color:#e6dede;" onclick="openImageModal('${gbOut}', '', '${monthVal} 外房瓦斯費憑證')">瓦斯</span>` : "<span style='color:#cbd1d6;'>-</span>";
-                    const btnGProof = gbProof ? `<span class="receipt-link-btn" style="color:#917B7A; background:#F5EFEB; border-color:#e6dede;" onclick="openImageModal('${gbProof}', '', '${monthVal} 瓦斯費繳款完成證明')">瓦斯收據</span>` : "<span style='color:#cbd1d6;'>-</span>";
+                    const btnEBig   = renderReceiptBtn(ebBig, '電費', `${monthVal} 內大電費憑證`, styleEle);
+                    const btnESmall = renderReceiptBtn(ebSmall, '電費', `${monthVal} 內小電費憑證`, styleEle);
+                    const btnEMid   = renderReceiptBtn(ebMid, '電費', `${monthVal} 中房電費憑證`, styleEle);
+                    const btnEOut   = renderReceiptBtn(ebOut, '電費', `${monthVal} 外房電費憑證`, styleEle);
+                    const btnEProof = renderReceiptBtn(ebProof, '電費收據', `${monthVal} 電費繳款完成證明`, styleEle);
+
+                    const btnGBig   = renderReceiptBtn(gbBig, '瓦斯', `${monthVal} 內大瓦斯費憑證`, styleGas);
+                    const btnGSmall = renderReceiptBtn(gbSmall, '瓦斯', `${monthVal} 內小瓦斯費憑證`, styleGas);
+                    const btnGMid   = renderReceiptBtn(gbMid, '瓦斯', `${monthVal} 中房瓦斯費憑證`, styleGas);
+                    const btnGOut   = renderReceiptBtn(gbOut, '瓦斯', `${monthVal} 外房瓦斯費憑證`, styleGas);
+                    const btnGProof = renderReceiptBtn(gbProof, '瓦斯收據', `${monthVal} 瓦斯費繳款完成證明`, styleGas);
 
                     utilityTableRowsHtml += `
                         <tr>
@@ -907,7 +934,6 @@
                 const dispGas = globalParsedData[currentGasIdx];
 
                 const prevMonthItem = lastIdx > 0 ? globalParsedData[lastIdx - 1] : latest;
-
                 const prevMonthDeltaSum = prevMonthItem.deltaMeters["總和"] !== "0" ? (parseFloat(prevMonthItem.deltaMeters["總和"]) / 10).toFixed(1) : "0.0";
 
                 const eleRemark = (eleIdx !== lastIdx) ? `<div style="font-size: 11px; color: #b56a6a; margin-top: 8px; font-weight: 600;">* 當月無帳單，顯示 ${dispEle.month} 費用</div>` : "";
@@ -1097,15 +1123,15 @@
 
                 if (type === 'currentEle') {
                     title.innerText = `${eleItem.month} 電費分房明細`;
-                    const receiptBtn = eleItem.eleReceipt ? `<div class="receipt-link-btn" style="color:#d97736; background:#fdf6f0; border-color:#f9e3d5;" onclick="openImageModal('${eleItem.eleReceipt}', '${eleItem.eleDate}', '${eleItem.month} 電費憑證')">查看憑證</div>` : "";
+                    const receiptBtn = renderReceiptBtn(eleItem.eleReceipt, '查看憑證', `${eleItem.month} 電費憑證`, "color:#d97736; background:#fdf6f0; border: 1px solid #f9e3d5;");
                     htmlContent = `<div class="modal-item-block"><div class="modal-month-title"><span>${eleItem.month} 實付分攤</span>${receiptBtn}</div><table class="detail-table"><thead><tr><th>房客</th><th>實付金額</th></tr></thead><tbody><tr><td>${tenantNames["內大"]}</td><td>NT$ ${eleItem.rooms["內大"].toLocaleString()}</td></tr><tr><td>${tenantNames["內小"]}</td><td>NT$ ${eleItem.rooms["內小"].toLocaleString()}</td></tr><tr><td>${tenantNames["中"]}</td><td>NT$ ${eleItem.rooms["中"].toLocaleString()}</td></tr><tr><td>${tenantNames["外"]}</td><td>NT$ ${eleItem.rooms["外"].toLocaleString()}</td></tr></tbody></table><div style="font-size: 11px; color: #437353; background: #ebf5ee; padding: 8px 10px; border-radius: 6px; margin-top: 12px; font-weight: 600;">* 經電表精算後，公基金已自動補貼分攤 NT$ ${eleItem.eleImpute} 元</div><div class="modal-row total-line"><span>當月電費總額</span><span style="color:#d97736;">NT$ ${eleItem.eleTotal.toLocaleString()}</span></div></div>`;
                 } else if (type === 'currentWater') {
                     title.innerText = `${waterItem.month} 水費分房明細`;
-                    const receiptBtn = waterItem.waterReceipt ? `<div class="receipt-link-btn" onclick="openImageModal('${waterItem.waterReceipt}', '${waterItem.waterDate}', '${waterItem.month} 水費憑證')">查看憑證</div>` : "";
+                    const receiptBtn = renderReceiptBtn(waterItem.waterReceipt, '查看憑證', `${waterItem.month} 水費憑證`);
                     htmlContent = `<div class="modal-item-block"><div class="modal-month-title"><span>${waterItem.month} 水費動態實付分攤</span>${receiptBtn}</div><table class="detail-table"><thead><tr><th>房客</th><th>實付金額</th></tr></thead><tbody><tr><td>${tenantNames["內大"]}</td><td>NT$ ${waterItem.waterRooms["內大"].toLocaleString()}</td></tr><tr><td>${tenantNames["內小"]}</td><td>NT$ ${waterItem.waterRooms["內小"].toLocaleString()}</td></tr><tr><td>${tenantNames["中"]}</td><td>NT$ ${waterItem.waterRooms["中"].toLocaleString()}</td></tr><tr><td>${tenantNames["外"]}</td><td>NT$ ${waterItem.waterRooms["外"].toLocaleString()}</td></tr></tbody></table><div style="font-size: 11px; color: #437353; background: #ebf5ee; padding: 8px 10px; border-radius: 6px; margin-top: 12px; font-weight: 600;">* 餘數/差額 NT$ ${waterItem.waterImpute} 元已由公基金自動補貼</div><div class="modal-row total-line"><span>全戶總水費出帳</span><span style="color:#527996;">NT$ ${waterItem.water.toLocaleString()}</span></div></div>`;
                 } else if (type === 'currentGas') {
                     title.innerText = `${gasItem.month} 瓦斯費分房明細`;
-                    const receiptBtn = gasItem.gasReceipt ? `<div class="receipt-link-btn" style="color:#917B7A; background:#F5EFEB; border-color:#e6dede;" onclick="openImageModal('${gasItem.gasReceipt}', '${gasItem.gasDate}', '${gasItem.month} 瓦斯費憑證')">查看憑證</div>` : "";
+                    const receiptBtn = renderReceiptBtn(gasItem.gasReceipt, '查看憑證', `${gasItem.month} 瓦斯費憑證`, "color:#917B7A; background:#F5EFEB; border: 1px solid #e6dede;");
                     htmlContent = `<div class="modal-item-block"><div class="modal-month-title"><span>${gasItem.month} 瓦斯費動態實付分攤</span>${receiptBtn}</div><table class="detail-table"><thead><tr><th>房客</th><th>實付金額</th></tr></thead><tbody><tr><td>${tenantNames["內大"]}</td><td>NT$ ${gasItem.gasRooms["內大"].toLocaleString()}</td></tr><tr><td>${tenantNames["內小"]}</td><td>NT$ ${gasItem.gasRooms["內小"].toLocaleString()}</td></tr><tr><td>${tenantNames["中"]}</td><td>NT$ ${gasItem.gasRooms["中"].toLocaleString()}</td></tr><tr><td>${tenantNames["外"]}</td><td>NT$ ${gasItem.gasRooms["外"].toLocaleString()}</td></tr></tbody></table><div style="font-size: 11px; color: #437353; background: #ebf5ee; padding: 8px 10px; border-radius: 6px; margin-top: 12px; font-weight: 600;">* 餘數/差額 NT$ ${gasItem.gasImpute} 元已由公基金自動補貼</div><div class="modal-row total-line"><span>全戶總瓦斯費出帳</span><span style="color:#917B7A;">NT$ ${gasItem.gas.toLocaleString()}</span></div></div>`;
                 } else if (type === 'currentSummary') {
                     title.innerText = `${latestItem.month} 水電瓦斯加總摘要`;
@@ -1114,7 +1140,7 @@
                     title.innerText = "歷月電費總額紀錄";
                     globalParsedData.forEach(item => {
                         if(item.eleTotal > 0) {
-                            const receiptBtn = item.eleReceipt ? `<div class="receipt-link-btn" style="color:#d97736; background:#fdf6f0; border-color:#f9e3d5;" onclick="openImageModal('${item.eleReceipt}', '${item.eleDate}', '${item.month} 電費憑證')">查看憑證</div>` : "";
+                            const receiptBtn = renderReceiptBtn(item.eleReceipt, '查看憑證', `${item.month} 電費憑證`, "color:#d97736; background:#fdf6f0; border: 1px solid #f9e3d5;");
                             htmlContent += `<div class="modal-item-block" style="border-bottom: 1px dashed #eaecef; padding-bottom: 10px;"><div class="modal-month-title"><span>${item.month}</span>${receiptBtn}</div><div class="modal-row"><span>電費帳單總額</span><span>NT$ ${item.eleTotal.toLocaleString()}</span></div><div style="font-size: 11px; color: #437353; background: #ebf5ee; padding: 4px 8px; border-radius: 4px; display: inline-block; margin-top: 4px;">公基金補貼：NT$ ${item.eleImpute}</div></div>`;
                         }
                     });
@@ -1122,7 +1148,7 @@
                     title.innerText = "歷月水費明細紀錄";
                     globalParsedData.forEach(item => {
                         if(item.water > 0) {
-                            const receiptBtn = item.waterReceipt ? `<div class="receipt-link-btn" onclick="openImageModal('${item.waterReceipt}', '${item.waterDate}', '${item.month} 水費憑證')">查看憑證</div>` : "";
+                            const receiptBtn = renderReceiptBtn(item.waterReceipt, '查看憑證', `${item.month} 水費憑證`);
                             htmlContent += `<div class="modal-item-block" style="border-bottom: 1px dashed #eaecef; padding-bottom: 10px;"><div class="modal-month-title"><span>${item.month}</span>${receiptBtn}</div><div class="modal-row"><span>全戶總水費</span><span>NT$ ${item.water.toLocaleString()}</span></div></div>`;
                         }
                     });
@@ -1130,7 +1156,7 @@
                     title.innerText = "歷月瓦斯費明細紀錄";
                     globalParsedData.forEach(item => {
                         if(item.gas > 0) {
-                            const receiptBtn = item.gasReceipt ? `<div class="receipt-link-btn" style="color:#917B7A; background:#F5EFEB; border-color:#e6dede;" onclick="openImageModal('${item.gasReceipt}', '${item.gasDate}', '${item.month} 瓦斯費憑證')">查看憑證</div>` : "";
+                            const receiptBtn = renderReceiptBtn(item.gasReceipt, '查看憑證', `${item.month} 瓦斯費憑證`, "color:#917B7A; background:#F5EFEB; border: 1px solid #e6dede;");
                             htmlContent += `<div class="modal-item-block" style="border-bottom: 1px dashed #eaecef; padding-bottom: 10px;"><div class="modal-month-title"><span>${item.month}</span>${receiptBtn}</div><div class="modal-row"><span>全戶總瓦斯費</span><span>NT$ ${item.gas.toLocaleString()}</span></div></div>`;
                         }
                     });
@@ -1138,19 +1164,19 @@
                     title.innerText = "歷史帳單紀錄明細摘要";
                     globalParsedData.forEach(item => {
                         let receiptGroup = `<div class="receipt-group-box">`;
-                        if (item.waterReceipt) receiptGroup += `<div class="receipt-link-btn" onclick="openImageModal('${item.waterReceipt}', '${item.waterDate}', '${item.month} 水費憑證')">水費憑證</div>`;
-                        if (item.eleReceipt) receiptGroup += `<div class="receipt-link-btn" style="color:#d97736; background:#fdf6f0; border-color:#f9e3d5;" onclick="openImageModal('${item.eleReceipt}', '${item.eleDate}', '${item.month} 電費憑證')">電費憑證</div>`;
-                        if (item.gasReceipt) receiptGroup += `<div class="receipt-link-btn" style="color:#917B7A; background:#F5EFEB; border-color:#e6dede;" onclick="openImageModal('${item.gasReceipt}', '${item.gasDate}', '${item.month} 瓦斯費憑證')">瓦斯憑證</div>`;
+                        if (item.waterReceipt) receiptGroup += renderReceiptBtn(item.waterReceipt, '水費憑證', `${item.month} 水費憑證`);
+                        if (item.eleReceipt) receiptGroup += renderReceiptBtn(item.eleReceipt, '電費憑證', `${item.month} 電費憑證`, "color:#d97736; background:#fdf6f0; border: 1px solid #f9e3d5;");
+                        if (item.gasReceipt) receiptGroup += renderReceiptBtn(item.gasReceipt, '瓦斯憑證', `${item.month} 瓦斯費憑證`, "color:#917B7A; background:#F5EFEB; border: 1px solid #e6dede;");
                         receiptGroup += `</div>`;
                         htmlContent += `<div class="modal-item-block" style="border-bottom: 1px dashed #eaecef; padding-bottom: 10px;"><div class="modal-month-title"><span>${item.month}</span>${receiptGroup}</div><div class="modal-row"><span>水費金額</span><span>NT$ ${item.water.toLocaleString()}</span></div><div class="modal-row"><span>電費金額</span><span>NT$ ${item.eleTotal.toLocaleString()}</span></div><div class="modal-row"><span>瓦斯費金額</span><span>NT$ ${item.gas.toLocaleString()}</span></div><div class="modal-row total-line"><span>當月支出小計</span><span style="color: #7b2cbf;">NT$ ${item.total.toLocaleString()}</span></div></div>`;
                     });
                 } else if (type === 'meter') {
                     title.innerText = "歷月電表抄錄與實用度數";
-                    const basePhotoBtn = globalBasePhotoUrl ? `<div class="receipt-link-btn" onclick="openImageModal('${globalBasePhotoUrl}', '入住當日', '初始入住電表基準照片')">查看基準照片</div>` : "";
+                    const basePhotoBtn = renderReceiptBtn(globalBasePhotoUrl, '查看基準照片', '初始入住電表基準照片');
                     htmlContent = `<div style="background:#eef2f5; padding:14px; border-radius:12px; font-size:12px; color:#54606e; margin-bottom:15px; line-height:1.6; border: 1px solid #dbe2e8;"><div style="float: right; margin-top: -2px;">${basePhotoBtn}</div>初始入住電表基準值：<br>外: 7479.8 | 中: 3664.6 | 內大: 6337.0 | 內小: 4010.4</div>`;
                         
                     globalParsedData.forEach(item => {
-                        const photoBtn = item.meterPhoto ? `<div class="receipt-link-btn" onclick="openImageModal('${item.meterPhoto}', '${item.meterDate}', '${item.month} 電表照片憑證')">電表照片</div>` : "";
+                        const photoBtn = renderReceiptBtn(item.meterPhoto, '電表照片', `${item.month} 電表照片憑證`);
                         
                         const recInBig   = item.recordMeters["內大"] !== "--" ? (parseFloat(item.recordMeters["內大"]) / 10).toFixed(1) : "--";
                         const recInSmall = item.recordMeters["內小"] !== "--" ? (parseFloat(item.recordMeters["內小"]) / 10).toFixed(1) : "--";
@@ -1176,10 +1202,12 @@
 
         function closeModal() { document.getElementById('detailModal').classList.remove('active'); }
 
-        function openImageModal(driveUrl, uploadDate, titleText) {
+        // 🎯 圖片檢視彈窗（已移除 uploadDate 參數與日期處理）
+        function openImageModal(driveUrl, titleText) {
+            if (!driveUrl || !driveUrl.includes("http")) return;
+            
             const imgModal = document.getElementById('imageModal');
             const imgTitle = document.getElementById('imageModalTitle');
-            const dateDisplay = document.getElementById('receiptDateDisplay');
             const imgDisplay = document.getElementById('receiptImageDisplay');
             
             let directImageUrl = driveUrl;
@@ -1188,8 +1216,8 @@
                 if (match && match[1]) directImageUrl = `https://drive.google.com/thumbnail?id=${match[1]}&sz=w1000`;
             }
             
-            imgTitle.innerText = titleText;
-            dateDisplay.innerText = `上傳/抄錄日期：${uploadDate || "未記錄"}`;
+            imgTitle.innerText = titleText || "檢視憑證照片";
+            
             imgDisplay.onerror = function() {
                 this.onerror = null;
                 this.src = "https://placehold.co/600x400/f4f5f7/b54a4a?text=載入失敗\\n請確認雲端資料夾權限";
