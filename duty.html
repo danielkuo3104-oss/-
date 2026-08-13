@@ -4,9 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>宿舍智慧值日中心</title>
-    <!-- 引入 PapaParse 解析 CSV -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
-    <!-- 引入 SweetAlert2 莫蘭迪優雅彈出視窗套件 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         :root {
@@ -35,7 +33,6 @@
             -webkit-tap-highlight-color: transparent;
         }
 
-        /* 頂部導航 - 紫色調風格 */
         .nav-header {
             background-color: var(--card-bg);
             padding: 12px 15px;
@@ -56,7 +53,6 @@
 
         .container { padding: 15px; max-width: 600px; margin: 0 auto; padding-bottom: 40px; }
 
-        /* 開發者面板樣式優化 */
         .dev-toggle-container { margin-bottom: 12px; text-align: right; }
         .dev-toggle-btn { background: #A89BB0; color: white; border: none; padding: 6px 12px; border-radius: 10px; font-size: 12px; font-weight: bold; cursor: pointer; }
         .test-panel { background: #F0EDF2; border-radius: var(--radius-main); padding: 15px; margin-bottom: 20px; border: 1px dashed var(--mora-purple-text); }
@@ -65,7 +61,6 @@
         .test-row { display: flex; justify-content: space-between; align-items: center; }
         select, input[type="date"], input[type="time"] { padding: 6px; border-radius: 8px; border: 1px solid #cbd1d6; font-size: 13px; background: #fff; }
 
-        /* 卡片共用樣式 */
         .card {
             background: var(--card-bg);
             border-radius: var(--radius-main);
@@ -77,7 +72,6 @@
         }
         .card-title { font-size: 16px; font-weight: 600; margin-top: 0; margin-bottom: 15px; color: #4A515A; }
 
-        /* 膠囊狀態配色 */
         .badge { display: inline-block; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; text-align: center; line-height: 1.4; }
         .badge-blue { background-color: #EBF5FB; color: #2874A6; }
         .badge-green { background-color: #E8F5E9; color: #2E7D32; }
@@ -87,14 +81,12 @@
         .badge-red { background-color: #FDE8E8; color: #C81E1E; }
         .badge-gray { background-color: #ECEFF1; color: #78909C; }
 
-        /* 大看板區 */
         .hero-banner { background: var(--card-bg); padding: 22px 20px; border-radius: var(--radius-main); margin-bottom: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.02); border: 1px solid rgba(255,255,255,0.8); box-sizing: border-box; display: flex; flex-direction: column; gap: 15px; }
         .banner-date-top { text-align: center; font-size: 16px; font-weight: bold; color: #2C3E50; letter-spacing: 0.5px; margin-bottom: 2px; }
         .hero-meta-box { background: #F4F6F7; border-radius: 12px; padding: 12px; font-size: 12px; color: #566573; font-weight: bold; display: flex; flex-direction: column; gap: 6px; border: 1px solid #EAECEE; text-align: left; }
         .hero-split-line { height: 1px; background: rgba(0,0,0,0.04); margin: 2px 0; }
         .hero-main-box { background: rgba(40, 116, 166, 0.05); border-radius: 14px; padding: 18px 15px; border: 1px solid rgba(40, 116, 166, 0.1); width: 100%; box-sizing: border-box; text-align: center; }
         
-        /* 按鈕功能調色 */
         .action-btn {
             display: block; width: 100%; text-align: center; padding: 14px; color: #fff;
             font-weight: bold; font-size: 16px; border: none; border-radius: var(--radius-main); cursor: pointer;
@@ -107,7 +99,6 @@
 
         .table-memo-btn { background: none; border: none; color: var(--mora-blue); text-decoration: underline; font-size: 13px; font-weight: bold; cursor: pointer; }
 
-        /* 統計與表格適配 */
         .stat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
         .stat-item { background: #F8FAFA; border-radius: 12px; padding: 12px; border: 1px solid #EAECEE; text-align: center; }
         .stat-name { font-size: 14px; font-weight: bold; margin-bottom: 4px; color: #2C3E50; }
@@ -122,7 +113,6 @@
 
         .hidden { display: none !important; }
 
-        /* 表單模組共通 */
         .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.4); z-index: 200; padding: 15px; display: flex; align-items: center; justify-content: center; }
         .modal-content { background: #fff; width: 100%; max-width: 500px; border-radius: var(--radius-main); max-height: 85vh; overflow-y: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.15); border: 1px solid rgba(0,0,0,0.05); }
         .form-header { background: #ECEFF1; padding: 15px; font-weight: bold; font-size: 15px; display: flex; justify-content: space-between; border-bottom: 1px solid #D5DBDB; align-items: center; }
@@ -133,7 +123,7 @@
         .form-label { display: block; font-size: 14px; font-weight: 600; margin-bottom: 8px; color: #34495E; }
         
         input[type="radio"], input[type="checkbox"], select { accent-color: var(--mora-purple-text); }
-        .form-select { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #cbd1d6; font-size: 15px; background-color: #FAFAFA; box-sizing: border-box; }
+        .form-select, .form-input { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #cbd1d6; font-size: 15px; background-color: #FAFAFA; box-sizing: border-box; }
         .radio-group, .check-group { display: flex; flex-direction: column; gap: 10px; }
         .radio-label, .check-label { display: flex; align-items: center; padding: 12px; background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 10px; cursor: pointer; font-size: 14px; box-sizing: border-box; }
         .radio-label input, .check-label input { margin-right: 10px; width: 18px; height: 18px; }
@@ -146,7 +136,6 @@
         .f-btn-cancel { background: #cbd1d6; color: #5a6168; }
         .f-btn-next { background: var(--mora-purple-text); color: #fff; }
 
-        /* 一鍵完成按鈕樣式 */
         .quick-complete-container { margin-bottom: 20px; }
         .quick-complete-btn { background: var(--mora-orange); color: white; border: none; width: 100%; padding: 12px; border-radius: 12px; font-size: 15px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 10px rgba(189, 131, 102, 0.2); transition: opacity 0.2s; }
         .quick-complete-btn:active { opacity: 0.85; }
@@ -175,11 +164,11 @@
     <div class="container">
 
         <div class="dev-toggle-container" id="devToggleBtnWrapper">
-            <button class="dev-toggle-btn" onclick="toggleDeveloperPanel()">調試控制面板 ⚙️</button>
+            <button class="dev-toggle-btn" onclick="toggleDeveloperPanel()">調試控制面板</button>
         </div>
 
         <div class="test-panel hidden" id="devControlPanel">
-            <p class="test-title">⚙️ 系統開發者調試面板 (測試專用限制控制開關)</p>
+            <p class="test-title">系統開發者調試面板 (測試專用限制控制開關)</p>
             <div class="test-grid">
                 <div class="test-row">
                     <label>測試模式 (全忽略限制)：</label>
@@ -214,7 +203,6 @@
             </div>
         </div>
 
-        <!-- 🕒 大看板區 -->
         <div class="hero-banner">
             <div class="banner-date-top" id="bannerFullDate">----年--月--日 週-</div>
             <div class="hero-meta-box">
@@ -231,9 +219,8 @@
             </div>
         </div>
 
-        <!-- 按鈕功能區 -->
         <button class="action-btn btn-log-green" onclick="initiateLogSystem()">工作日誌登錄</button>
-        <button class="action-btn btn-leave-purple" onclick="openLeaveModal()">請假與異動申報中心 📝</button>
+        <button class="action-btn btn-leave-purple" onclick="openLeaveModal()">請假與異動申報中心</button>
         <button class="action-btn btn-view-blue" onclick="toggleLogCenterView()">歷史日誌紀錄查閱區</button>
 
         <div class="card">
@@ -281,14 +268,14 @@
         </div>
 
         <div class="footer-copyright">
-            <span class="footer-version">v2.9.1D</span><br>
+            <span class="footer-version">v2.9.2D</span><br>
             宿舍智慧居住管理看板系統<br>
-            Copyright © Daniel. All Rights Reserved.
+            Copyright Daniel. All Rights Reserved.
         </div>
 
     </div>
 
-    <!-- 📝 模組彈窗：工作日誌動態表單系統 -->
+    <!-- 工作日誌動態表單系統 -->
     <div class="modal-overlay hidden" id="logFormModal">
         <div class="modal-content">
             <div class="form-header">
@@ -307,7 +294,7 @@
         </div>
     </div>
 
-    <!-- 🔍 模組彈窗：獨立歷史日誌紀錄查閱中心 -->
+    <!-- 獨立歷史日誌紀錄查閱中心 -->
     <div class="modal-overlay hidden" id="logCenterModal">
         <div class="modal-content" style="max-width: 550px;">
             <div class="form-header">
@@ -330,7 +317,7 @@
         </div>
     </div>
 
-    <!-- 📝 模組彈窗：請假與異動申報動態系統 -->
+    <!-- 請假與異動申報動態系統 -->
     <div class="modal-overlay hidden" id="leaveFormModal">
         <div class="modal-content">
             <div class="form-header">
@@ -355,7 +342,7 @@
                         <label class="radio-label"><input type="radio" name="leaveType" value="長假" checked> 長假 (大於或等於 2 週)</label>
                         <label class="radio-label"><input type="radio" name="leaveType" value="預先假"> 預先假 (一次請 1 週)</label>
                         <label class="radio-label hidden" id="emergencyLeaveOption">
-                            <input type="radio" name="leaveType" value="臨時假"> 🚨 臨時假 (當值限定，需指定未來成員代班)
+                            <input type="radio" name="leaveType" value="臨時假"> 臨時假 (當值限定，需指定未來成員代班)
                         </label>
                     </div>
                 </div>
@@ -374,7 +361,7 @@
     </div>
 
     <script>
-        // 🚀 共用全域變數與系統設定
+        // 共用全域變數與系統設定
         const SHOW_DEV_PANEL_BUTTON = true;
         const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQkqhXCPp4XiHKCEpI3pz4pzcu3sQreQ_qNRLger00ULCHFr9cTbXHMQqAfk7dLa_gUBAIBSJ5sZM4F/pub?gid=1984800604&single=true&output=csv";
         const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzU_H6ld7TeMZAg6avRGDehYfN0ybUs9Na9-LLPUs7f0pJndTSdAoD1TKZ4VLgO9VbK/exec";
@@ -409,7 +396,7 @@
         }
 
         // ==========================================
-        // 📡 核心資料載入與解析模組
+        // 核心資料載入與解析模組
         // ==========================================
         function fetchDormitoryData() {
             const cacheBusterUrl = `${CSV_URL}&t=${new Date().getTime()}`;
@@ -513,7 +500,7 @@
         }
 
         // ==========================================
-        // 📊 儀表板看板渲染模組
+        // 儀表板看板渲染模組
         // ==========================================
         function renderMainSystem() {
             if(parsedSchedule.length === 0) return;
@@ -670,8 +657,19 @@
             renderLeaveTable();
         }
 
+        // 輔助函式：將日期轉換為西元週號
+        function getSundayBasedWeekCode(d) {
+            let date = new Date(d.getTime());
+            let year = date.getFullYear().toString().substring(2);
+            let firstDayOfYear = new Date(date.getFullYear(), 0, 1);
+            let pastDaysOfYear = (date - firstDayOfYear) / 86400000;
+            let weekNum = Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
+            let weekStr = weekNum < 10 ? "0" + weekNum : weekNum.toString();
+            return parseInt(year + weekStr, 10);
+        }
+
         // ==========================================
-        // 📝 請假與異動申報中心控制模組
+        // 請假與異動申報中心控制模組
         // ==========================================
         function openLeaveModal() {
             currentLeaveStep = 1;
@@ -726,36 +724,46 @@
         function setupStep2Layout() {
             let leaveType = document.querySelector('input[name="leaveType"]:checked').value;
             let container = document.getElementById('leaveStep2Content');
+            let applicant = document.getElementById('leaveApplicant').value;
             let html = "";
 
             if (leaveType === "長假") {
                 html = `
                     <div class="form-group">
-                        <label class="form-label">請選擇長假涵蓋週次 (需選取 ≥ 2 週，最多 2 個月)：</label>
-                        <div class="check-group">
-                            ${generateWeekCheckboxes()}
-                        </div>
-                    </div>`;
+                        <label class="form-label">請選擇長假開始日期：</label>
+                        <input type="date" id="leaveStartDate" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">請選擇長假結束日期：</label>
+                        <input type="date" id="leaveEndDate" class="form-input">
+                    </div>
+                    <div style="font-size:12.5px; color:#7A868C; margin-top:8px;">系統將自動換算對應週次。請假須涵蓋至少 2 週，最多不可超過 2 個月。</div>
+                `;
             } else if (leaveType === "預先假") {
                 html = `
                     <div class="form-group">
-                        <label class="form-label">請選取單一週次作為預先假 (不可為本週)：</label>
-                        <div class="radio-group">
-                            ${generateWeekRadios()}
-                        </div>
-                    </div>`;
+                        <label class="form-label">請選擇預先假開始日期：</label>
+                        <input type="date" id="leaveStartDate" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">請選擇預先假結束日期：</label>
+                        <input type="date" id="leaveEndDate" class="form-input">
+                    </div>
+                    <div style="font-size:12.5px; color:#7A868C; margin-top:8px;">預先假一次僅能申請一週（起迄日須落於同一週次內），且僅可申請未來 2 個月內之區間。</div>
+                `;
             } else if (leaveType === "臨時假") {
-                // 從 index 1 抓起，避開本週的人與全體分攤
-                let candidates = parsedSchedule.slice(1).map(s => s.worker).filter((v, i, a) => a.indexOf(v) === i && v !== "【全體分攤】");
+                // 從 index 1 抓起，排除自己與全體分攤
+                let candidates = parsedSchedule.slice(1).map(s => s.worker).filter((v, i, a) => a.indexOf(v) === i && v !== "【全體分攤】" && v !== applicant);
                 html = `
                     <div class="form-group">
                         <label class="form-label">請選取協調接替之當值代班人員：</label>
                         <select id="swapTargetSelect" class="form-select">
+                            <option value="">請選擇代班人員...</option>
                             ${candidates.map(c => `<option value="${c}">${c}</option>`).join('')}
                         </select>
                     </div>
                     <div style="background:#FDE8E8; padding:12px; border-radius:8px; font-size:13px; color:#C81E1E; line-height:1.5; margin-top:10px;">
-                        ⚠️ <strong>專業職責宣告與安全警示：</strong><br>
+                        <strong>專業職責宣告與安全警示：</strong><br>
                         1. 送出後代表本週值日未完成，班表將更動由代班人員接替完成。<br>
                         2. 申報前請務必確認已與代班人員充分溝通並取得同意！
                     </div>`;
@@ -769,50 +777,73 @@
             currentLeaveStep = 2;
         }
 
-        // 動態生成選單：從下週(index=1)開始列出
-        function generateWeekCheckboxes() {
-            let html = "";
-            for (let i = 1; i < parsedSchedule.length; i++) {
-                let s = parsedSchedule[i];
-                let weekNum = s.code.substring(2, 6);
-                html += `<label class="check-label"><input type="checkbox" name="weekCheck" value="${weekNum}"> 第 ${weekNum} 週 (${s.interval})</label>`;
-            }
-            return html;
-        }
-
-        function generateWeekRadios() {
-            let html = "";
-            for (let i = 1; i < parsedSchedule.length; i++) {
-                let s = parsedSchedule[i];
-                let weekNum = s.code.substring(2, 6);
-                html += `<label class="radio-label"><input type="radio" name="weekRadio" value="${weekNum}" ${i===1?'checked':''}> 第 ${weekNum} 週 (${s.interval})</label>`;
-            }
-            return html;
-        }
-
         function submitLeavePayload() {
             let applicant = document.getElementById('leaveApplicant').value;
             let leaveType = document.querySelector('input[name="leaveType"]:checked').value;
             let targetWeeks = "";
             let swapTarget = "";
 
-            if (leaveType === "長假") {
-                let checked = Array.from(document.querySelectorAll('input[name="weekCheck"]:checked')).map(c => c.value);
-                if (checked.length < 2) {
-                    Swal.fire("申報限制", "長假申請必須選擇至少 2 週 (包含 2 週)！", "warning");
+            let currentWeekCode = 0;
+            if (parsedSchedule.length > 0) {
+                currentWeekCode = parseInt(parsedSchedule[0].code.substring(2, 6), 10);
+            }
+
+            if (leaveType === "長假" || leaveType === "預先假") {
+                let startDateVal = document.getElementById('leaveStartDate').value;
+                let endDateVal = document.getElementById('leaveEndDate').value;
+                
+                if (!startDateVal || !endDateVal) {
+                    Swal.fire("欄位未填", "請選擇開始與結束日期。", "warning");
                     return;
                 }
-                targetWeeks = `${checked[0]}-${checked[checked.length - 1]}`;
-            } else if (leaveType === "預先假") {
-                let selected = document.querySelector('input[name="weekRadio"]:checked');
-                if (!selected) {
-                    Swal.fire("欄位未填", "請選取要請假的週次！", "warning");
+
+                let startD = new Date(startDateVal);
+                let endD = new Date(endDateVal);
+
+                if (startD > endD) {
+                    Swal.fire("日期錯誤", "結束日期不能早於開始日期。", "error");
                     return;
                 }
-                targetWeeks = selected.value;
+
+                let startWeekCode = getSundayBasedWeekCode(startD);
+                let endWeekCode = getSundayBasedWeekCode(endD);
+
+                if (startWeekCode <= currentWeekCode) {
+                    Swal.fire("日期錯誤", "請假期間不可包含本週或過去的週次。", "error");
+                    return;
+                }
+
+                if (leaveType === "長假") {
+                    if (endWeekCode - startWeekCode < 1) {
+                        Swal.fire("申報限制", "長假申請必須選擇至少 2 週的時間。", "warning");
+                        return;
+                    }
+                    let diffDays = (endD - startD) / (1000 * 60 * 60 * 24);
+                    if (diffDays > 60) {
+                        Swal.fire("申報限制", "長假申請最多不可超過 2 個月。", "warning");
+                        return;
+                    }
+                    targetWeeks = `${startWeekCode}-${endWeekCode}`;
+                } else if (leaveType === "預先假") {
+                    if (startWeekCode !== endWeekCode) {
+                        Swal.fire("申報限制", "預先假一次僅能申請單一週次，請確認起訖日期是否在同一週內。", "warning");
+                        return;
+                    }
+                    let maxFuture = new Date();
+                    maxFuture.setMonth(maxFuture.getMonth() + 2);
+                    if (startD > maxFuture) {
+                        Swal.fire("申報限制", "預先假最多僅能申請未來兩個月內的週次。", "warning");
+                        return;
+                    }
+                    targetWeeks = startWeekCode.toString();
+                }
             } else if (leaveType === "臨時假") {
                 targetWeeks = parsedSchedule[0].code.substring(2, 6);
                 swapTarget = document.getElementById('swapTargetSelect').value;
+                if (!swapTarget) {
+                    Swal.fire("欄位未填", "請選擇代班人員。", "warning");
+                    return;
+                }
             }
 
             document.getElementById('leaveNextBtn').disabled = true;
@@ -856,7 +887,7 @@
         }
 
         // ==========================================
-        // 📝 智慧問卷日誌回報核心控制引擎
+        // 智慧問卷日誌回報核心控制引擎
         // ==========================================
         function initiateLogSystem() {
             const isTestMode = document.getElementById('cfgTestMode').value === "true";
@@ -912,7 +943,6 @@
                 }
 
                 if (isPrevDayEmpty) {
-                    // 🎯【第一項修改】：補填時間寬限放寬到中午 12:00 (1200)
                     if (curTimeValue <= 1200) {
                         Swal.fire({
                             title: "昨日補填程序啟動",
@@ -922,7 +952,6 @@
                         currentFormModeLabel = isTestMode ? "補填 (測試)" : "補填";
                         submissionTargetDayNum = prevDayNum; 
                     } else {
-                        // 🎯 熔斷防禦同步修補文字為 12:00
                         Swal.fire({
                             title: "昨日補填已逾期",
                             text: "昨日工作日誌已逾今日 12:00 補填寬限期，系統已關閉補登通道。本次填寫將自動轉為登錄「今日」值日資訊。",
@@ -1081,11 +1110,10 @@
             document.getElementById('formTitleText').innerText = page.title;
             let html = "";
 
-            // 🎯【第二項修改】：在第二頁最頂端加入「一鍵完成」按鈕
             if (currentFormPageIndex === 1) {
                 html += `
                 <div class="quick-complete-container">
-                    <button type="button" class="quick-complete-btn" onclick="triggerQuickComplete()">✨ 本頁項目一鍵完成</button>
+                    <button type="button" class="quick-complete-btn" onclick="triggerQuickComplete()">本頁項目一鍵完成</button>
                 </div>`;
             }
 
@@ -1176,9 +1204,8 @@
             document.getElementById('formActionBtn').innerText = (currentFormPageIndex === formPagesData.length - 1) ? "提交日誌表格" : "下一步";
         }
 
-        // 🎯【第二項修改】：一鍵完成核心處理函數
         function triggerQuickComplete() {
-            const page = formPagesData[1]; // 精確鎖定第二頁
+            const page = formPagesData[1];
             if (!page) return;
 
             let questionList = [];
@@ -1385,7 +1412,7 @@
         }
 
         // ==========================================
-        // 🔍 歷史日誌查閱中心模組
+        // 歷史日誌查閱中心模組
         // ==========================================
         function toggleLogCenterView() { document.getElementById('logCenterModal').classList.toggle('hidden'); }
 
@@ -1434,7 +1461,7 @@
         function loadSpecificDayLog() {
             const weekWeekEl = document.getElementById('selectLogWeek');
             if (!weekWeekEl || weekWeekEl.options.length === 0) {
-                document.getElementById('logViewerCanvas').innerHTML = `<div style="text-align:center; padding:4px 0; color:#95A5A6; font-size:13px; font-weight:500;">➔ 本日暫無任何登錄紀錄資料</div>`;
+                document.getElementById('logViewerCanvas').innerHTML = `<div style="text-align:center; padding:4px 0; color:#95A5A6; font-size:13px; font-weight:500;">本日暫無任何登錄紀錄資料</div>`;
                 return;
             }
 
@@ -1451,7 +1478,7 @@
             }
 
             if (!rowData || !rowData[baseColIdx] || rowData[baseColIdx].trim() === "") {
-                document.getElementById('logViewerCanvas').innerHTML = `<div style="text-align:center; padding:4px 0; color:#95A5A6; font-size:13px; font-weight:500;">➔ 本日暫無任何登錄紀錄資料</div>`;
+                document.getElementById('logViewerCanvas').innerHTML = `<div style="text-align:center; padding:4px 0; color:#95A5A6; font-size:13px; font-weight:500;">本日暫無任何登錄紀錄資料</div>`;
                 return;
             }
 
@@ -1494,8 +1521,8 @@
                     if (key === "[系統戳記]" || key === "[原訂值日生]") continue; 
                     let val = obj[key];
                     let valHtml = val;
-                    if(val === "已完成") valHtml = `<span style="color:#2E7D32; font-weight:bold;">✓ 已完成</span>`;
-                    else if(val === "未完成") valHtml = `<span style="color:#C81E1E; font-weight:bold;">✗ 未完成</span>`;
+                    if(val === "已完成") valHtml = `<span style="color:#2E7D32; font-weight:bold;">已完成</span>`;
+                    else if(val === "未完成") valHtml = `<span style="color:#C81E1E; font-weight:bold;">未完成</span>`;
                     else if(val === "無個別備註") valHtml = `<span style="color:#BDC3C7; font-weight:500;">無個別備註</span>`;
                     
                     html += `<div class="view-row"><span class="view-label">${key}</span><span class="view-val">${valHtml}</span></div>`;
