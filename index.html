@@ -822,26 +822,39 @@
       }
     }
 
-    // 1. 檢查登入：只負責抓資料並呼叫 launchApp
-    function checkRememberedLogin() {
-      let stored = localStorage.getItem('sectorpulse_user') || sessionStorage.getItem('sectorpulse_user');
+    // 💡 最暴力版本：直接在檢查時就判斷 DOM 顯示狀態
+function checkRememberedLogin() {
+  const stored = localStorage.getItem('sectorpulse_user') || sessionStorage.getItem('sectorpulse_user');
+  const authModal = document.getElementById('authModal');
+  const mainApp = document.getElementById('mainApp');
 
-      if (stored) {
-        try {
-          currentUser = JSON.parse(stored);
-          userWatchlist = new Set();
-          
-          // 直接啟動 App
-          launchApp();
-        } catch(e) {
-          localStorage.removeItem('sectorpulse_user');
-          sessionStorage.removeItem('sectorpulse_user');
-          showAuthModal();
-        }
-      } else {
-        showAuthModal();
+  if (stored) {
+    console.log("【自動登入】發現已存登入資料，準備進入...");
+    try {
+      currentUser = JSON.parse(stored);
+      
+      // 直接隱藏視窗
+      if (authModal) {
+        authModal.classList.add('hidden');
+        authModal.style.display = 'none';
       }
+      // 直接顯示內容
+      if (mainApp) {
+        mainApp.classList.remove('hidden');
+      }
+      
+      launchApp();
+    } catch(e) {
+      console.error("解析錯誤，清除暫存");
+      localStorage.removeItem('sectorpulse_user');
+      sessionStorage.removeItem('sectorpulse_user');
+      showAuthModal();
     }
+  } else {
+    console.log("【進入登入模式】無暫存資料");
+    showAuthModal();
+  }
+}
 
     function showAuthModal() {
       document.getElementById('authModal').classList.remove('hidden');
