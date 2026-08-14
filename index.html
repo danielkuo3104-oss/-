@@ -822,42 +822,25 @@
       }
     }
 
-    // 💡 3. 嚴格檢查：只讀取符合規則的儲存區
+    // 3. 檢查登入狀態（只認基本資料，不解析 watchlist）
     function checkRememberedLogin() {
-      // 優先檢查永久儲存，如果沒有，才檢查暫時儲存
-      let stored = localStorage.getItem('sectorpulse_user');
-      let isPermanent = true;
-
-      if (!stored) {
-        stored = sessionStorage.getItem('session_user') || sessionStorage.getItem('sectorpulse_user');
-        isPermanent = false;
-      }
+      let stored = localStorage.getItem('sectorpulse_user') || sessionStorage.getItem('sectorpulse_user');
 
       if (stored) {
         try {
           currentUser = JSON.parse(stored);
-
-          // 略過代號格式問題，直接建立 Set
+          
+          // 這裡的watchlist透過其他機制處理，登入狀態單純放行
           userWatchlist = new Set();
-          if (currentUser.watchlist) {
-            try {
-              const rawList = typeof currentUser.watchlist === 'string' ? JSON.parse(currentUser.watchlist) : currentUser.watchlist;
-              if (Array.isArray(rawList)) {
-                userWatchlist = new Set(rawList);
-              }
-            } catch(err) {}
-          }
 
           document.getElementById('authModal').classList.add('hidden');
           launchApp();
         } catch(e) {
-          console.warn("登入暫存解析失敗", e);
           localStorage.removeItem('sectorpulse_user');
           sessionStorage.removeItem('sectorpulse_user');
           showAuthModal();
         }
       } else {
-        // 如果兩邊都沒有，強制跳出登入框
         showAuthModal();
       }
     }
@@ -894,12 +877,12 @@
       launchApp();
     }
 
-    // 💡 2. 強化版登入驗證處理
+    // 1. 登入處理：抓取勾選狀態
     async function handleLogin(e) {
       e.preventDefault();
       const email = document.getElementById('loginEmail').value.trim();
       const pass = document.getElementById('loginPass').value.trim();
-      const remember = document.getElementById('loginRemember').checked; // 抓取有沒有勾選
+      const remember = document.getElementById('loginRemember').checked;
       const btn = document.getElementById('btnLoginSubmit');
 
       btn.disabled = true;
@@ -912,8 +895,13 @@
         });
         const result = await res.json();
         if (result.success) {
-          currentUser = result.user;
-          finalizeLogin(remember); // 把勾選狀態傳進去
+          // 💡 關鍵：直接捨棄後端回傳的 watchlist，只留純粹的會員基本資料
+          currentUser = {
+            name: result.user.name,
+            email: result.user.email,
+            role: result.user.role
+          };
+          finalizeLogin(remember);
         } else {
           showAuthMsg(result.message || '帳號未開通或密碼不符', true);
         }
@@ -930,16 +918,14 @@
       }
     }
 
-    // 💡 2. 根據是否勾選，決定寫入 LocalStorage 還是 SessionStorage
+    // 2. 儲存登入狀態（完全不含 watchlist）
     function finalizeLogin(remember) {
       const userJson = JSON.stringify(currentUser);
       
       if (remember) {
-        // 有勾選「保持登入」：存入永久 LocalStorage
         localStorage.setItem('sectorpulse_user', userJson);
         sessionStorage.removeItem('sectorpulse_user');
       } else {
-        // 沒勾選：只存入暫時 SessionStorage（關閉後即失效）
         sessionStorage.setItem('sectorpulse_user', userJson);
         localStorage.removeItem('sectorpulse_user');
       }
