@@ -225,7 +225,7 @@
   </div>
 
   <!-- ================= 登入 / 註冊 彈窗視窗 ================= -->
-  <div id="authModal" class="fixed inset-0 z-40 bg-slate-950/95 flex items-center justify-center p-4">
+  <div id="authModal" class="fixed inset-0 z-40 bg-slate-950/95 flex items-center justify-center p-4 hidden">
     <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl w-full max-w-md p-6 sm:p-8 shadow-2xl">
       
       <div class="flex items-center space-x-3 mb-6">
@@ -822,6 +822,7 @@
       }
     }
 
+    // 💡 徹底修復保持登入與字串型態相容
     function checkRememberedLogin() {
       let stored = localStorage.getItem('sectorpulse_user') || sessionStorage.getItem('sectorpulse_user');
 
@@ -829,22 +830,50 @@
         try {
           currentUser = JSON.parse(stored);
 
-          if (currentUser.watchlist && typeof currentUser.watchlist === 'string') {
-            try { currentUser.watchlist = JSON.parse(currentUser.watchlist); } catch(e) { currentUser.watchlist = []; }
+          // 1. 強制修復 watchlist 雙重字串打包問題
+          if (currentUser.watchlist) {
+            if (typeof currentUser.watchlist === 'string') {
+              try {
+                currentUser.watchlist = JSON.parse(currentUser.watchlist);
+              } catch(e) {
+                currentUser.watchlist = [];
+              }
+            }
+            if (Array.isArray(currentUser.watchlist)) {
+              userWatchlist = new Set(currentUser.watchlist);
+            }
+          } else {
+            userWatchlist = new Set();
           }
 
-          if (currentUser.watchlist && Array.isArray(currentUser.watchlist)) {
-            userWatchlist = new Set(currentUser.watchlist);
-          }
-          
+          // 2. 確保登入視窗隱藏並直接進入主畫面
           document.getElementById('authModal').classList.add('hidden');
           launchApp();
         } catch(e) {
+          console.error("登入暫存解析失敗，重設登入狀態:", e);
+          localStorage.removeItem('sectorpulse_user');
+          sessionStorage.removeItem('sectorpulse_user');
           showAuthModal();
         }
       } else {
         showAuthModal();
       }
+    }
+
+    function finalizeLogin(remember) {
+      // 確保存入前 watchlist 也是標準陣列
+      if (currentUser && typeof currentUser.watchlist === 'string') {
+        try { currentUser.watchlist = JSON.parse(currentUser.watchlist); } catch(e) { currentUser.watchlist = []; }
+      }
+
+      const userJson = JSON.stringify(currentUser);
+      localStorage.setItem('sectorpulse_user', userJson);
+      if (!remember) {
+        sessionStorage.setItem('sectorpulse_user', userJson);
+      }
+      
+      document.getElementById('authModal').classList.add('hidden');
+      launchApp();
     }
 
     function showAuthModal() {
