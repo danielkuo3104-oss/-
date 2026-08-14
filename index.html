@@ -807,7 +807,7 @@
           body: JSON.stringify({
             action: 'updateWatchlist',
             email: currentUser.email,
-            watchlist: JSON.stringify(watchlistArr)
+            watchlist: watchlistArr // 👉 直接傳陣列就好！
           })
         })
         .then(res => res.json())
@@ -836,6 +836,10 @@
           if (currentUser.watchlist && Array.isArray(currentUser.watchlist)) {
             userWatchlist = new Set(currentUser.watchlist);
           }
+          
+          // 💡 關鍵修正：成功讀取到資料後，必須把登入視窗隱藏起來！
+          document.getElementById('authModal').classList.add('hidden');
+          
           launchApp();
         } catch(e) {
           showAuthModal();
