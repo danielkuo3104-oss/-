@@ -822,6 +822,7 @@
       }
     }
 
+    // 💡 1. 強化版檢查登入（加入陣列型態強力清洗）
     function checkRememberedLogin() {
       let stored = localStorage.getItem('sectorpulse_user') || sessionStorage.getItem('sectorpulse_user');
 
@@ -829,14 +830,10 @@
         try {
           currentUser = JSON.parse(stored);
 
-          // 💡 強制清洗：如果 watchlist 是字串，務必還原成純陣列
+          // 強制清洗 watchlist：確保它絕對是陣列
           if (currentUser.watchlist) {
             if (typeof currentUser.watchlist === 'string') {
-              try {
-                currentUser.watchlist = JSON.parse(currentUser.watchlist);
-              } catch(e) {
-                currentUser.watchlist = [];
-              }
+              try { currentUser.watchlist = JSON.parse(currentUser.watchlist); } catch(e) { currentUser.watchlist = []; }
             }
             if (Array.isArray(currentUser.watchlist)) {
               userWatchlist = new Set(currentUser.watchlist);
@@ -847,13 +844,13 @@
             userWatchlist = new Set();
           }
 
-          // 確保更新 localStorage 讓下次乾淨
+          // 回寫乾淨的資料至 localStorage
           localStorage.setItem('sectorpulse_user', JSON.stringify(currentUser));
 
           document.getElementById('authModal').classList.add('hidden');
           launchApp();
         } catch(e) {
-          console.warn("解析登入暫存失敗，清除重登", e);
+          console.error("登入暫存解析失敗，重設:", e);
           localStorage.removeItem('sectorpulse_user');
           sessionStorage.removeItem('sectorpulse_user');
           showAuthModal();
@@ -910,6 +907,7 @@
       launchApp();
     }
 
+    // 💡 2. 強化版登入驗證處理
     async function handleLogin(e) {
       e.preventDefault();
       const email = document.getElementById('loginEmail').value.trim();
@@ -928,19 +926,24 @@
         const result = await res.json();
         if (result.success) {
           currentUser = result.user;
-          if (currentUser.watchlist && typeof currentUser.watchlist === 'string') {
-            try { currentUser.watchlist = JSON.parse(currentUser.watchlist); } catch(e) { currentUser.watchlist = []; }
+
+          // 💡 關鍵：在這裡就將後端回傳的 watchlist 字串轉成陣列
+          if (currentUser.watchlist) {
+            if (typeof currentUser.watchlist === 'string') {
+              try { currentUser.watchlist = JSON.parse(currentUser.watchlist); } catch(e) { currentUser.watchlist = []; }
+            }
+            if (Array.isArray(currentUser.watchlist)) {
+              userWatchlist = new Set(currentUser.watchlist);
+            }
           }
-          if (currentUser.watchlist && Array.isArray(currentUser.watchlist)) {
-            userWatchlist = new Set(currentUser.watchlist);
-          }
+
           finalizeLogin(remember);
         } else {
           showAuthMsg(result.message || '帳號未開通或密碼不符', true);
         }
       } catch (err) {
         if (email === ADMIN_EMAIL && pass) {
-          currentUser = { name: '郭丹騏', email: email, role: 'admin' };
+          currentUser = { name: '郭丹騏', email: email, role: 'admin', watchlist: [] };
           finalizeLogin(remember);
         } else {
           showAuthMsg('連線異常，請確認網路或試算表狀態。', true);
@@ -1001,6 +1004,7 @@
       }
     }
 
+    // 💡 3. 強化版已訂閱會員開通處理
     async function handleRegSub(e) {
       e.preventDefault();
       const select = document.getElementById('subNameSelect');
@@ -1026,9 +1030,16 @@
         if (result.success) {
           showAuthMsg('開通成功！確認信件已寄出，登入中...', false);
           currentUser = result.user;
-          if (currentUser.watchlist && Array.isArray(currentUser.watchlist)) {
-            userWatchlist = new Set(currentUser.watchlist);
+
+          if (currentUser.watchlist) {
+            if (typeof currentUser.watchlist === 'string') {
+              try { currentUser.watchlist = JSON.parse(currentUser.watchlist); } catch(e) { currentUser.watchlist = []; }
+            }
+            if (Array.isArray(currentUser.watchlist)) {
+              userWatchlist = new Set(currentUser.watchlist);
+            }
           }
+
           setTimeout(() => finalizeLogin(true), 1200);
         } else {
           showAuthMsg(result.message || '信箱與登記紀錄不一致，請確認或全新註冊。', true);
