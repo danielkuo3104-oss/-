@@ -822,7 +822,6 @@
       }
     }
 
-    // 💡 徹底修復保持登入與字串型態相容
     function checkRememberedLogin() {
       let stored = localStorage.getItem('sectorpulse_user') || sessionStorage.getItem('sectorpulse_user');
 
@@ -830,7 +829,7 @@
         try {
           currentUser = JSON.parse(stored);
 
-          // 1. 強制修復 watchlist 雙重字串打包問題
+          // 💡 強制清洗：如果 watchlist 是字串，務必還原成純陣列
           if (currentUser.watchlist) {
             if (typeof currentUser.watchlist === 'string') {
               try {
@@ -841,16 +840,20 @@
             }
             if (Array.isArray(currentUser.watchlist)) {
               userWatchlist = new Set(currentUser.watchlist);
+            } else {
+              userWatchlist = new Set();
             }
           } else {
             userWatchlist = new Set();
           }
 
-          // 2. 確保登入視窗隱藏並直接進入主畫面
+          // 確保更新 localStorage 讓下次乾淨
+          localStorage.setItem('sectorpulse_user', JSON.stringify(currentUser));
+
           document.getElementById('authModal').classList.add('hidden');
           launchApp();
         } catch(e) {
-          console.error("登入暫存解析失敗，重設登入狀態:", e);
+          console.warn("解析登入暫存失敗，清除重登", e);
           localStorage.removeItem('sectorpulse_user');
           sessionStorage.removeItem('sectorpulse_user');
           showAuthModal();
@@ -861,8 +864,8 @@
     }
 
     function finalizeLogin(remember) {
-      // 確保存入前 watchlist 也是標準陣列
-      if (currentUser && typeof currentUser.watchlist === 'string') {
+      // 💡 確保寫入前就是乾淨的陣列
+      if (currentUser && currentUser.watchlist && typeof currentUser.watchlist === 'string') {
         try { currentUser.watchlist = JSON.parse(currentUser.watchlist); } catch(e) { currentUser.watchlist = []; }
       }
 
