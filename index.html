@@ -225,7 +225,7 @@
   </div>
 
   <!-- ================= 登入 / 註冊 彈窗視窗 ================= -->
-  <div id="authModal" class="fixed inset-0 z-40 bg-slate-950/95 flex items-center justify-center p-4 hidden">
+  <div id="authModal" class="fixed inset-0 z-40 bg-slate-950/95 flex items-center justify-center p-4">
     <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl w-full max-w-md p-6 sm:p-8 shadow-2xl">
       
       <div class="flex items-center space-x-3 mb-6">
@@ -822,15 +822,19 @@
       }
     }
 
-    // 3. 檢查登入狀態（只認基本資料，不解析 watchlist）
+    // 💡 嚴格檢查登入狀態（依據有無勾選保持登入來決定讀取來源）
     function checkRememberedLogin() {
-      let stored = localStorage.getItem('sectorpulse_user') || sessionStorage.getItem('sectorpulse_user');
+      // 優先檢查永久儲存 (localStorage)
+      let stored = localStorage.getItem('sectorpulse_user');
+
+      if (!stored) {
+        // 如果沒有永久儲存，才檢查暫時儲存 (sessionStorage)
+        stored = sessionStorage.getItem('sectorpulse_user');
+      }
 
       if (stored) {
         try {
           currentUser = JSON.parse(stored);
-          
-          // 這裡的watchlist透過其他機制處理，登入狀態單純放行
           userWatchlist = new Set();
 
           document.getElementById('authModal').classList.add('hidden');
@@ -844,7 +848,6 @@
         showAuthModal();
       }
     }
-
 
     function showAuthModal() {
       document.getElementById('authModal').classList.remove('hidden');
@@ -865,7 +868,7 @@
         document.getElementById('formRegSub').classList.remove('hidden');
       } else {
         document.getElementById('tabRegisterNew').className = "flex-1 pb-3 text-center font-bold text-brand-500 border-b-2 border-brand-500 cursor-pointer";
-        document.getElementById('formRegNew').classList.remove('hidden');
+        document.getElementById('formRegNew').classList.add('hidden');
       }
       document.getElementById('authAlert').classList.add('hidden');
     }
@@ -877,12 +880,12 @@
       launchApp();
     }
 
-    // 1. 登入處理：抓取勾選狀態
+    // 💡 抓取登入時的「保持登入」勾選狀態
     async function handleLogin(e) {
       e.preventDefault();
       const email = document.getElementById('loginEmail').value.trim();
       const pass = document.getElementById('loginPass').value.trim();
-      const remember = document.getElementById('loginRemember').checked;
+      const remember = document.getElementById('loginRemember').checked; // 這裡精準抓取勾選框
       const btn = document.getElementById('btnLoginSubmit');
 
       btn.disabled = true;
@@ -895,13 +898,12 @@
         });
         const result = await res.json();
         if (result.success) {
-          // 💡 關鍵：直接捨棄後端回傳的 watchlist，只留純粹的會員基本資料
           currentUser = {
             name: result.user.name,
             email: result.user.email,
             role: result.user.role
           };
-          finalizeLogin(remember);
+          finalizeLogin(remember); // 傳入勾選狀態
         } else {
           showAuthMsg(result.message || '帳號未開通或密碼不符', true);
         }
@@ -918,14 +920,16 @@
       }
     }
 
-    // 2. 儲存登入狀態（完全不含 watchlist）
+    // 💡 嚴格根據 remember 決定存入 Local 還是 Session
     function finalizeLogin(remember) {
       const userJson = JSON.stringify(currentUser);
       
       if (remember) {
+        // 有勾選：存入 LocalStorage (永久保留)
         localStorage.setItem('sectorpulse_user', userJson);
         sessionStorage.removeItem('sectorpulse_user');
       } else {
+        // 沒勾選：存入 SessionStorage (僅本次有效，關閉即失效)
         sessionStorage.setItem('sectorpulse_user', userJson);
         localStorage.removeItem('sectorpulse_user');
       }
@@ -977,7 +981,6 @@
       }
     }
 
-    // 💡 3. 強化版已訂閱會員開通處理
     async function handleRegSub(e) {
       e.preventDefault();
       const select = document.getElementById('subNameSelect');
@@ -1002,17 +1005,11 @@
         const result = await res.json();
         if (result.success) {
           showAuthMsg('開通成功！確認信件已寄出，登入中...', false);
-          currentUser = result.user;
-
-          if (currentUser.watchlist) {
-            if (typeof currentUser.watchlist === 'string') {
-              try { currentUser.watchlist = JSON.parse(currentUser.watchlist); } catch(e) { currentUser.watchlist = []; }
-            }
-            if (Array.isArray(currentUser.watchlist)) {
-              userWatchlist = new Set(currentUser.watchlist);
-            }
-          }
-
+          currentUser = {
+            name: result.user.name,
+            email: result.user.email,
+            role: result.user.role
+          };
           setTimeout(() => finalizeLogin(true), 1200);
         } else {
           showAuthMsg(result.message || '信箱與登記紀錄不一致，請確認或全新註冊。', true);
@@ -1245,7 +1242,6 @@
       else el.className = 'font-bold font-mono text-slate-500';
     }
 
-    // 💡 修正：安全移除 countFlat 和 barFlat 的操作，避免 JS 拋錯中斷
     function parseAT10MarketCounts() {
       let at10Raw = "";
       if (rawCsvGrid[9] && rawCsvGrid[9][45]) at10Raw = rawCsvGrid[9][45].trim();
