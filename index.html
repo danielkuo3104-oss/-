@@ -822,22 +822,16 @@
       }
     }
 
-    // 💡 嚴格檢查登入狀態（依據有無勾選保持登入來決定讀取來源）
+    // 1. 檢查登入：只負責抓資料並呼叫 launchApp
     function checkRememberedLogin() {
-      // 優先檢查永久儲存 (localStorage)
-      let stored = localStorage.getItem('sectorpulse_user');
-
-      if (!stored) {
-        // 如果沒有永久儲存，才檢查暫時儲存 (sessionStorage)
-        stored = sessionStorage.getItem('sectorpulse_user');
-      }
+      let stored = localStorage.getItem('sectorpulse_user') || sessionStorage.getItem('sectorpulse_user');
 
       if (stored) {
         try {
           currentUser = JSON.parse(stored);
           userWatchlist = new Set();
-
-          document.getElementById('authModal').classList.add('hidden');
+          
+          // 直接啟動 App
           launchApp();
         } catch(e) {
           localStorage.removeItem('sectorpulse_user');
@@ -1055,7 +1049,15 @@
       }
     }
 
+    // 2. 啟動 App：強制用雙重保險把登入框徹底關閉
     async function launchApp() {
+      // 💡 關鍵：強制確保登入視窗隱藏
+      const authModal = document.getElementById('authModal');
+      if (authModal) {
+        authModal.classList.add('hidden');
+        authModal.style.display = 'none'; // 直接用 CSS 封印它，防止它跑出來
+      }
+
       document.getElementById('mainApp').classList.remove('hidden');
 
       const badgeEl = document.getElementById('userBadge');
