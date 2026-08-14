@@ -822,59 +822,46 @@
       }
     }
 
-    // 💡 1. 強化版檢查登入（加入陣列型態強力清洗）
+    // 💡 3. 嚴格檢查：只讀取符合規則的儲存區
     function checkRememberedLogin() {
-      let stored = localStorage.getItem('sectorpulse_user') || sessionStorage.getItem('sectorpulse_user');
+      // 優先檢查永久儲存，如果沒有，才檢查暫時儲存
+      let stored = localStorage.getItem('sectorpulse_user');
+      let isPermanent = true;
+
+      if (!stored) {
+        stored = sessionStorage.getItem('session_user') || sessionStorage.getItem('sectorpulse_user');
+        isPermanent = false;
+      }
 
       if (stored) {
         try {
           currentUser = JSON.parse(stored);
 
-          // 強制清洗 watchlist：確保它絕對是陣列
+          // 略過代號格式問題，直接建立 Set
+          userWatchlist = new Set();
           if (currentUser.watchlist) {
-            if (typeof currentUser.watchlist === 'string') {
-              try { currentUser.watchlist = JSON.parse(currentUser.watchlist); } catch(e) { currentUser.watchlist = []; }
-            }
-            if (Array.isArray(currentUser.watchlist)) {
-              userWatchlist = new Set(currentUser.watchlist);
-            } else {
-              userWatchlist = new Set();
-            }
-          } else {
-            userWatchlist = new Set();
+            try {
+              const rawList = typeof currentUser.watchlist === 'string' ? JSON.parse(currentUser.watchlist) : currentUser.watchlist;
+              if (Array.isArray(rawList)) {
+                userWatchlist = new Set(rawList);
+              }
+            } catch(err) {}
           }
-
-          // 回寫乾淨的資料至 localStorage
-          localStorage.setItem('sectorpulse_user', JSON.stringify(currentUser));
 
           document.getElementById('authModal').classList.add('hidden');
           launchApp();
         } catch(e) {
-          console.error("登入暫存解析失敗，重設:", e);
+          console.warn("登入暫存解析失敗", e);
           localStorage.removeItem('sectorpulse_user');
           sessionStorage.removeItem('sectorpulse_user');
           showAuthModal();
         }
       } else {
+        // 如果兩邊都沒有，強制跳出登入框
         showAuthModal();
       }
     }
 
-    function finalizeLogin(remember) {
-      // 💡 確保寫入前就是乾淨的陣列
-      if (currentUser && currentUser.watchlist && typeof currentUser.watchlist === 'string') {
-        try { currentUser.watchlist = JSON.parse(currentUser.watchlist); } catch(e) { currentUser.watchlist = []; }
-      }
-
-      const userJson = JSON.stringify(currentUser);
-      localStorage.setItem('sectorpulse_user', userJson);
-      if (!remember) {
-        sessionStorage.setItem('sectorpulse_user', userJson);
-      }
-      
-      document.getElementById('authModal').classList.add('hidden');
-      launchApp();
-    }
 
     function showAuthModal() {
       document.getElementById('authModal').classList.remove('hidden');
@@ -912,7 +899,7 @@
       e.preventDefault();
       const email = document.getElementById('loginEmail').value.trim();
       const pass = document.getElementById('loginPass').value.trim();
-      const remember = document.getElementById('loginRemember').checked;
+      const remember = document.getElementById('loginRemember').checked; // 抓取有沒有勾選
       const btn = document.getElementById('btnLoginSubmit');
 
       btn.disabled = true;
@@ -926,24 +913,13 @@
         const result = await res.json();
         if (result.success) {
           currentUser = result.user;
-
-          // 💡 關鍵：在這裡就將後端回傳的 watchlist 字串轉成陣列
-          if (currentUser.watchlist) {
-            if (typeof currentUser.watchlist === 'string') {
-              try { currentUser.watchlist = JSON.parse(currentUser.watchlist); } catch(e) { currentUser.watchlist = []; }
-            }
-            if (Array.isArray(currentUser.watchlist)) {
-              userWatchlist = new Set(currentUser.watchlist);
-            }
-          }
-
-          finalizeLogin(remember);
+          finalizeLogin(remember); // 把勾選狀態傳進去
         } else {
           showAuthMsg(result.message || '帳號未開通或密碼不符', true);
         }
       } catch (err) {
         if (email === ADMIN_EMAIL && pass) {
-          currentUser = { name: '郭丹騏', email: email, role: 'admin', watchlist: [] };
+          currentUser = { name: '郭丹騏', email: email, role: 'admin' };
           finalizeLogin(remember);
         } else {
           showAuthMsg('連線異常，請確認網路或試算表狀態。', true);
@@ -954,9 +930,20 @@
       }
     }
 
+    // 💡 2. 根據是否勾選，決定寫入 LocalStorage 還是 SessionStorage
     function finalizeLogin(remember) {
-      localStorage.setItem('sectorpulse_user', JSON.stringify(currentUser));
-      if (!remember) sessionStorage.setItem('sectorpulse_user', JSON.stringify(currentUser));
+      const userJson = JSON.stringify(currentUser);
+      
+      if (remember) {
+        // 有勾選「保持登入」：存入永久 LocalStorage
+        localStorage.setItem('sectorpulse_user', userJson);
+        sessionStorage.removeItem('sectorpulse_user');
+      } else {
+        // 沒勾選：只存入暫時 SessionStorage（關閉後即失效）
+        sessionStorage.setItem('sectorpulse_user', userJson);
+        localStorage.removeItem('sectorpulse_user');
+      }
+      
       document.getElementById('authModal').classList.add('hidden');
       launchApp();
     }
