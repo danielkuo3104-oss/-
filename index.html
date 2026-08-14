@@ -751,7 +751,7 @@
 
     async function preloadMembersFromSheet() {
       try {
-        const res = await fetch(CSV_MEMBERS_URL);
+        const res = await fetch(`${CSV_MEMBERS_URL}&_t=${Date.now()}`);
         const text = await res.text();
         const lines = text.split(/\r\n|\n/).filter(l => l.trim() !== '');
         memberListCache = lines.slice(1).map(line => {
@@ -767,7 +767,7 @@
 
     async function preloadHolidays() {
       try {
-        const res = await fetch(CSV_HOLIDAYS_URL);
+        const res = await fetch(`${CSV_HOLIDAYS_URL}&_t=${Date.now()}`);
         const text = await res.text();
         const lines = text.split(/\r\n|\n/).filter(l => l.trim() !== '');
         holidaysList = lines.slice(1).map(l => {
@@ -807,7 +807,7 @@
           body: JSON.stringify({
             action: 'updateWatchlist',
             email: currentUser.email,
-            watchlist: watchlistArr // 👉 直接傳陣列就好！
+            watchlist: watchlistArr
           })
         })
         .then(res => res.json())
@@ -823,23 +823,21 @@
     }
 
     function checkRememberedLogin() {
-      let stored = localStorage.getItem('sectorpulse_user');
-      
-      if (!stored && sessionStorage.getItem('sectorpulse_user')) {
-        stored = sessionStorage.getItem('sectorpulse_user');
-        localStorage.setItem('sectorpulse_user', stored); 
-      }
+      let stored = localStorage.getItem('sectorpulse_user') || sessionStorage.getItem('sectorpulse_user');
 
       if (stored) {
         try {
           currentUser = JSON.parse(stored);
+
+          if (currentUser.watchlist && typeof currentUser.watchlist === 'string') {
+            try { currentUser.watchlist = JSON.parse(currentUser.watchlist); } catch(e) { currentUser.watchlist = []; }
+          }
+
           if (currentUser.watchlist && Array.isArray(currentUser.watchlist)) {
             userWatchlist = new Set(currentUser.watchlist);
           }
           
-          // 💡 關鍵修正：成功讀取到資料後，必須把登入視窗隱藏起來！
           document.getElementById('authModal').classList.add('hidden');
-          
           launchApp();
         } catch(e) {
           showAuthModal();
@@ -898,6 +896,9 @@
         const result = await res.json();
         if (result.success) {
           currentUser = result.user;
+          if (currentUser.watchlist && typeof currentUser.watchlist === 'string') {
+            try { currentUser.watchlist = JSON.parse(currentUser.watchlist); } catch(e) { currentUser.watchlist = []; }
+          }
           if (currentUser.watchlist && Array.isArray(currentUser.watchlist)) {
             userWatchlist = new Set(currentUser.watchlist);
           }
@@ -920,11 +921,7 @@
 
     function finalizeLogin(remember) {
       localStorage.setItem('sectorpulse_user', JSON.stringify(currentUser));
-      
-      if (!remember) {
-        sessionStorage.setItem('sectorpulse_user', JSON.stringify(currentUser));
-      }
-      
+      if (!remember) sessionStorage.setItem('sectorpulse_user', JSON.stringify(currentUser));
       document.getElementById('authModal').classList.add('hidden');
       launchApp();
     }
@@ -1080,10 +1077,14 @@
 
     async function fetchAndParseCsv() {
       try {
-        const res = await fetch(CSV_STOCKS_URL);
+        const cacheBuster = `&_t=${Date.now()}`;
+        const res = await fetch(CSV_STOCKS_URL + cacheBuster);
         const text = await res.text();
         parseCsvData(text);
-      } catch (e) {}
+      } catch (e) {
+        console.error("CSV 下載失敗:", e);
+        document.getElementById('dataTimestamp').textContent = "連線異常，請點擊刷新";
+      }
     }
 
     function parseCsvData(csvText) {
@@ -1103,8 +1104,8 @@
 
       renderAnnouncements();
       checkSystemIntegrity(at2Date, arHeaderDate, ahHeaderDate, as11Val);
-      renderMarketData();
       renderStockModules();
+      renderMarketData();
     }
 
     function parseCsvRow(text) {
@@ -1228,6 +1229,7 @@
       else el.className = 'font-bold font-mono text-slate-500';
     }
 
+    // 💡 修正：安全移除 countFlat 和 barFlat 的操作，避免 JS 拋錯中斷
     function parseAT10MarketCounts() {
       let at10Raw = "";
       if (rawCsvGrid[9] && rawCsvGrid[9][45]) at10Raw = rawCsvGrid[9][45].trim();
@@ -1251,16 +1253,16 @@
       }
 
       const total = limitUp + up + down + limitDown;
-      document.getElementById('countLimitUp').textContent = limitUp;
-      document.getElementById('countUp').textContent = up;
-      document.getElementById('countDown').textContent = down;
-      document.getElementById('countLimitDown').textContent = limitDown;
+      if (document.getElementById('countLimitUp')) document.getElementById('countLimitUp').textContent = limitUp;
+      if (document.getElementById('countUp')) document.getElementById('countUp').textContent = up;
+      if (document.getElementById('countDown')) document.getElementById('countDown').textContent = down;
+      if (document.getElementById('countLimitDown')) document.getElementById('countLimitDown').textContent = limitDown;
 
       if (total > 0) {
-        document.getElementById('barLimitUp').style.width = `${(limitUp / total) * 100}%`;
-        document.getElementById('barUp').style.width = `${(up / total) * 100}%`;
-        document.getElementById('barDown').style.width = `${(down / total) * 100}%`;
-        document.getElementById('barLimitDown').style.width = `${(limitDown / total) * 100}%`;
+        if (document.getElementById('barLimitUp')) document.getElementById('barLimitUp').style.width = `${(limitUp / total) * 100}%`;
+        if (document.getElementById('barUp')) document.getElementById('barUp').style.width = `${(up / total) * 100}%`;
+        if (document.getElementById('barDown')) document.getElementById('barDown').style.width = `${(down / total) * 100}%`;
+        if (document.getElementById('barLimitDown')) document.getElementById('barLimitDown').style.width = `${(limitDown / total) * 100}%`;
       }
     }
 
