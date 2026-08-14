@@ -623,13 +623,13 @@
     let currentModalStockId = null;
     let customSimulatedDate = null;
 
-    window.addEventListener('DOMContentLoaded', () => {
+    
       initTheme();
       preloadMembersFromSheet();
       preloadHolidays();
       loadWatchlist();
       checkRememberedLogin();
-    });
+    
 
     async function handleRefresh() {
       const icon = document.getElementById('refreshIcon');
