@@ -880,12 +880,12 @@
       launchApp();
     }
 
-    // 💡 抓取登入時的「保持登入」勾選狀態
+    // 1. 登入處理：徹底把後端的 watchlist 刪掉，不讓它汙染 LocalStorage
     async function handleLogin(e) {
       e.preventDefault();
       const email = document.getElementById('loginEmail').value.trim();
       const pass = document.getElementById('loginPass').value.trim();
-      const remember = document.getElementById('loginRemember').checked; // 這裡精準抓取勾選框
+      const remember = document.getElementById('loginRemember').checked;
       const btn = document.getElementById('btnLoginSubmit');
 
       btn.disabled = true;
@@ -898,12 +898,12 @@
         });
         const result = await res.json();
         if (result.success) {
-          currentUser = {
-            name: result.user.name,
-            email: result.user.email,
-            role: result.user.role
-          };
-          finalizeLogin(remember); // 傳入勾選狀態
+          currentUser = result.user;
+          
+          // 💡 決定性的一刀：直接將後端帶來的 watchlist 刪除！
+          delete currentUser.watchlist; 
+
+          finalizeLogin(remember);
         } else {
           showAuthMsg(result.message || '帳號未開通或密碼不符', true);
         }
