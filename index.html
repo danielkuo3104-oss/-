@@ -421,28 +421,59 @@
         let globalBasePhotoUrl = ""; 
         let globalRulesHistory = []; 
 
-        // 🎯 智慧憑證/已繳按鈕渲染防禦器
-        function renderReceiptBtn(val, btnText, titleText, styleStr = "") {
-            if (!val) return "<span style='color:#cbd1d6;'>-</span>";
-            let cleanVal = String(val).trim();
-            if (cleanVal === "" || cleanVal === "-") return "<span style='color:#cbd1d6;'>-</span>";
-            
-            // 如果填寫「已繳」，顯示靜態完成標籤，不綁定點擊事件
-            if (cleanVal === "已繳") {
-                return `<span class="paid-badge">已繳</span>`;
-            }
-            
-            // 只有包含網址時才渲染成可點擊的檢視按鈕
-            if (cleanVal.includes("http://") || cleanVal.includes("https://") || cleanVal.includes("drive.google.com")) {
-                let defaultStyle = "color:#527996; background:#edf3f7; border: 1px solid #cedde7;";
-                let useStyle = styleStr || defaultStyle;
-                return `<span class="receipt-link-btn" style="${useStyle}" onclick="openImageModal('${cleanVal}', '${titleText}')">${btnText}</span>`;
-            }
-            
-            // 其他狀況（如其他純文字備註）直接顯示
-            return `<span style='color:#7a828a; font-size:12px;'>${cleanVal}</span>`;
-        }
+        // 🎯 智慧憑證/已繳按鈕渲染防禦器（保留按鈕名稱，支援手動登記提示）
+function renderReceiptBtn(val, btnText, titleText, styleStr = "") {
+    if (!val) return "<span style='color:#cbd1d6;'>-</span>";
+    let cleanVal = String(val).trim();
+    if (cleanVal === "" || cleanVal === "-") return "<span style='color:#cbd1d6;'>-</span>";
+    
+    let defaultStyle = "color:#527996; background:#edf3f7; border: 1px solid #cedde7;";
+    let useStyle = styleStr || defaultStyle;
 
+    // 1. 如果填寫「已繳」，依然顯示該費用名稱按鈕，點擊跳出專業提示
+    if (cleanVal === "已繳") {
+        return `<span class="receipt-link-btn" style="${useStyle}" onclick="showPaidNotice('${titleText}')">${btnText}</span>`;
+    }
+    
+    // 2. 包含 Google Drive 或一般網址時，點擊開啟照片彈窗
+    if (cleanVal.includes("http://") || cleanVal.includes("https://") || cleanVal.includes("drive.google.com")) {
+        return `<span class="receipt-link-btn" style="${useStyle}" onclick="openImageModal('${cleanVal}', '${titleText}')">${btnText}</span>`;
+    }
+    
+    // 3. 其他非網址文字備註，點擊亦彈出提示說明
+    return `<span class="receipt-link-btn" style="${useStyle}" onclick="showPaidNotice('${titleText}', '${cleanVal}')">${btnText}</span>`;
+}
+
+// 🎯 手動登記已繳提示（專業版系統彈窗）
+function showPaidNotice(titleText, customRemark = "") {
+    let detailMsg = customRemark ? `\n（備註：${customRemark}）` : "";
+    alert(`【系統提示 - ${titleText}】\n\n該筆費用已由管理員手動登記為「已繳納」，暫無檢附影像憑證。${detailMsg}`);
+}
+
+// 🎯 圖片檢視彈窗（防禦性網址載入）
+function openImageModal(driveUrl, titleText) {
+    if (!driveUrl || !driveUrl.includes("http")) return;
+    
+    const imgModal = document.getElementById('imageModal');
+    const imgTitle = document.getElementById('imageModalTitle');
+    const imgDisplay = document.getElementById('receiptImageDisplay');
+    
+    let directImageUrl = driveUrl;
+    if (driveUrl && driveUrl.includes("drive.google.com")) {
+        const match = driveUrl.match(/\/file\/d\/([^\/]+)/) || driveUrl.match(/[?&]id=([^&]+)/);
+        if (match && match[1]) directImageUrl = `https://drive.google.com/thumbnail?id=${match[1]}&sz=w1000`;
+    }
+    
+    imgTitle.innerText = titleText || "檢視憑證照片";
+    
+    imgDisplay.onerror = function() {
+        this.onerror = null;
+        this.src = "https://placehold.co/600x400/f4f5f7/b54a4a?text=載入失敗\\n請確認雲端資料夾權限";
+        alert("【圖片無法顯示】\n請確認儲存照片的 Google Drive 資料夾權限。");
+    };
+    imgDisplay.src = directImageUrl;
+    imgModal.classList.add('active');
+}
         // 🎯 安全清洗數值（清除 # 字號及空白，轉為標準數字）
         function parseCleanNumber(val) {
             if (!val) return 0;
@@ -1202,31 +1233,7 @@
 
         function closeModal() { document.getElementById('detailModal').classList.remove('active'); }
 
-        // 🎯 圖片檢視彈窗（已移除 uploadDate 參數與日期處理）
-        function openImageModal(driveUrl, titleText) {
-            if (!driveUrl || !driveUrl.includes("http")) return;
-            
-            const imgModal = document.getElementById('imageModal');
-            const imgTitle = document.getElementById('imageModalTitle');
-            const imgDisplay = document.getElementById('receiptImageDisplay');
-            
-            let directImageUrl = driveUrl;
-            if (driveUrl && driveUrl.includes("drive.google.com")) {
-                const match = driveUrl.match(/\/file\/d\/([^\/]+)/) || driveUrl.match(/[?&]id=([^&]+)/);
-                if (match && match[1]) directImageUrl = `https://drive.google.com/thumbnail?id=${match[1]}&sz=w1000`;
-            }
-            
-            imgTitle.innerText = titleText || "檢視憑證照片";
-            
-            imgDisplay.onerror = function() {
-                this.onerror = null;
-                this.src = "https://placehold.co/600x400/f4f5f7/b54a4a?text=載入失敗\\n請確認雲端資料夾權限";
-                alert("【圖片無法顯示】\n請確認儲存照片的 Google Drive 資料夾權限。");
-            };
-            imgDisplay.src = directImageUrl;
-            imgModal.classList.add('active');
-        }
-
+        
         function closeImageModal() {
             const imgDisplay = document.getElementById('receiptImageDisplay');
             imgDisplay.onerror = null; 
