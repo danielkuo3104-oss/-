@@ -226,7 +226,16 @@
         .detail-table th, .detail-table td { padding: 10px 12px; border-bottom: 1px solid #f0f2f5; text-align: left; }
         .detail-table th { background: #f8fafc; color: #8a929a; font-weight: 600; }
 
-        .duty-modal { max-width: 420px; text-align: center; border: 1px solid rgba(110, 145, 110, 0.2); }
+        .duty-modal { 
+            max-width: 420px; 
+            text-align: center; 
+            border: 1px solid rgba(110, 145, 110, 0.2); 
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .duty-modal:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 16px 36px rgba(110, 145, 110, 0.2);
+        }
         .duty-title { color: #4a515a; font-size: 18px; font-weight: 700; margin-bottom: 6px; }
         .duty-timer-sub { font-size: 11px; color: #9ba3ab; margin-bottom: 22px; font-weight: 500; }
         .duty-main-box { background: #f4f7f4; border-radius: 18px; padding: 24px 20px; margin-bottom: 16px; border: 1px solid #e3eae3; }
@@ -334,9 +343,10 @@
     </div>
 
     <div class="modal-overlay" id="dutyModal" onclick="closeDutyModal()">
-        <div class="modal-box duty-modal" onclick="event.stopPropagation()">
+        <!-- 加入 onclick 跳轉至 duty.html，並在按鈕阻止冒泡 -->
+        <div class="modal-box duty-modal" style="cursor: pointer;" onclick="location.href='duty.html'" title="點擊前往值日中心">
             <div class="duty-title">本週值日生公告</div>
-            <div class="duty-timer-sub" id="dutyTimerText">視窗將於 5 秒後自動關閉</div>
+            <div class="duty-timer-sub" id="dutyTimerText">視窗將於 5 秒後自動關閉（點擊視窗前往值日中心）</div>
             
             <div class="duty-main-box">
                 <div class="duty-current-label">當前值日生</div>
@@ -348,7 +358,8 @@
                 <span class="duty-next-value" id="nextDutyName">載入中...</span>
             </div>
 
-            <button class="duty-btn" onclick="closeDutyModal()">我瞭解了</button>
+            <!-- 使用 event.stopPropagation() 防止按鈕觸發外層跳轉 -->
+            <button class="duty-btn" onclick="event.stopPropagation(); closeDutyModal()">我瞭解了</button>
         </div>
     </div>
 
