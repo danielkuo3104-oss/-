@@ -1150,6 +1150,13 @@
 
             currentFormPageIndex = 0;
             userAnswers = {};
+
+            // 🎯 新增：預設將「請選擇登錄人」設為當週值日生
+            let currentWeekOnDutyWorkerName = parsedSchedule[0] ? parsedSchedule[0].worker : "";
+            if (currentWeekOnDutyWorkerName) {
+                userAnswers["請選擇登錄人"] = currentWeekOnDutyWorkerName;
+            }
+
             let mockDateStr = document.getElementById('mockDate').value;
             if (timeAnchor === "real") {
                 mockDateStr = new Date().toISOString().split('T')[0];
