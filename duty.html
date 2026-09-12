@@ -945,9 +945,8 @@
             const makeupMode = document.getElementById('cfgMakeupMode').value;
             const timeAnchor = document.getElementById('cfgTimeAnchor').value;
             
-            let simDateTime = new Date(); // 直接抓取裝置當下即時真實時間
+            let simDateTime = new Date(); 
 
-            // 僅在「測試模式」且選取「mock」時，才讀取模擬選單時間
             if (isTestMode && timeAnchor === "mock") {
                 const mockDateStr = document.getElementById('mockDate').value; 
                 const mockTimeStr = document.getElementById('mockTime').value; 
@@ -965,22 +964,31 @@
             isEarlyMeltMode = false; 
             submissionTargetDayNum = dayOfWeek; 
 
-            // 🎯 輔助函式：檢查指定星期 (1~5) 是否尚未填寫
+            // 🎯 修正對位：各日「登錄人」在 0-based 陣列中的精確欄位索引
+            // 週一=Q(16), 週二=U(20), 週三=Y(24), 週四=AC(28), 週五=AG(32)
+            // 各日「登錄時間」索引：
+            // 週一=P(15), 週二=T(19), 週三=X(23), 週四=AB(27), 週五=AF(31)
             const checkDayEmpty = (dayNum) => {
-                const reporterCsvColMapping = [0, 16, 20, 24, 28, 32];
-                let colIdx = reporterCsvColMapping[dayNum];
+                const reporterCols = [0, 16, 20, 24, 28, 32];
+                const timeCols = [0, 15, 19, 23, 27, 31];
+                let repCol = reporterCols[dayNum];
+                let timeCol = timeCols[dayNum];
                 let targetRowIdx = getSystemTargetRowIdx();
-                let currentOnDutyRow = globalRawData[targetRowIdx];
-                if (currentOnDutyRow && currentOnDutyRow[colIdx]) {
-                    let repText = currentOnDutyRow[colIdx].toString().trim();
-                    if (repText !== "" && repText !== "—" && repText !== "=") {
-                        return false;
-                    }
-                }
-                return true;
+                let row = globalRawData[targetRowIdx];
+                
+                if (!row) return true;
+
+                let repText = row[repCol] ? row[repCol].toString().trim() : "";
+                let timeText = row[timeCol] ? row[timeCol].toString().trim() : "";
+
+                // 兩者皆為空或無效符號才視為未填
+                let isRepEmpty = (repText === "" || repText === "—" || repText === "=");
+                let isTimeEmpty = (timeText === "" || timeText === "—" || timeText === "=");
+
+                return isRepEmpty && isTimeEmpty;
             };
 
-            // 🎯 判斷週六中午 12:00 前是否需啟動週五補登
+            // 🎯 週六 12:00 前且週五（第 5 日）未填寫時，強制啟動週五補登
             let isSaturdayMakeupFriday = false;
             if (dayOfWeek === 6 && curTimeValue <= 1200) {
                 if (checkDayEmpty(5)) {
@@ -988,14 +996,12 @@
                 }
             }
 
-            // 六、日休假攔截（若週六上午判定需要補登週五，則放行不隔離）
+            // 休假攔截：排除「週六 12:00 前補登週五」的情況
             if (!isTestMode && (dayOfWeek === 0 || (dayOfWeek === 6 && !isSaturdayMakeupFriday))) {
                 Swal.fire("宿舍休假期間", "目前為週末六日休假不排班時段，無需填寫工作日誌系統。", "info");
                 return;
             }
 
-            // 🎯 時間軸分流機制：
-            
             // ----------------------------------------------------
             // 情況 A：週六上午 12:00 前補登週五
             // ----------------------------------------------------
