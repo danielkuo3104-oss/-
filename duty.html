@@ -965,43 +965,59 @@
             isEarlyMeltMode = false; 
             submissionTargetDayNum = dayOfWeek; 
 
-            // 六、日休假不排班
-            if (!isTestMode && (dayOfWeek === 0 || dayOfWeek === 6)) {
+            // 🎯 輔助函式：檢查指定星期 (1~5) 是否尚未填寫
+            const checkDayEmpty = (dayNum) => {
+                const reporterCsvColMapping = [0, 16, 20, 24, 28, 32];
+                let colIdx = reporterCsvColMapping[dayNum];
+                let targetRowIdx = getSystemTargetRowIdx();
+                let currentOnDutyRow = globalRawData[targetRowIdx];
+                if (currentOnDutyRow && currentOnDutyRow[colIdx]) {
+                    let repText = currentOnDutyRow[colIdx].toString().trim();
+                    if (repText !== "" && repText !== "—" && repText !== "=") {
+                        return false;
+                    }
+                }
+                return true;
+            };
+
+            // 🎯 判斷週六中午 12:00 前是否需啟動週五補登
+            let isSaturdayMakeupFriday = false;
+            if (dayOfWeek === 6 && curTimeValue <= 1200) {
+                if (checkDayEmpty(5)) {
+                    isSaturdayMakeupFriday = true;
+                }
+            }
+
+            // 六、日休假攔截（若週六上午判定需要補登週五，則放行不隔離）
+            if (!isTestMode && (dayOfWeek === 0 || (dayOfWeek === 6 && !isSaturdayMakeupFriday))) {
                 Swal.fire("宿舍休假期間", "目前為週末六日休假不排班時段，無需填寫工作日誌系統。", "info");
                 return;
             }
 
-            // 🎯 時間軸精準三分流機制：
+            // 🎯 時間軸分流機制：
             
             // ----------------------------------------------------
-            // 時段一：00:00 ~ 12:00 (凌晨至中午)
+            // 情況 A：週六上午 12:00 前補登週五
             // ----------------------------------------------------
-            if (curTimeValue <= 1200) {
+            if (isSaturdayMakeupFriday) {
+                Swal.fire({
+                    title: "週五補登程序啟動",
+                    text: "系統偵測到週五之工作日誌尚未填寫。目前處於隔日 12:00 寬限時間內，本次提交將自動寫入「週五」日誌中，且系統備註將加註「補填」。",
+                    icon: "info"
+                });
+                currentFormModeLabel = isTestMode ? "補填 (測試)" : "補填";
+                submissionTargetDayNum = 5;
+            }
+            // ----------------------------------------------------
+            // 情況 B：平日 00:00 ~ 12:00 (凌晨至中午)
+            // ----------------------------------------------------
+            else if (curTimeValue <= 1200) {
                 if (dayOfWeek === 1) {
-                    // 週一凌晨：沒有昨日(週日)需補填的問題，直接進行當日(週一)回報
                     currentFormModeLabel = isTestMode ? "正常回報 (測試)" : "正常回報";
                     submissionTargetDayNum = 1;
                 } else {
-                    // 週二至週五凌晨：檢查「前一日」是否未填寫
-                    let prevDayNum = dayOfWeek - 1; 
-                    
-                    // 登錄人對應欄位索引: 週一=Q(16), 週二=U(20), 週三=Y(24), 週四=AC(28)
-                    const reporterCsvColMapping = [0, 16, 20, 24, 28, 32];
-                    let prevDayReporterColIdx = reporterCsvColMapping[prevDayNum]; 
-                    
-                    let targetRowIdx = getSystemTargetRowIdx(); 
-                    let currentOnDutyRow = globalRawData[targetRowIdx]; 
-                    
-                    let isPrevDayEmpty = true;
-                    if (currentOnDutyRow && currentOnDutyRow[prevDayReporterColIdx]) {
-                        let repText = currentOnDutyRow[prevDayReporterColIdx].toString().trim();
-                        if (repText !== "" && repText !== "—" && repText !== "=") {
-                            isPrevDayEmpty = false; // 前一日已填過，代表前一日紀錄完備
-                        }
-                    }
-
-                    if (isPrevDayEmpty) {
-                        // 情況 1A：前一日未填，啟動昨日補填
+                    let prevDayNum = dayOfWeek - 1;
+                    if (checkDayEmpty(prevDayNum)) {
                         Swal.fire({
                             title: "昨日補填程序啟動",
                             text: "系統偵測到前一日（昨日）之工作日誌尚未填寫。目前處於寬限時間內，本次提交將自動寫入「昨日」日誌中，且系統備註將加註「補填」。",
@@ -1010,14 +1026,13 @@
                         currentFormModeLabel = isTestMode ? "補填 (測試)" : "補填";
                         submissionTargetDayNum = prevDayNum; 
                     } else {
-                        // 情況 1B：前一日已填，凌晨點擊視為「當日(今日)巡檢回報」
                         currentFormModeLabel = isTestMode ? "正常回報 (測試)" : "正常回報";
                         submissionTargetDayNum = dayOfWeek; 
                     }
                 }
             } 
             // ----------------------------------------------------
-            // 時段二：12:01 ~ 17:59 (中午過後至傍晚)
+            // 情況 C：平日 12:01 ~ 17:59 (提早休假申報)
             // ----------------------------------------------------
             else if (curTimeValue > 1200 && hour < 18) {
                 Swal.fire({
@@ -1030,7 +1045,7 @@
                 submissionTargetDayNum = dayOfWeek;
             } 
             // ----------------------------------------------------
-            // 時段三：18:00 ~ 23:59 (傍晚/夜間)
+            // 情況 D：平日 18:00 ~ 23:59 (當日夜間正常回報)
             // ----------------------------------------------------
             else {
                 currentFormModeLabel = isTestMode ? "正常回報 (測試)" : "正常回報";
@@ -1043,7 +1058,7 @@
                 return;
             }
 
-            compileDynamicFormLayout(dayOfWeek === 5); 
+            compileDynamicFormLayout(submissionTargetDayNum === 5); 
         }
         function proceedWithDuplicateCheck(mockDateStr, reporter, finalJsonString, isMakeupMode, isTestMode, isProxyAgentRun) {
             let dIdx = submissionTargetDayNum; 
