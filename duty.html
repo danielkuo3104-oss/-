@@ -1122,7 +1122,7 @@
                     qCopy.isInstruction = true;
                 }
                 if (qCopy.stem.includes("今日是否休假") && !isFriday) {
-                    qCopy.rule = qCopy.rule.replace(/\|?\s*\(\s*\)\s*返家（限週五）\s*->\s*END/g, '');
+                    qCopy.rule = qCopy.rule.replace(/\|?\s*\(\s*\)\s*返家（限週五）(?:\s*->\s*END)?/g, '');
                 }
                 currentPage.questions.push(qCopy);
             });
@@ -1149,13 +1149,14 @@
             formPagesData.forEach(page => {
                 page.questions.forEach(q => {
                     if(q.stem.includes("今日是否休假")) {
+                        // 移除返家後方的 -> END，確保使用者能進入下一頁填寫垃圾與回收
                         if (isMakeupModeRun) {
-                            q.rule = isFriday ? "( ) 無 | ( ) 國定假日或例假日 -> END | ( ) 返家（限週五） -> END" : "( ) 無 | ( ) 國定假日或例假日 -> END";
+                            q.rule = isFriday ? "( ) 無 | ( ) 國定假日或例假日 -> END | ( ) 返家（限週五）" : "( ) 無 | ( ) 國定假日或例假日 -> END";
                         } else {
                             if (hour < 18) {
-                                q.rule = isFriday ? "( ) 國定假日或例假日 -> END | ( ) 返家（限週五） -> END" : "( ) 國定假日或例假日 -> END";
+                                q.rule = isFriday ? "( ) 國定假日或例假日 -> END | ( ) 返家（限週五）" : "( ) 國定假日或例假日 -> END";
                             } else {
-                                q.rule = isFriday ? "( ) 無 | ( ) 國定假日或例假日 -> END | ( ) 返家（限週五） -> END" : "( ) 無 | ( ) 國定假日或例假日 -> END";
+                                q.rule = isFriday ? "( ) 無 | ( ) 國定假日或例假日 -> END | ( ) 返家（限週五）" : "( ) 無 | ( ) 國定假日或例假日 -> END";
                             }
                         }
                     }
@@ -1163,16 +1164,16 @@
             });
 
             if (isEarlyMeltMode && !isMakeupModeRun) {
+                // 如果是下午提前休假申報模式，仍保留基本資訊與巡檢項目以防當日有提前倒垃圾
                 let meltedQuestions = formPagesData[0].questions.filter(q => {
                     return q.stem.includes("請選擇登錄人") || q.stem.includes("今日是否休假") || q.rule === "***" || q.isInstruction === true;
                 });
-                formPagesData = [{ title: "【提早休假/返家登錄回報】", questions: meltedQuestions }];
+                formPagesData[0].questions = meltedQuestions;
             }
 
             currentFormPageIndex = 0;
             userAnswers = {};
 
-            // 🎯 新增：預設將「請選擇登錄人」設為當週值日生
             let currentWeekOnDutyWorkerName = parsedSchedule[0] ? parsedSchedule[0].worker : "";
             if (currentWeekOnDutyWorkerName) {
                 userAnswers["請選擇登錄人"] = currentWeekOnDutyWorkerName;
@@ -1379,8 +1380,13 @@
                 } else if (radioEl) {
                     let val = radioEl.value;
                     let raw = radioEl.getAttribute("data-raw") || ""; 
-                    userAnswers[q.stem] = val.split("->")[0].trim();
-                    if (raw.includes("-> END") || val.includes("-> END")) { triggerEndFlow = true; }
+                    let cleanVal = val.split("->")[0].trim();
+                    userAnswers[q.stem] = cleanVal;
+
+                    // 關鍵修正：若勾選「返家（限週五）」，不觸發提前提交流程，允許繼續填寫後續工作清單
+                    if ((raw.includes("-> END") || val.includes("-> END")) && !cleanVal.includes("返家")) { 
+                        triggerEndFlow = true; 
+                    }
                 } else if (textEl) {
                     userAnswers[q.stem] = textEl.value || "無個別備註";
                 } else if (pureCheckEl) {
