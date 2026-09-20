@@ -154,7 +154,6 @@
             font-size: 15px; box-sizing: border-box;
         }
 
-        /* 參與者名單選擇區塊樣式 */
         .voter-selector-box {
             background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 12px;
             padding: 12px; margin-top: 8px;
@@ -165,6 +164,7 @@
         .voter-check-item {
             display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500;
             background: #fff; padding: 6px 10px; border-radius: 8px; border: 1px solid #cbd1d6;
+            cursor: pointer; user-select: none;
         }
         .btn-mini-add {
             background: #6E8573; color: white; border: none; border-radius: 8px;
@@ -289,13 +289,10 @@
             <div id="voter-custom-block" class="voter-selector-box" style="display: none;">
                 <div style="font-size:12px; color:#666; margin-bottom:8px;">請勾選具備投票資格之成員：</div>
                 <div class="voter-checkbox-grid" id="voter-checkbox-list">
-                    <label class="voter-check-item"><input type="checkbox" name="voter-pick" value="室友 A" checked> 室友 A</label>
-                    <label class="voter-check-item"><input type="checkbox" name="voter-pick" value="室友 B" checked> 室友 B</label>
-                    <label class="voter-check-item"><input type="checkbox" name="voter-pick" value="室友 C" checked> 室友 C</label>
-                    <label class="voter-check-item"><input type="checkbox" name="voter-pick" value="室友 D" checked> 室友 D</label>
+                    <span style="font-size:12px; color:#999;">正在載入房客名單...</span>
                 </div>
                 <div style="display: flex; gap: 6px;">
-                    <input type="text" id="extra-voter-name" class="form-control" placeholder="新增其他人員姓名/號碼" style="padding: 6px 10px; font-size: 13px;">
+                    <input type="text" id="extra-voter-name" class="form-control" placeholder="手動加入其他姓名" style="padding: 6px 10px; font-size: 13px;">
                     <button type="button" class="btn-mini-add" onclick="addNewVoterOption()">新增</button>
                 </div>
             </div>
@@ -323,6 +320,8 @@
 
 <script>
     const GAS_URL = "https://script.google.com/macros/s/AKfycbx4U_nCu7S8Tf3hc40D-aP6N9MxdeTDoj3vs5vjBnHNE5Jkokir74WzBMtlav5fzUX1/exec"; 
+    // 試算表 CSV 發佈連結
+    const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQkqhXCPp4XiHKCEpI3pz4pzcu3sQreQ_qNRLger00ULCHFr9cTbXHMQqAfk7dLa_gUBAIBSJ5sZM4F/pub?gid=1423212010&single=true&output=csv";
     
     let allVotesCache = [];
     let currentSelectedVote = null;
@@ -338,6 +337,9 @@
     }
 
     window.onload = function() {
+        // 初始化載入房客真實姓名清單
+        loadTenantsFromSheet();
+
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.get('voteCode') && urlParams.get('token')) {
             voterName = urlParams.get('name') || "住宿生";
@@ -348,6 +350,50 @@
             setInterval(fetchActiveVotes, 5000);
         }
     };
+
+    // 從 Google Sheet CSV 讀取房客姓名 (B欄)
+    function loadTenantsFromSheet() {
+        fetch(CSV_URL)
+        .then(res => res.text())
+        .then(csvText => {
+            const lines = csvText.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
+            let tenantNames = [];
+            // 從第 2 列開始解析（跳過標題行）
+            for (let i = 1; i < lines.length; i++) {
+                const cols = lines[i].split(",");
+                if (cols.length >= 2) {
+                    const name = cols[1].replace(/^["']|["']$/g, '').trim();
+                    if (name && !tenantNames.includes(name)) {
+                        tenantNames.push(name);
+                    }
+                }
+            }
+            if (tenantNames.length > 0) {
+                renderVoterCheckboxes(tenantNames);
+            } else {
+                renderDefaultVoters();
+            }
+        })
+        .catch(err => {
+            console.warn("讀取試算表失敗，切換至預設房客名單:", err);
+            renderDefaultVoters();
+        });
+    }
+
+    function renderDefaultVoters() {
+        renderVoterCheckboxes(["洪健棋", "郭丹騏", "尹奕竑", "林易諒"]);
+    }
+
+    function renderVoterCheckboxes(names) {
+        const container = document.getElementById("voter-checkbox-list");
+        container.innerHTML = "";
+        names.forEach(name => {
+            const label = document.createElement("label");
+            label.className = "voter-check-item";
+            label.innerHTML = `<input type="checkbox" name="voter-pick" value="${name}" checked> ${name}`;
+            container.appendChild(label);
+        });
+    }
 
     function renderListUI(data) {
         allVotesCache = data.votes || [];
@@ -675,13 +721,11 @@
         else { ynOption.style.display = "none"; choicesInputs.style.display = "block"; }
     }
 
-    // 切換參與者選取模式
     function toggleVoterSelector(val) {
         const block = document.getElementById("voter-custom-block");
         block.style.display = (val === "CUSTOM") ? "block" : "none";
     }
 
-    // 動態新增成員到勾選區
     function addNewVoterOption() {
         const input = document.getElementById("extra-voter-name");
         const val = input.value.trim();
@@ -703,7 +747,6 @@
 
         if (!desc) { alert("請輸入投票說明目的！"); return; }
 
-        // 收集參與名單
         let targetVoters = [];
         if (voterScope === "ALL") {
             targetVoters = ["ALL"];
@@ -735,7 +778,7 @@
             startDelay: startDelay, 
             duration: duration, 
             options: optionsArr,
-            targetVoters: targetVoters // 傳遞參與名單至後端
+            targetVoters: targetVoters
         };
 
         if (!confirm("確定要發起此投票案嗎？")) return;
