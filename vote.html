@@ -159,11 +159,11 @@
             padding: 12px; margin-top: 8px;
         }
         .voter-checkbox-grid {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px;
+            display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 6px;
         }
         .voter-check-item {
-            display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500;
-            background: #fff; padding: 6px 10px; border-radius: 8px; border: 1px solid #cbd1d6;
+            display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600;
+            background: #fff; padding: 8px 10px; border-radius: 8px; border: 1px solid #cbd1d6;
             cursor: pointer; user-select: none;
         }
     </style>
@@ -189,11 +189,9 @@
             <button class="exit-btn" onclick="backToList()">返回</button>
             <p id="auth-title" style="font-weight: bold; text-align: center; padding-top: 15px;"></p>
             <div class="form-group">
-                <label style="font-size: 13px; color: #555;">選擇您的姓名：</label>
-                <select id="auth-select-name" class="form-control" style="margin-bottom: 12px;"></select>
-                <input type="text" id="input-token" class="form-control" placeholder="請輸入 6 碼個人安全碼" maxlength="6" style="text-align: center; font-size: 16px; padding: 12px;">
+                <input type="text" id="input-token" class="form-control" placeholder="請輸入 6 碼個人專屬安全碼" maxlength="6" style="text-align: center; font-size: 16px; padding: 12px;">
             </div>
-            <button class="btn-prime" onclick="verifyAndEnterVote()">驗證並進入</button>
+            <button class="btn-prime" onclick="verifyAndEnterVote()">驗證安全碼並進入</button>
         </div>
 
         <div id="panel-core" style="display: none;">
@@ -229,7 +227,7 @@
 
     <div class="footer-info" id="voting-footer-layout">
         <div>&copy; 2026 宿舍智慧管理系統. All Rights Reserved.</div>
-        <div style="font-weight: 600; margin-top: 2px;">Version v4.5.0.SIMPLE</div>
+        <div style="font-weight: 600; margin-top: 2px;">Version v5.1.0</div>
     </div>
 </div>
 
@@ -275,12 +273,12 @@
             </select>
         </div>
 
-        <!-- 5. 參與投票名單（勾選真實姓名） -->
+        <!-- 5. 參與投票名單（依房客資訊順序對齊序列一至四） -->
         <div class="form-group">
-            <label>5. 參與投票名單</label>
+            <label>5. 參與投票名單 (請勾選)</label>
             <div class="voter-selector-box">
                 <div class="voter-checkbox-grid" id="voter-checkbox-list">
-                    <span style="font-size:12px; color:#999;">名單載入中...</span>
+                    <span style="font-size:12px; color:#999;">名單讀取中...</span>
                 </div>
             </div>
         </div>
@@ -311,7 +309,7 @@
     
     let allVotesCache = [];
     let currentSelectedVote = null;
-    let voterName = "";
+    let voterName = "住宿生";
     let verifiedToken = "";
     let selectedIndices = []; 
     let countdownInterval = null;
@@ -324,34 +322,32 @@
     }
 
     window.onload = function() {
-        loadTenants();
+        loadTenantsFromSheet();
 
         const urlParams = new URLSearchParams(window.location.search);
         const urlCode = urlParams.get('voteCode');
         const urlToken = urlParams.get('token');
-        const urlName = urlParams.get('name');
 
         if (urlCode && urlToken) {
-            voterName = urlName ? decodeURIComponent(urlName) : "";
             verifiedToken = urlToken.toUpperCase();
-            directAccessJsonp(urlCode, verifiedToken, voterName);
+            directAccessJsonp(urlCode, verifiedToken);
         } else {
             fetchActiveVotes();
             setInterval(fetchActiveVotes, 5000);
         }
     };
 
-    function loadTenants() {
+    function loadTenantsFromSheet() {
         fetch(CSV_URL)
         .then(res => res.text())
         .then(csv => {
             const lines = csv.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
             let names = [];
-            for (let i = 1; i < lines.length; i++) {
+            for (let i = 1; i <= 4 && i < lines.length; i++) {
                 const cols = lines[i].split(",");
                 if (cols.length >= 2) {
                     const name = cols[1].replace(/^["']|["']$/g, '').trim();
-                    if (name && !names.includes(name)) names.push(name);
+                    if (name) names.push(name);
                 }
             }
             if (names.length > 0) availableTenants = names;
@@ -382,10 +378,7 @@
         }
 
         const timeSort = (a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime();
-        const runningList = allVotesCache.filter(v => v.status === "進行中").sort(timeSort);
-        const upcomingList = allVotesCache.filter(v => v.status === "尚未開始").sort(timeSort);
-        const closedList = allVotesCache.filter(v => v.status === "已結束").sort(timeSort);
-        allVotesCache = [...runningList, ...upcomingList, ...closedList]; 
+        allVotesCache.sort(timeSort);
 
         let html = `<p style="font-size:14px; color:#7f8c8d; margin-bottom:15px; text-align:center;">即時投票系統公告欄：</p>`;
         allVotesCache.forEach((v, idx) => {
@@ -422,7 +415,7 @@
         document.body.appendChild(script);
     }
 
-    function directAccessJsonp(voteCode, token, name) {
+    function directAccessJsonp(voteCode, token) {
         const cbName = "VOTE_DIRECT_" + Math.floor(Math.random() * 10000000);
         window[cbName] = function(data) {
             if (data.tokenCheck && !data.tokenCheck.valid) {
@@ -434,10 +427,10 @@
             }
 
             currentSelectedVote = (data.votes || []).find(v => v.code === voteCode);
-            if (!currentSelectedVote) { alert("該投票案不存在或已關閉！"); backToPureHomeList(); return; }
+            if (!currentSelectedVote) { alert("該投票案不存在或已結束！"); backToPureHomeList(); return; }
             document.getElementById("global-home-btn").style.display = "none";
             
-            // 姓名直接以驗證通過回傳的為準
+            // 後端直接根據 Token 所在序列判定身分回傳[cite: 6]
             if (data.tokenCheck && data.tokenCheck.identityName) {
                 voterName = data.tokenCheck.identityName; 
             }
@@ -455,7 +448,7 @@
 
         const script = document.createElement("script");
         script.id = cbName + "_script";
-        script.src = `${GAS_URL}?callback=${cbName}&voteCode=${encodeURIComponent(voteCode)}&token=${encodeURIComponent(token)}&name=${encodeURIComponent(name || "")}&_ts=${new Date().getTime()}`;
+        script.src = `${GAS_URL}?callback=${cbName}&voteCode=${encodeURIComponent(voteCode)}&token=${encodeURIComponent(token)}&_ts=${new Date().getTime()}`;
         document.body.appendChild(script);
     }
 
@@ -487,30 +480,15 @@
             document.getElementById("panel-list").style.display = "none";
             document.getElementById("panel-auth").style.display = "block";
             document.getElementById("auth-title").innerText = `參與投票案：${currentSelectedVote.description}`;
-            
-            // 填入該投票案允許的人名下拉選項
-            const nameSelect = document.getElementById("auth-select-name");
-            nameSelect.innerHTML = "";
-            const allowed = currentSelectedVote.allowedVoters || availableTenants;
-            allowed.forEach(n => {
-                const opt = document.createElement("option");
-                opt.value = n;
-                opt.textContent = n;
-                nameSelect.appendChild(opt);
-            });
         }
     }
 
     function verifyAndEnterVote() {
         const input = document.getElementById("input-token").value.trim().toUpperCase();
-        const chosenName = document.getElementById("auth-select-name").value;
         if (input.length !== 6) { alert("請輸入完整的 6 碼安全碼！"); return; }
-        
         verifiedToken = input;
-        voterName = chosenName;
         document.getElementById("panel-auth").style.display = "none";
-        
-        directAccessJsonp(currentSelectedVote.code, verifiedToken, voterName);
+        directAccessJsonp(currentSelectedVote.code, verifiedToken);
     }
 
     function showVotingResult() {
@@ -548,7 +526,13 @@
                     <div class="score-circle-node node-abstain"><div class="node-title">棄權</div><div class="node-count">${abstainVotes}</div></div>
                     <div class="score-circle-node node-unvoted"><div class="node-title">未投票</div><div class="node-count">${unvotedCount}</div></div>
                 </div>
-                <div class="result-big-conclusion ${conclusionBg}">${conclusionText}</div>`;
+                <div class="result-big-conclusion ${conclusionBg}">${conclusionText}</div>
+                <div class="result-explain-legend">
+                    <div class="legend-item"><span class="mini-dot" style="background:#c2e0c6; border:1px solid #99cca0;"></span> 同意</div>
+                    <div class="legend-item"><span class="mini-dot" style="background:#f7cbd0; border:1px solid #efa1aa;"></span> 不同意</div>
+                    <div class="legend-item"><span class="mini-dot" style="background:#e2e8f0; border:1px solid #cbd1d6;"></span> 棄權</div>
+                    <div class="legend-item"><span class="mini-dot" style="background:#cbd1d6; border:1px solid #9ba3ab;"></span> 未投票</div>
+                </div>`;
             slot.innerHTML = html;
         } else {
             let maxScore = -1;
@@ -619,7 +603,8 @@
     }
 
     function toggleInputsLock(isLocked) {
-        document.getElementById("vote-interface-slot").style.pointerEvents = isLocked ? "none" : "auto";
+        const slot = document.getElementById("vote-interface-slot");
+        slot.style.pointerEvents = isLocked ? "none" : "auto";
     }
 
     function renderVoteSlot() {
@@ -685,7 +670,6 @@
             action: "submitVote", 
             voteCode: currentSelectedVote.code, 
             token: verifiedToken, 
-            voterName: voterName,
             choicesText: choicesTextArr 
         };
         fetch(GAS_URL, { method: "POST", body: JSON.stringify(payload) })
