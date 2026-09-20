@@ -142,7 +142,8 @@
         }
         .modal-box {
             background: white; padding: 25px; border-radius: 20px; width: 90%;
-            max-width: 400px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); box-sizing: border-box;
+            max-width: 420px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); box-sizing: border-box;
+            max-height: 90vh; overflow-y: auto;
         }
         .modal-box h3 { margin-top: 0; color: #333; text-align: center; }
         
@@ -151,6 +152,23 @@
         .form-control {
             width: 100%; padding: 10px; border: 2px solid #cbd1d6; border-radius: 12px;
             font-size: 15px; box-sizing: border-box;
+        }
+
+        /* 參與者名單選擇區塊樣式 */
+        .voter-selector-box {
+            background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 12px;
+            padding: 12px; margin-top: 8px;
+        }
+        .voter-checkbox-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px;
+        }
+        .voter-check-item {
+            display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500;
+            background: #fff; padding: 6px 10px; border-radius: 8px; border: 1px solid #cbd1d6;
+        }
+        .btn-mini-add {
+            background: #6E8573; color: white; border: none; border-radius: 8px;
+            padding: 6px 10px; font-size: 12px; cursor: pointer; font-weight: bold;
         }
     </style>
 </head>
@@ -223,10 +241,12 @@
     <div class="modal-box">
         <h3>發起即時投票案</h3>
         <hr style="border:0; border-top: 1px dashed #cbd1d6; margin-bottom: 15px;">
+        
         <div class="form-group">
             <label>1. 投票說明 (目的)</label>
             <input type="text" id="admin-desc" class="form-control" placeholder="例如：今晚點心吃哪家？">
         </div>
+        
         <div class="form-group">
             <label>2. 投票類型</label>
             <select id="admin-type" class="form-control" onchange="handleTypeFlowChange()">
@@ -235,6 +255,7 @@
                 <option value="MS">多項選擇 (多選)</option>
             </select>
         </div>
+        
         <div class="form-group">
             <label>3. 開始時間</label>
             <select id="admin-start" class="form-control">
@@ -247,6 +268,7 @@
                 <option value="60">1 小時後</option>
             </select>
         </div>
+        
         <div class="form-group">
             <label>4. 投票有效時限</label>
             <select id="admin-duration" class="form-control">
@@ -256,6 +278,29 @@
                 <option value="10">10 分鐘</option> 
             </select>
         </div>
+
+        <!-- 5. 參與對象設置 -->
+        <div class="form-group">
+            <label>5. 參與投票名單</label>
+            <select id="admin-voter-scope" class="form-control" onchange="toggleVoterSelector(this.value)">
+                <option value="ALL">全體成員 (所有人)</option>
+                <option value="CUSTOM">指定參與名單</option>
+            </select>
+            <div id="voter-custom-block" class="voter-selector-box" style="display: none;">
+                <div style="font-size:12px; color:#666; margin-bottom:8px;">請勾選具備投票資格之成員：</div>
+                <div class="voter-checkbox-grid" id="voter-checkbox-list">
+                    <label class="voter-check-item"><input type="checkbox" name="voter-pick" value="室友 A" checked> 室友 A</label>
+                    <label class="voter-check-item"><input type="checkbox" name="voter-pick" value="室友 B" checked> 室友 B</label>
+                    <label class="voter-check-item"><input type="checkbox" name="voter-pick" value="室友 C" checked> 室友 C</label>
+                    <label class="voter-check-item"><input type="checkbox" name="voter-pick" value="室友 D" checked> 室友 D</label>
+                </div>
+                <div style="display: flex; gap: 6px;">
+                    <input type="text" id="extra-voter-name" class="form-control" placeholder="新增其他人員姓名/號碼" style="padding: 6px 10px; font-size: 13px;">
+                    <button type="button" class="btn-mini-add" onclick="addNewVoterOption()">新增</button>
+                </div>
+            </div>
+        </div>
+
         <div id="admin-dynamic-flow-zone" style="margin-top: 15px; padding-top: 10px; border-top: 1px dashed #e2e8f0;">
             <div class="form-group" id="flow-yn-option">
                 <label style="display: flex; align-items: center; gap: 8px;">
@@ -270,6 +315,7 @@
                 <input type="text" id="opt-input-3" class="form-control" placeholder="選項四">
             </div>
         </div>
+        
         <button class="btn-prime" style="margin-top: 20px;" onclick="submitNewVoteFromAdmin()">確認發起並發送通知信</button>
         <button class="btn-prime" style="background:#cbd1d6; border-color:#b0b7bd; border-bottom-color:#8e959c; margin-top:10px;" onclick="closeAdminModal()">取消</button>
     </div>
@@ -337,7 +383,7 @@
 
     function fetchActiveVotes() {
         if (document.getElementById("panel-core").style.display === "block" || 
-            document.getElementById("panel-auth").style.display === "block" ||
+            document.getElementById("panel-auth").style.display === "block" || 
             document.getElementById("dynamic-error-container").style.display === "block") return;
 
         const uniqueCallbackName = "VOTE_CB_" + Math.floor(Math.random() * 10000000);
@@ -355,7 +401,6 @@
     function directAccessJsonp(voteCode, token) {
         const directCallbackName = "VOTE_DIRECT_" + Math.floor(Math.random() * 10000000);
         window[directCallbackName] = function(data) {
-            // ⚡ 錯代碼、錯安全驗證攔截區：精準重置 DOM 遮罩，提供完全不 reload 的安全返回！
             if (data.tokenCheck && !data.tokenCheck.valid) {
                 alert(data.tokenCheck.message);
                 document.getElementById("voting-core-layout").style.display = "none";
@@ -368,7 +413,6 @@
             if (!currentSelectedVote) { alert("該投票案已關閉！"); backToPureHomeList(); return; }
             document.getElementById("global-home-btn").style.display = "none";
             
-            // 🚀【身份自動追蹤解忙】：如果是手動輸入代碼登入，自動同步後端解忙回傳的人名
             if (data.tokenCheck && data.tokenCheck.identityName) {
                 voterName = data.tokenCheck.identityName; 
             }
@@ -386,7 +430,6 @@
         document.body.appendChild(script);
     }
 
-    // 🚀 物理重置無感返回核心
     function backToPureHomeList() {
         if (countdownInterval) clearInterval(countdownInterval);
         if (window.history && window.history.replaceState) {
@@ -439,7 +482,8 @@
 
         if (type === "YN") {
             const yesVotes = scores[0]; const noVotes = scores[1]; const abstainVotes = scores[2] || 0;
-            const unvotedCount = Math.max(0, 4 - (yesVotes + noVotes + abstainVotes));
+            const targetCount = currentSelectedVote.targetCount || 4;
+            const unvotedCount = Math.max(0, targetCount - (yesVotes + noVotes + abstainVotes));
             
             let conclusionBg = "res-card-none"; let conclusionText = "無共識";
             if (yesVotes > noVotes) { conclusionBg = "res-card-yes"; conclusionText = "同意"; }
@@ -631,12 +675,47 @@
         else { ynOption.style.display = "none"; choicesInputs.style.display = "block"; }
     }
 
+    // 切換參與者選取模式
+    function toggleVoterSelector(val) {
+        const block = document.getElementById("voter-custom-block");
+        block.style.display = (val === "CUSTOM") ? "block" : "none";
+    }
+
+    // 動態新增成員到勾選區
+    function addNewVoterOption() {
+        const input = document.getElementById("extra-voter-name");
+        const val = input.value.trim();
+        if (!val) return;
+        const container = document.getElementById("voter-checkbox-list");
+        const label = document.createElement("label");
+        label.className = "voter-check-item";
+        label.innerHTML = `<input type="checkbox" name="voter-pick" value="${val}" checked> ${val}`;
+        container.appendChild(label);
+        input.value = "";
+    }
+
     function submitNewVoteFromAdmin() {
         const desc = document.getElementById("admin-desc").value.trim();
         const type = document.getElementById("admin-type").value;
         const startDelay = document.getElementById("admin-start").value;
         const duration = document.getElementById("admin-duration").value;
+        const voterScope = document.getElementById("admin-voter-scope").value;
+
         if (!desc) { alert("請輸入投票說明目的！"); return; }
+
+        // 收集參與名單
+        let targetVoters = [];
+        if (voterScope === "ALL") {
+            targetVoters = ["ALL"];
+        } else {
+            const checkedBoxes = document.querySelectorAll('input[name="voter-pick"]:checked');
+            checkedBoxes.forEach(cb => targetVoters.push(cb.value));
+            if (targetVoters.length === 0) {
+                alert("請至少勾選一位參與投票的成員！");
+                return;
+            }
+        }
+
         let optionsArr = [];
         if (type === "YN") {
             optionsArr.push("同意", "不同意");
@@ -648,7 +727,17 @@
             }
             if (optionsArr.length < 2) { alert("請至少輸入兩個投票選項！"); return; }
         }
-        const payload = { action: "createVote", type: type, description: desc, startDelay: startDelay, duration: duration, options: optionsArr };
+
+        const payload = { 
+            action: "createVote", 
+            type: type, 
+            description: desc, 
+            startDelay: startDelay, 
+            duration: duration, 
+            options: optionsArr,
+            targetVoters: targetVoters // 傳遞參與名單至後端
+        };
+
         if (!confirm("確定要發起此投票案嗎？")) return;
         fetch(GAS_URL, { method: "POST", body: JSON.stringify(payload) })
         .then(res => res.json())
