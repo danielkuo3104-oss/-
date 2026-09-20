@@ -166,10 +166,6 @@
             background: #fff; padding: 6px 10px; border-radius: 8px; border: 1px solid #cbd1d6;
             cursor: pointer; user-select: none;
         }
-        .btn-mini-add {
-            background: #6E8573; color: white; border: none; border-radius: 8px;
-            padding: 6px 10px; font-size: 12px; cursor: pointer; font-weight: bold;
-        }
     </style>
 </head>
 <body>
@@ -193,9 +189,11 @@
             <button class="exit-btn" onclick="backToList()">返回</button>
             <p id="auth-title" style="font-weight: bold; text-align: center; padding-top: 15px;"></p>
             <div class="form-group">
-                <input type="text" id="input-token" class="form-control" placeholder="請輸入 6 碼個人匿名安全碼" maxlength="6" style="text-align: center; font-size: 16px; padding: 12px;">
+                <label style="font-size: 13px; color: #555;">選擇您的姓名：</label>
+                <select id="auth-select-name" class="form-control" style="margin-bottom: 12px;"></select>
+                <input type="text" id="input-token" class="form-control" placeholder="請輸入 6 碼個人安全碼" maxlength="6" style="text-align: center; font-size: 16px; padding: 12px;">
             </div>
-            <button class="btn-prime" onclick="verifyAndEnterVote()">驗證憑證並進入</button>
+            <button class="btn-prime" onclick="verifyAndEnterVote()">驗證並進入</button>
         </div>
 
         <div id="panel-core" style="display: none;">
@@ -231,7 +229,7 @@
 
     <div class="footer-info" id="voting-footer-layout">
         <div>&copy; 2026 宿舍智慧管理系統. All Rights Reserved.</div>
-        <div style="font-weight: 600; margin-top: 2px;">Version v3.9.7.VT</div>
+        <div style="font-weight: 600; margin-top: 2px;">Version v4.5.0.SIMPLE</div>
     </div>
 </div>
 
@@ -264,8 +262,6 @@
                 <option value="3">3 分鐘後</option>
                 <option value="5">5 分鐘後</option>
                 <option value="10">10 分鐘後</option>
-                <option value="30">30 分鐘後</option>
-                <option value="60">1 小時後</option>
             </select>
         </div>
         
@@ -279,21 +275,12 @@
             </select>
         </div>
 
-        <!-- 5. 參與對象設置 -->
+        <!-- 5. 參與投票名單（勾選真實姓名） -->
         <div class="form-group">
             <label>5. 參與投票名單</label>
-            <select id="admin-voter-scope" class="form-control" onchange="toggleVoterSelector(this.value)">
-                <option value="ALL">全體成員 (所有人)</option>
-                <option value="CUSTOM">指定參與名單</option>
-            </select>
-            <div id="voter-custom-block" class="voter-selector-box" style="display: none;">
-                <div style="font-size:12px; color:#666; margin-bottom:8px;">請勾選具備投票資格之成員：</div>
+            <div class="voter-selector-box">
                 <div class="voter-checkbox-grid" id="voter-checkbox-list">
-                    <span style="font-size:12px; color:#999;">正在載入房客名單...</span>
-                </div>
-                <div style="display: flex; gap: 6px;">
-                    <input type="text" id="extra-voter-name" class="form-control" placeholder="手動加入其他姓名" style="padding: 6px 10px; font-size: 13px;">
-                    <button type="button" class="btn-mini-add" onclick="addNewVoterOption()">新增</button>
+                    <span style="font-size:12px; color:#999;">名單載入中...</span>
                 </div>
             </div>
         </div>
@@ -320,15 +307,15 @@
 
 <script>
     const GAS_URL = "https://script.google.com/macros/s/AKfycbx4U_nCu7S8Tf3hc40D-aP6N9MxdeTDoj3vs5vjBnHNE5Jkokir74WzBMtlav5fzUX1/exec"; 
-    // 試算表 CSV 發佈連結
     const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQkqhXCPp4XiHKCEpI3pz4pzcu3sQreQ_qNRLger00ULCHFr9cTbXHMQqAfk7dLa_gUBAIBSJ5sZM4F/pub?gid=1423212010&single=true&output=csv";
     
     let allVotesCache = [];
     let currentSelectedVote = null;
-    let voterName = "住宿生";
+    let voterName = "";
     let verifiedToken = "";
     let selectedIndices = []; 
     let countdownInterval = null;
+    let availableTenants = ["洪健棋", "郭丹騏", "尹奕竑", "林易諒"];
 
     function limitTextLength(text) {
         if (!text) return "";
@@ -337,61 +324,52 @@
     }
 
     window.onload = function() {
-        // 初始化載入房客真實姓名清單
-        loadTenantsFromSheet();
+        loadTenants();
 
         const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get('voteCode') && urlParams.get('token')) {
-            voterName = urlParams.get('name') || "住宿生";
-            verifiedToken = urlParams.get('token').toUpperCase();
-            directAccessJsonp(urlParams.get('voteCode'), verifiedToken);
+        const urlCode = urlParams.get('voteCode');
+        const urlToken = urlParams.get('token');
+        const urlName = urlParams.get('name');
+
+        if (urlCode && urlToken) {
+            voterName = urlName ? decodeURIComponent(urlName) : "";
+            verifiedToken = urlToken.toUpperCase();
+            directAccessJsonp(urlCode, verifiedToken, voterName);
         } else {
             fetchActiveVotes();
             setInterval(fetchActiveVotes, 5000);
         }
     };
 
-    // 從 Google Sheet CSV 讀取房客姓名 (B欄)
-    function loadTenantsFromSheet() {
+    function loadTenants() {
         fetch(CSV_URL)
         .then(res => res.text())
-        .then(csvText => {
-            const lines = csvText.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
-            let tenantNames = [];
-            // 從第 2 列開始解析（跳過標題行）
+        .then(csv => {
+            const lines = csv.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
+            let names = [];
             for (let i = 1; i < lines.length; i++) {
                 const cols = lines[i].split(",");
                 if (cols.length >= 2) {
                     const name = cols[1].replace(/^["']|["']$/g, '').trim();
-                    if (name && !tenantNames.includes(name)) {
-                        tenantNames.push(name);
-                    }
+                    if (name && !names.includes(name)) names.push(name);
                 }
             }
-            if (tenantNames.length > 0) {
-                renderVoterCheckboxes(tenantNames);
-            } else {
-                renderDefaultVoters();
-            }
+            if (names.length > 0) availableTenants = names;
+            renderVoterCheckboxes();
         })
-        .catch(err => {
-            console.warn("讀取試算表失敗，切換至預設房客名單:", err);
-            renderDefaultVoters();
+        .catch(() => {
+            renderVoterCheckboxes();
         });
     }
 
-    function renderDefaultVoters() {
-        renderVoterCheckboxes(["洪健棋", "郭丹騏", "尹奕竑", "林易諒"]);
-    }
-
-    function renderVoterCheckboxes(names) {
-        const container = document.getElementById("voter-checkbox-list");
-        container.innerHTML = "";
-        names.forEach(name => {
+    function renderVoterCheckboxes() {
+        const list = document.getElementById("voter-checkbox-list");
+        list.innerHTML = "";
+        availableTenants.forEach(name => {
             const label = document.createElement("label");
             label.className = "voter-check-item";
             label.innerHTML = `<input type="checkbox" name="voter-pick" value="${name}" checked> ${name}`;
-            container.appendChild(label);
+            list.appendChild(label);
         });
     }
 
@@ -432,21 +410,21 @@
             document.getElementById("panel-auth").style.display === "block" || 
             document.getElementById("dynamic-error-container").style.display === "block") return;
 
-        const uniqueCallbackName = "VOTE_CB_" + Math.floor(Math.random() * 10000000);
-        window[uniqueCallbackName] = function(data) {
+        const cbName = "VOTE_CB_" + Math.floor(Math.random() * 10000000);
+        window[cbName] = function(data) {
             renderListUI(data);
-            document.getElementById(uniqueCallbackName + "_script").remove(); 
-            delete window[uniqueCallbackName]; 
+            document.getElementById(cbName + "_script").remove(); 
+            delete window[cbName]; 
         };
         const script = document.createElement("script");
-        script.id = uniqueCallbackName + "_script";
-        script.src = GAS_URL + "?callback=" + uniqueCallbackName + "&_ts=" + new Date().getTime();
+        script.id = cbName + "_script";
+        script.src = GAS_URL + "?callback=" + cbName + "&_ts=" + new Date().getTime();
         document.body.appendChild(script);
     }
 
-    function directAccessJsonp(voteCode, token) {
-        const directCallbackName = "VOTE_DIRECT_" + Math.floor(Math.random() * 10000000);
-        window[directCallbackName] = function(data) {
+    function directAccessJsonp(voteCode, token, name) {
+        const cbName = "VOTE_DIRECT_" + Math.floor(Math.random() * 10000000);
+        window[cbName] = function(data) {
             if (data.tokenCheck && !data.tokenCheck.valid) {
                 alert(data.tokenCheck.message);
                 document.getElementById("voting-core-layout").style.display = "none";
@@ -456,23 +434,28 @@
             }
 
             currentSelectedVote = (data.votes || []).find(v => v.code === voteCode);
-            if (!currentSelectedVote) { alert("該投票案已關閉！"); backToPureHomeList(); return; }
+            if (!currentSelectedVote) { alert("該投票案不存在或已關閉！"); backToPureHomeList(); return; }
             document.getElementById("global-home-btn").style.display = "none";
             
+            // 姓名直接以驗證通過回傳的為準
             if (data.tokenCheck && data.tokenCheck.identityName) {
                 voterName = data.tokenCheck.identityName; 
             }
 
-            if (currentSelectedVote.status === "Closed" || currentSelectedVote.status === "已結束") { showVotingResult(); } 
-            else { document.getElementById("panel-list").style.display = "none"; startVoteInterface(); }
+            if (currentSelectedVote.status === "Closed" || currentSelectedVote.status === "已結束") {
+                showVotingResult();
+            } else {
+                document.getElementById("panel-list").style.display = "none"; 
+                startVoteInterface();
+            }
             
-            document.getElementById(directCallbackName + "_script").remove();
-            delete window[directCallbackName];
+            document.getElementById(cbName + "_script").remove();
+            delete window[cbName];
         };
 
         const script = document.createElement("script");
-        script.id = directCallbackName + "_script";
-        script.src = GAS_URL + "?callback=" + directCallbackName + "&voteCode=" + voteCode + "&token=" + token + "&_ts=" + new Date().getTime();
+        script.id = cbName + "_script";
+        script.src = `${GAS_URL}?callback=${cbName}&voteCode=${encodeURIComponent(voteCode)}&token=${encodeURIComponent(token)}&name=${encodeURIComponent(name || "")}&_ts=${new Date().getTime()}`;
         document.body.appendChild(script);
     }
 
@@ -504,7 +487,30 @@
             document.getElementById("panel-list").style.display = "none";
             document.getElementById("panel-auth").style.display = "block";
             document.getElementById("auth-title").innerText = `參與投票案：${currentSelectedVote.description}`;
+            
+            // 填入該投票案允許的人名下拉選項
+            const nameSelect = document.getElementById("auth-select-name");
+            nameSelect.innerHTML = "";
+            const allowed = currentSelectedVote.allowedVoters || availableTenants;
+            allowed.forEach(n => {
+                const opt = document.createElement("option");
+                opt.value = n;
+                opt.textContent = n;
+                nameSelect.appendChild(opt);
+            });
         }
+    }
+
+    function verifyAndEnterVote() {
+        const input = document.getElementById("input-token").value.trim().toUpperCase();
+        const chosenName = document.getElementById("auth-select-name").value;
+        if (input.length !== 6) { alert("請輸入完整的 6 碼安全碼！"); return; }
+        
+        verifiedToken = input;
+        voterName = chosenName;
+        document.getElementById("panel-auth").style.display = "none";
+        
+        directAccessJsonp(currentSelectedVote.code, verifiedToken, voterName);
     }
 
     function showVotingResult() {
@@ -528,8 +534,8 @@
 
         if (type === "YN") {
             const yesVotes = scores[0]; const noVotes = scores[1]; const abstainVotes = scores[2] || 0;
-            const targetCount = currentSelectedVote.targetCount || 4;
-            const unvotedCount = Math.max(0, targetCount - (yesVotes + noVotes + abstainVotes));
+            const targetTotal = currentSelectedVote.targetCount || 4;
+            const unvotedCount = Math.max(0, targetTotal - (yesVotes + noVotes + abstainVotes));
             
             let conclusionBg = "res-card-none"; let conclusionText = "無共識";
             if (yesVotes > noVotes) { conclusionBg = "res-card-yes"; conclusionText = "同意"; }
@@ -542,13 +548,7 @@
                     <div class="score-circle-node node-abstain"><div class="node-title">棄權</div><div class="node-count">${abstainVotes}</div></div>
                     <div class="score-circle-node node-unvoted"><div class="node-title">未投票</div><div class="node-count">${unvotedCount}</div></div>
                 </div>
-                <div class="result-big-conclusion ${conclusionBg}">${conclusionText}</div>
-                <div class="result-explain-legend">
-                    <div class="legend-item"><span class="mini-dot" style="background:#c2e0c6; border:1px solid #99cca0;"></span> 同意</div>
-                    <div class="legend-item"><span class="mini-dot" style="background:#f7cbd0; border:1px solid #efa1aa;"></span> 不同意</div>
-                    <div class="legend-item"><span class="mini-dot" style="background:#e2e8f0; border:1px solid #cbd1d6;"></span> 棄權</div>
-                    <div class="legend-item"><span class="mini-dot" style="background:#cbd1d6; border:1px solid #9ba3ab;"></span> 未投票</div>
-                </div>`;
+                <div class="result-big-conclusion ${conclusionBg}">${conclusionText}</div>`;
             slot.innerHTML = html;
         } else {
             let maxScore = -1;
@@ -564,31 +564,16 @@
             for (let idx = 0; idx < 4; idx++) {
                 const opt = currentSelectedVote.options[idx];
                 if (!opt || String(opt).trim() === "") continue; 
-                
                 const count = scores[idx] || 0;
                 const isWinner = (count === maxScore && maxScore > 0);
-                const activeClass = isWinner ? "winner" : "";
-                const cleanDisplayOpt = limitTextLength(opt);
-
                 html += `
-                    <div class="strip-result-item ${activeClass}">
-                        <span class="strip-opt-text">${cleanDisplayOpt}</span>
+                    <div class="strip-result-item ${isWinner ? 'winner' : ''}">
+                        <span class="strip-opt-text">${limitTextLength(opt)}</span>
                         <span class="strip-opt-score">${count} 票</span>
                     </div>`;
             }
             slot.innerHTML = html;
         }
-    }
-
-    function verifyAndEnterVote() {
-        const input = document.getElementById("input-token").value.trim().toUpperCase();
-        if (input.length !== 6) { alert("請輸入完整的 6 碼安全碼！"); return; }
-        verifiedToken = input;
-        document.getElementById("panel-auth").style.display = "none";
-        
-        const urlParams = new URLSearchParams(window.location.search);
-        const voteCode = currentSelectedVote ? currentSelectedVote.code : urlParams.get('voteCode');
-        directAccessJsonp(voteCode, verifiedToken);
     }
 
     function startVoteInterface() {
@@ -634,9 +619,7 @@
     }
 
     function toggleInputsLock(isLocked) {
-        const slot = document.getElementById("vote-interface-slot");
-        if (isLocked) slot.style.pointerEvents = "none";
-        else slot.style.pointerEvents = "auto";
+        document.getElementById("vote-interface-slot").style.pointerEvents = isLocked ? "none" : "auto";
     }
 
     function renderVoteSlot() {
@@ -660,8 +643,7 @@
             for (let idx = 0; idx < 4; idx++) {
                 const opt = currentSelectedVote.options[idx];
                 if (opt && String(opt).trim() !== "") {
-                    const displayOpt = limitTextLength(opt);
-                    slot.innerHTML += `<div class="option-strip" id="strip-${idx}" onclick="handleStripSelect(${idx}, '${type}')">${displayOpt}</div>`;
+                    slot.innerHTML += `<div class="option-strip" id="strip-${idx}" onclick="handleStripSelect(${idx}, '${type}')">${limitTextLength(opt)}</div>`;
                 }
             }
         }
@@ -670,8 +652,7 @@
     function handleStripSelect(idx, type) {
         if (type === "SS") {
             selectedIndices = [idx];
-            const allStrips = document.querySelectorAll(".option-strip");
-            allStrips.forEach(s => s.classList.remove("selected"));
+            document.querySelectorAll(".option-strip").forEach(s => s.classList.remove("selected"));
             document.getElementById(`strip-${idx}`).classList.add("selected");
         } else {
             const findIdx = selectedIndices.indexOf(idx);
@@ -686,7 +667,9 @@
     }
 
     function submitDirectYN(choiceIdx, choiceText) {
-        if (confirm(`您確定投下【${choiceText}】嗎？送出後即無法更改。`)) { executeSubmitPost([choiceText]); }
+        if (confirm(`您確定投下【${choiceText}】嗎？送出後即無法更改。`)) { 
+            executeSubmitPost([choiceText]); 
+        }
     }
 
     function confirmAndSubmitChoices() {
@@ -698,7 +681,13 @@
     }
 
     function executeSubmitPost(choicesTextArr) {
-        const payload = { action: "submitVote", voteCode: currentSelectedVote.code, token: verifiedToken, choicesText: choicesTextArr };
+        const payload = { 
+            action: "submitVote", 
+            voteCode: currentSelectedVote.code, 
+            token: verifiedToken, 
+            voterName: voterName,
+            choicesText: choicesTextArr 
+        };
         fetch(GAS_URL, { method: "POST", body: JSON.stringify(payload) })
         .then(res => res.json())
         .then(res => {
@@ -715,27 +704,8 @@
     
     function handleTypeFlowChange() {
         const type = document.getElementById("admin-type").value;
-        const ynOption = document.getElementById("flow-yn-option");
-        const choicesInputs = document.getElementById("flow-choices-inputs");
-        if (type === "YN") { ynOption.style.display = "block"; choicesInputs.style.display = "none"; } 
-        else { ynOption.style.display = "none"; choicesInputs.style.display = "block"; }
-    }
-
-    function toggleVoterSelector(val) {
-        const block = document.getElementById("voter-custom-block");
-        block.style.display = (val === "CUSTOM") ? "block" : "none";
-    }
-
-    function addNewVoterOption() {
-        const input = document.getElementById("extra-voter-name");
-        const val = input.value.trim();
-        if (!val) return;
-        const container = document.getElementById("voter-checkbox-list");
-        const label = document.createElement("label");
-        label.className = "voter-check-item";
-        label.innerHTML = `<input type="checkbox" name="voter-pick" value="${val}" checked> ${val}`;
-        container.appendChild(label);
-        input.value = "";
+        document.getElementById("flow-yn-option").style.display = (type === "YN") ? "block" : "none";
+        document.getElementById("flow-choices-inputs").style.display = (type !== "YN") ? "block" : "none";
     }
 
     function submitNewVoteFromAdmin() {
@@ -743,20 +713,14 @@
         const type = document.getElementById("admin-type").value;
         const startDelay = document.getElementById("admin-start").value;
         const duration = document.getElementById("admin-duration").value;
-        const voterScope = document.getElementById("admin-voter-scope").value;
 
         if (!desc) { alert("請輸入投票說明目的！"); return; }
 
         let targetVoters = [];
-        if (voterScope === "ALL") {
-            targetVoters = ["ALL"];
-        } else {
-            const checkedBoxes = document.querySelectorAll('input[name="voter-pick"]:checked');
-            checkedBoxes.forEach(cb => targetVoters.push(cb.value));
-            if (targetVoters.length === 0) {
-                alert("請至少勾選一位參與投票的成員！");
-                return;
-            }
+        document.querySelectorAll('input[name="voter-pick"]:checked').forEach(cb => targetVoters.push(cb.value));
+        if (targetVoters.length === 0) {
+            alert("請至少選擇一位參與投票的房客！");
+            return;
         }
 
         let optionsArr = [];
