@@ -105,10 +105,6 @@
         .res-card-no { background-color: #f7cbd0; color: #7a2e35; border-color: #efa1aa; }
         .res-card-none { background-color: #e2e8f0; color: #4a515a; border-color: #cbd1d6; }
 
-        .result-explain-legend { display: flex; justify-content: center; gap: 10px; font-size: 11px; font-weight: bold; margin-top: 25px; }
-        .legend-item { display: flex; align-items: center; gap: 4px; }
-        .mini-dot { width: 14px; height: 14px; border-radius: 50%; display: inline-block; box-sizing: border-box; }
-
         .strip-result-item {
             display: flex; justify-content: space-between; align-items: center;
             background: #f1f3f5; border: 2px solid #cbd1d6; border-radius: 14px;
@@ -159,10 +155,10 @@
             padding: 12px; margin-top: 8px;
         }
         .voter-checkbox-grid {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 6px;
+            display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
         }
         .voter-check-item {
-            display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600;
+            display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 600;
             background: #fff; padding: 8px 10px; border-radius: 8px; border: 1px solid #cbd1d6;
             cursor: pointer; user-select: none;
         }
@@ -225,9 +221,9 @@
         </div>
     </div>
 
-    <div class="footer-info" id="voting-footer-layout">
+    <div class="footer-info">
         <div>&copy; 2026 宿舍智慧管理系統. All Rights Reserved.</div>
-        <div style="font-weight: 600; margin-top: 2px;">Version v5.1.0</div>
+        <div style="font-weight: 600; margin-top: 2px;">Version v6.0.0</div>
     </div>
 </div>
 
@@ -273,12 +269,15 @@
             </select>
         </div>
 
-        <!-- 5. 參與投票名單（依房客資訊順序對齊序列一至四） -->
+        <!-- 5. 參與投票名單 (固定位置嚴格綁定序列一～四) -->
         <div class="form-group">
             <label>5. 參與投票名單 (請勾選)</label>
             <div class="voter-selector-box">
-                <div class="voter-checkbox-grid" id="voter-checkbox-list">
-                    <span style="font-size:12px; color:#999;">名單讀取中...</span>
+                <div class="voter-checkbox-grid">
+                    <label class="voter-check-item"><input type="checkbox" id="voter-slot-0" checked> 洪健棋</label>
+                    <label class="voter-check-item"><input type="checkbox" id="voter-slot-1" checked> 郭丹騏</label>
+                    <label class="voter-check-item"><input type="checkbox" id="voter-slot-2" checked> 尹奕竑</label>
+                    <label class="voter-check-item"><input type="checkbox" id="voter-slot-3" checked> 林易諒</label>
                 </div>
             </div>
         </div>
@@ -305,7 +304,6 @@
 
 <script>
     const GAS_URL = "https://script.google.com/macros/s/AKfycbx4U_nCu7S8Tf3hc40D-aP6N9MxdeTDoj3vs5vjBnHNE5Jkokir74WzBMtlav5fzUX1/exec"; 
-    const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQkqhXCPp4XiHKCEpI3pz4pzcu3sQreQ_qNRLger00ULCHFr9cTbXHMQqAfk7dLa_gUBAIBSJ5sZM4F/pub?gid=1423212010&single=true&output=csv";
     
     let allVotesCache = [];
     let currentSelectedVote = null;
@@ -313,7 +311,6 @@
     let verifiedToken = "";
     let selectedIndices = []; 
     let countdownInterval = null;
-    let availableTenants = ["洪健棋", "郭丹騏", "尹奕竑", "林易諒"];
 
     function limitTextLength(text) {
         if (!text) return "";
@@ -322,8 +319,6 @@
     }
 
     window.onload = function() {
-        loadTenantsFromSheet();
-
         const urlParams = new URLSearchParams(window.location.search);
         const urlCode = urlParams.get('voteCode');
         const urlToken = urlParams.get('token');
@@ -336,38 +331,6 @@
             setInterval(fetchActiveVotes, 5000);
         }
     };
-
-    function loadTenantsFromSheet() {
-        fetch(CSV_URL)
-        .then(res => res.text())
-        .then(csv => {
-            const lines = csv.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
-            let names = [];
-            for (let i = 1; i <= 4 && i < lines.length; i++) {
-                const cols = lines[i].split(",");
-                if (cols.length >= 2) {
-                    const name = cols[1].replace(/^["']|["']$/g, '').trim();
-                    if (name) names.push(name);
-                }
-            }
-            if (names.length > 0) availableTenants = names;
-            renderVoterCheckboxes();
-        })
-        .catch(() => {
-            renderVoterCheckboxes();
-        });
-    }
-
-    function renderVoterCheckboxes() {
-        const list = document.getElementById("voter-checkbox-list");
-        list.innerHTML = "";
-        availableTenants.forEach(name => {
-            const label = document.createElement("label");
-            label.className = "voter-check-item";
-            label.innerHTML = `<input type="checkbox" name="voter-pick" value="${name}" checked> ${name}`;
-            list.appendChild(label);
-        });
-    }
 
     function renderListUI(data) {
         allVotesCache = data.votes || [];
@@ -430,7 +393,7 @@
             if (!currentSelectedVote) { alert("該投票案不存在或已結束！"); backToPureHomeList(); return; }
             document.getElementById("global-home-btn").style.display = "none";
             
-            // 後端直接根據 Token 所在序列判定身分回傳[cite: 6]
+            // 後端直接依 Token 所在位置判定對應人名
             if (data.tokenCheck && data.tokenCheck.identityName) {
                 voterName = data.tokenCheck.identityName; 
             }
@@ -526,13 +489,7 @@
                     <div class="score-circle-node node-abstain"><div class="node-title">棄權</div><div class="node-count">${abstainVotes}</div></div>
                     <div class="score-circle-node node-unvoted"><div class="node-title">未投票</div><div class="node-count">${unvotedCount}</div></div>
                 </div>
-                <div class="result-big-conclusion ${conclusionBg}">${conclusionText}</div>
-                <div class="result-explain-legend">
-                    <div class="legend-item"><span class="mini-dot" style="background:#c2e0c6; border:1px solid #99cca0;"></span> 同意</div>
-                    <div class="legend-item"><span class="mini-dot" style="background:#f7cbd0; border:1px solid #efa1aa;"></span> 不同意</div>
-                    <div class="legend-item"><span class="mini-dot" style="background:#e2e8f0; border:1px solid #cbd1d6;"></span> 棄權</div>
-                    <div class="legend-item"><span class="mini-dot" style="background:#cbd1d6; border:1px solid #9ba3ab;"></span> 未投票</div>
-                </div>`;
+                <div class="result-big-conclusion ${conclusionBg}">${conclusionText}</div>`;
             slot.innerHTML = html;
         } else {
             let maxScore = -1;
@@ -603,8 +560,7 @@
     }
 
     function toggleInputsLock(isLocked) {
-        const slot = document.getElementById("vote-interface-slot");
-        slot.style.pointerEvents = isLocked ? "none" : "auto";
+        document.getElementById("vote-interface-slot").style.pointerEvents = isLocked ? "none" : "auto";
     }
 
     function renderVoteSlot() {
@@ -700,10 +656,16 @@
 
         if (!desc) { alert("請輸入投票說明目的！"); return; }
 
-        let targetVoters = [];
-        document.querySelectorAll('input[name="voter-pick"]:checked').forEach(cb => targetVoters.push(cb.value));
-        if (targetVoters.length === 0) {
-            alert("請至少選擇一位參與投票的房客！");
+        // 嚴格取得 4 個 Slot 的勾選布林狀態
+        const slot0 = document.getElementById("voter-slot-0").checked; // 洪健棋
+        const slot1 = document.getElementById("voter-slot-1").checked; // 郭丹騏
+        const slot2 = document.getElementById("voter-slot-2").checked; // 尹奕竑
+        const slot3 = document.getElementById("voter-slot-3").checked; // 林易諒
+
+        const targetSlots = [slot0, slot1, slot2, slot3];
+
+        if (!slot0 && !slot1 && !slot2 && !slot3) {
+            alert("請至少勾選一位參與人員！");
             return;
         }
 
@@ -726,7 +688,7 @@
             startDelay: startDelay, 
             duration: duration, 
             options: optionsArr,
-            targetVoters: targetVoters
+            targetSlots: targetSlots // 傳送嚴格對齊位置的布林陣列
         };
 
         if (!confirm("確定要發起此投票案嗎？")) return;
