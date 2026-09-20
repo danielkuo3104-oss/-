@@ -223,7 +223,7 @@
 
     <div class="footer-info">
         <div>&copy; 2026 宿舍智慧管理系統. All Rights Reserved.</div>
-        <div style="font-weight: 600; margin-top: 2px;">Version v7.0.0</div>
+        <div style="font-weight: 600; margin-top: 2px;">Version v9.0.FIXED</div>
     </div>
 </div>
 
@@ -255,6 +255,7 @@
                 <option value="1">1 分鐘後</option>
                 <option value="3">3 分鐘後</option>
                 <option value="5">5 分鐘後</option>
+                <option value="10">10 分鐘後</option>
             </select>
         </div>
         
@@ -268,9 +269,9 @@
             </select>
         </div>
 
-        <!-- 5. 參與投票名單 (固定位置對位：序列一～四) -->
+        <!-- 5. 參與投票名單 (固定對齊：洪健棋、郭丹騏、尹奕竑、林易諒) -->
         <div class="form-group">
-            <label>5. 參與投票名單 (勾選者納入，未勾選排除)</label>
+            <label>5. 參與投票名單 (取消勾選即排除)</label>
             <div class="voter-selector-box">
                 <div class="voter-checkbox-grid">
                     <label class="voter-check-item"><input type="checkbox" id="voter-slot-0" checked> 洪健棋</label>
@@ -394,7 +395,6 @@
             if (!currentSelectedVote) { alert("該投票案不存在或已結束！"); backToPureHomeList(); return; }
             document.getElementById("global-home-btn").style.display = "none";
             
-            // 身分優先使用後端回傳經位置比對後的姓名[cite: 6]
             if (data.tokenCheck && data.tokenCheck.identityName) {
                 voterName = data.tokenCheck.identityName; 
             } else if (passName) {
@@ -659,7 +659,7 @@
 
         if (!desc) { alert("請輸入投票說明目的！"); return; }
 
-        // 嚴格讀取 4 個 Slot 勾選狀態 (true/false)
+        // 讀取 4 個 Slot 勾選狀態 (true / false)
         const slot0 = document.getElementById("voter-slot-0").checked; // 洪健棋
         const slot1 = document.getElementById("voter-slot-1").checked; // 郭丹騏
         const slot2 = document.getElementById("voter-slot-2").checked; // 尹奕竑
