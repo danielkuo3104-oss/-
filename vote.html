@@ -223,7 +223,7 @@
 
     <div class="footer-info">
         <div>&copy; 2026 宿舍智慧管理系統. All Rights Reserved.</div>
-        <div style="font-weight: 600; margin-top: 2px;">Version v9.0.FIXED</div>
+        <div style="font-weight: 600; margin-top: 2px;">Version v10.0.JSONP</div>
     </div>
 </div>
 
@@ -318,6 +318,24 @@
         return str.length > 10 ? str.substring(0, 10) + "..." : str;
     }
 
+    // 通用安全 JSONP 發送函式 (100% 繞過跨域 POST 問題)
+    function sendJsonpRequest(paramsObj, callbackFn) {
+        const cbName = "GAS_CB_" + Math.floor(Math.random() * 10000000);
+        window[cbName] = function(res) {
+            callbackFn(res);
+            document.getElementById(cbName + "_script").remove();
+            delete window[cbName];
+        };
+        const params = new URLSearchParams(paramsObj);
+        params.append("callback", cbName);
+        params.append("_ts", new Date().getTime());
+
+        const script = document.createElement("script");
+        script.id = cbName + "_script";
+        script.src = `${GAS_URL}?${params.toString()}`;
+        document.body.appendChild(script);
+    }
+
     window.onload = function() {
         const urlParams = new URLSearchParams(window.location.search);
         const urlCode = urlParams.get('voteCode');
@@ -368,21 +386,13 @@
             document.getElementById("panel-auth").style.display === "block" || 
             document.getElementById("dynamic-error-container").style.display === "block") return;
 
-        const cbName = "VOTE_CB_" + Math.floor(Math.random() * 10000000);
-        window[cbName] = function(data) {
+        sendJsonpRequest({}, function(data) {
             renderListUI(data);
-            document.getElementById(cbName + "_script").remove(); 
-            delete window[cbName]; 
-        };
-        const script = document.createElement("script");
-        script.id = cbName + "_script";
-        script.src = GAS_URL + "?callback=" + cbName + "&_ts=" + new Date().getTime();
-        document.body.appendChild(script);
+        });
     }
 
     function directAccessJsonp(voteCode, token, passName) {
-        const cbName = "VOTE_DIRECT_" + Math.floor(Math.random() * 10000000);
-        window[cbName] = function(data) {
+        sendJsonpRequest({ voteCode: voteCode, token: token, name: passName || "" }, function(data) {
             if (data.tokenCheck && !data.tokenCheck.valid) {
                 alert(data.tokenCheck.message);
                 document.getElementById("voting-core-layout").style.display = "none";
@@ -407,15 +417,7 @@
                 document.getElementById("panel-list").style.display = "none"; 
                 startVoteInterface();
             }
-            
-            document.getElementById(cbName + "_script").remove();
-            delete window[cbName];
-        };
-
-        const script = document.createElement("script");
-        script.id = cbName + "_script";
-        script.src = `${GAS_URL}?callback=${cbName}&voteCode=${encodeURIComponent(voteCode)}&token=${encodeURIComponent(token)}&name=${encodeURIComponent(passName || "")}&_ts=${new Date().getTime()}`;
-        document.body.appendChild(script);
+        });
     }
 
     function backToPureHomeList() {
@@ -612,7 +614,7 @@
 
     function submitDirectYN(choiceIdx, choiceText) {
         if (confirm(`您確定投下【${choiceText}】嗎？送出後即無法更改。`)) { 
-            executeSubmitPost([choiceText]); 
+            executeSubmitVote([choiceText]); 
         }
     }
 
@@ -620,24 +622,23 @@
         if (selectedIndices.length === 0) { alert("請至少選擇一個選項！"); return; }
         if (confirm("您確定要送出目前的投票選擇嗎？")) { 
             const chosenTexts = selectedIndices.map(idx => currentSelectedVote.options[idx]);
-            executeSubmitPost(chosenTexts); 
+            executeSubmitVote(chosenTexts); 
         }
     }
 
-    function executeSubmitPost(choicesTextArr) {
-        const payload = { 
-            action: "submitVote", 
-            voteCode: currentSelectedVote.code, 
-            token: verifiedToken, 
-            choicesText: choicesTextArr 
-        };
-        fetch(GAS_URL, { method: "POST", body: JSON.stringify(payload) })
-        .then(res => res.json())
-        .then(res => {
+    function executeSubmitVote(choicesTextArr) {
+        sendJsonpRequest({
+            action: "submitVote",
+            voteCode: currentSelectedVote.code,
+            token: verifiedToken,
+            choicesText: JSON.stringify(choicesTextArr)
+        }, function(res) {
             if (res.status === "success") {
                 alert("🎉 投票成功！感謝您的參與。"); 
                 backToPureHomeList(); 
-            } else { alert("❌ 錯誤: " + res.message); }
+            } else { 
+                alert("❌ 錯誤: " + res.message); 
+            }
         });
     }
 
@@ -659,15 +660,13 @@
 
         if (!desc) { alert("請輸入投票說明目的！"); return; }
 
-        // 讀取 4 個 Slot 勾選狀態 (true / false)
-        const slot0 = document.getElementById("voter-slot-0").checked; // 洪健棋
-        const slot1 = document.getElementById("voter-slot-1").checked; // 郭丹騏
-        const slot2 = document.getElementById("voter-slot-2").checked; // 尹奕竑
-        const slot3 = document.getElementById("voter-slot-3").checked; // 林易諒
+        // 讀取 4 個 Slot 勾選狀態 (0 代表排除, 1 代表參與)
+        const slot0 = document.getElementById("voter-slot-0").checked ? 1 : 0; // 洪健棋
+        const slot1 = document.getElementById("voter-slot-1").checked ? 1 : 0; // 郭丹騏
+        const slot2 = document.getElementById("voter-slot-2").checked ? 1 : 0; // 尹奕竑
+        const slot3 = document.getElementById("voter-slot-3").checked ? 1 : 0; // 林易諒
 
-        const targetSlots = [slot0, slot1, slot2, slot3];
-
-        if (!slot0 && !slot1 && !slot2 && !slot3) {
+        if (slot0 === 0 && slot1 === 0 && slot2 === 0 && slot3 === 0) {
             alert("請至少勾選一位參與人員！");
             return;
         }
@@ -684,27 +683,27 @@
             if (optionsArr.length < 2) { alert("請至少輸入兩個投票選項！"); return; }
         }
 
-        const payload = { 
-            action: "createVote", 
-            type: type, 
-            description: desc, 
-            startDelay: startDelay, 
-            duration: duration, 
-            options: optionsArr,
-            targetSlots: targetSlots
-        };
-
         if (!confirm("確定要發起此投票案嗎？")) return;
-        fetch(GAS_URL, { method: "POST", body: JSON.stringify(payload) })
-        .then(res => res.json())
-        .then(res => {
+
+        // 使用安全的 JSONP 格式發出請求
+        sendJsonpRequest({
+            action: "createVote",
+            type: type,
+            description: desc,
+            startDelay: startDelay,
+            duration: duration,
+            options: JSON.stringify(optionsArr),
+            slots: `${slot0},${slot1},${slot2},${slot3}`
+        }, function(res) {
             if (res.status === "success") {
                 alert(`🎉 投票案建立成功！代碼：${res.voteCode}`);
                 closeAdminModal();
                 document.getElementById("admin-desc").value = "";
                 for(let i=0; i<4; i++) document.getElementById("opt-input-" + i).value = "";
                 backToPureHomeList();
-            } else { alert("❌ 建立失敗: " + res.message); }
+            } else { 
+                alert("❌ 建立失敗: " + res.message); 
+            }
         });
     }
 </script>
