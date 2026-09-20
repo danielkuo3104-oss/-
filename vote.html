@@ -223,7 +223,7 @@
 
     <div class="footer-info">
         <div>&copy; 2026 宿舍智慧管理系統. All Rights Reserved.</div>
-        <div style="font-weight: 600; margin-top: 2px;">Version v6.0.0</div>
+        <div style="font-weight: 600; margin-top: 2px;">Version v7.0.0</div>
     </div>
 </div>
 
@@ -255,7 +255,6 @@
                 <option value="1">1 分鐘後</option>
                 <option value="3">3 分鐘後</option>
                 <option value="5">5 分鐘後</option>
-                <option value="10">10 分鐘後</option>
             </select>
         </div>
         
@@ -269,9 +268,9 @@
             </select>
         </div>
 
-        <!-- 5. 參與投票名單 (固定位置嚴格綁定序列一～四) -->
+        <!-- 5. 參與投票名單 (固定位置對位：序列一～四) -->
         <div class="form-group">
-            <label>5. 參與投票名單 (請勾選)</label>
+            <label>5. 參與投票名單 (勾選者納入，未勾選排除)</label>
             <div class="voter-selector-box">
                 <div class="voter-checkbox-grid">
                     <label class="voter-check-item"><input type="checkbox" id="voter-slot-0" checked> 洪健棋</label>
@@ -322,10 +321,12 @@
         const urlParams = new URLSearchParams(window.location.search);
         const urlCode = urlParams.get('voteCode');
         const urlToken = urlParams.get('token');
+        const urlName = urlParams.get('name');
 
         if (urlCode && urlToken) {
             verifiedToken = urlToken.toUpperCase();
-            directAccessJsonp(urlCode, verifiedToken);
+            if (urlName) voterName = decodeURIComponent(urlName);
+            directAccessJsonp(urlCode, verifiedToken, voterName);
         } else {
             fetchActiveVotes();
             setInterval(fetchActiveVotes, 5000);
@@ -378,7 +379,7 @@
         document.body.appendChild(script);
     }
 
-    function directAccessJsonp(voteCode, token) {
+    function directAccessJsonp(voteCode, token, passName) {
         const cbName = "VOTE_DIRECT_" + Math.floor(Math.random() * 10000000);
         window[cbName] = function(data) {
             if (data.tokenCheck && !data.tokenCheck.valid) {
@@ -393,9 +394,11 @@
             if (!currentSelectedVote) { alert("該投票案不存在或已結束！"); backToPureHomeList(); return; }
             document.getElementById("global-home-btn").style.display = "none";
             
-            // 後端直接依 Token 所在位置判定對應人名
+            // 身分優先使用後端回傳經位置比對後的姓名[cite: 6]
             if (data.tokenCheck && data.tokenCheck.identityName) {
                 voterName = data.tokenCheck.identityName; 
+            } else if (passName) {
+                voterName = passName;
             }
 
             if (currentSelectedVote.status === "Closed" || currentSelectedVote.status === "已結束") {
@@ -411,7 +414,7 @@
 
         const script = document.createElement("script");
         script.id = cbName + "_script";
-        script.src = `${GAS_URL}?callback=${cbName}&voteCode=${encodeURIComponent(voteCode)}&token=${encodeURIComponent(token)}&_ts=${new Date().getTime()}`;
+        script.src = `${GAS_URL}?callback=${cbName}&voteCode=${encodeURIComponent(voteCode)}&token=${encodeURIComponent(token)}&name=${encodeURIComponent(passName || "")}&_ts=${new Date().getTime()}`;
         document.body.appendChild(script);
     }
 
@@ -451,7 +454,7 @@
         if (input.length !== 6) { alert("請輸入完整的 6 碼安全碼！"); return; }
         verifiedToken = input;
         document.getElementById("panel-auth").style.display = "none";
-        directAccessJsonp(currentSelectedVote.code, verifiedToken);
+        directAccessJsonp(currentSelectedVote.code, verifiedToken, "");
     }
 
     function showVotingResult() {
@@ -656,7 +659,7 @@
 
         if (!desc) { alert("請輸入投票說明目的！"); return; }
 
-        // 嚴格取得 4 個 Slot 的勾選布林狀態
+        // 嚴格讀取 4 個 Slot 勾選狀態 (true/false)
         const slot0 = document.getElementById("voter-slot-0").checked; // 洪健棋
         const slot1 = document.getElementById("voter-slot-1").checked; // 郭丹騏
         const slot2 = document.getElementById("voter-slot-2").checked; // 尹奕竑
@@ -688,7 +691,7 @@
             startDelay: startDelay, 
             duration: duration, 
             options: optionsArr,
-            targetSlots: targetSlots // 傳送嚴格對齊位置的布林陣列
+            targetSlots: targetSlots
         };
 
         if (!confirm("確定要發起此投票案嗎？")) return;
